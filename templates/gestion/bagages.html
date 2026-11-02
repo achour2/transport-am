@@ -1,7 +1,10 @@
 {% extends "gestion/_base.html" %}{% load outils %}
 {% block titre %}Bagages{% endblock %}
 {% block gestion %}
-<h1 class="section-titre h3 mb-3">Bagages</h1>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="section-titre h3 mb-0">Bagages</h1>
+  <a href="{% url 'gestion_envoi_comptoir' %}" class="btn btn-accent"><i class="bi bi-cash-coin"></i> Envoi au comptoir (paiement en espèces)</a>
+</div>
 <form method="get" class="carte carte-ombre p-3 mb-3 row g-2 align-items-end">
   <div class="col-md-3"><label class="form-label small" for="q">Recherche</label><input id="q" name="q" value="{{ q }}" class="form-control" placeholder="Numéro, client, destinataire"></div>
   <div class="col-6 col-md-2"><label class="form-label small" for="statut">Statut</label><select id="statut" name="statut" class="form-select"><option value="">Tous</option>{% for c, l in statuts %}<option value="{{ c }}" {% if f.statut == c %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>

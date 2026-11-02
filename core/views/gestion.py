@@ -9,11 +9,12 @@ from django.core.paginator import Paginator
 from django.db.models import Count, Q, Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from ..decorators import admin_requis
-from ..forms import DeplacerBagageForm, ParametresForm, PaysForm, StatutBagageForm, TransporteurForm, VoyageForm
+from ..forms import DeplacerBagageForm, EnvoiComptoirForm, ParametresForm, PaysForm, StatutBagageForm, TransporteurForm, VoyageForm
 from ..models import Bagage, Incident, MessageContact, Paiement, Parametres, Pays, Utilisateur, Voyage
 from ..services import (
     ErreurMetier,
@@ -251,6 +252,53 @@ def bagages(request):
         "statuts": Bagage.Statut.choices, "pays_list": Pays.objects.all(),
         "voyages_list": Voyage.objects.exclude(statut="annule").select_related("ville_depart", "ville_arrivee").order_by("-depart")[:50],
     })
+
+
+@admin_requis
+def envoi_comptoir(request):
+    """Le client paie en espèces au comptoir : l'admin crée l'envoi (et le compte client si courriel)."""
+    from ..services import creer_envoi_comptoir
+
+    form = EnvoiComptoirForm(request.POST or None, request.FILES or None)
+    if request.method == "POST" and form.is_valid():
+        d = form.cleaned_data
+        donnees = {k: d[k] for k in ("description", "poids", "longueur_cm", "largeur_cm", "hauteur_cm", "valeur_declaree",
+                                     "dest_nom", "dest_telephone", "dest_adresse", "dest_courriel")}
+        try:
+            bagage, compte_cree = creer_envoi_comptoir(
+                request.user, d["voyage"], donnees,
+                {"courriel": d["courriel"], "prenom": d["prenom"], "nom": d["nom"], "telephone": d["telephone"]},
+                d["mode"], depose=d["depose"])
+        except ErreurMetier as e:
+            messages.error(request, str(e))
+        else:
+            if d.get("photo"):
+                bagage.photo_depot = d["photo"]
+                bagage.save(update_fields=["photo_depot"])
+            msg = f"Envoi {bagage.numero_suivi} enregistré et payé ({bagage.prix} {bagage.devise}). "
+            if compte_cree:
+                msg += f"Compte client créé : un lien d'activation a été envoyé à {bagage.client.email}."
+            elif bagage.client:
+                msg += f"Ajouté au compte existant de {bagage.client}."
+            else:
+                msg += "Sans compte : remettez le reçu, le client suivra son bagage avec le numéro de suivi."
+            messages.success(request, msg)
+            return redirect(f"{reverse('gestion_bagage', args=[bagage.numero_suivi])}?nouveau=1")
+    return render(request, "gestion/envoi_comptoir.html", {"form": form})
+
+
+@admin_requis
+def recu_admin(request, numero):
+    from ..pdf import recu_pdf
+
+    bagage = get_object_or_404(Bagage, numero_suivi=numero)
+    paiement = bagage.paiements.filter(statut__in=["paye", "rembourse"]).first()
+    if not paiement:
+        messages.error(request, "Aucun paiement pour cet envoi.")
+        return redirect("gestion_bagage", numero=numero)
+    r = HttpResponse(recu_pdf(paiement), content_type="application/pdf")
+    r["Content-Disposition"] = f'inline; filename="recu-{numero}.pdf"'
+    return r
 
 
 @admin_requis

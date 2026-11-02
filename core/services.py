@@ -232,7 +232,7 @@ def rembourser(bagage, auteur=None):
     paiement = bagage.paiements.filter(statut=Paiement.Statut.PAYE).first()
     if paiement is None:
         raise ErreurMetier("Aucun paiement à rembourser pour cet envoi.")
-    if settings.STRIPE_SECRET_KEY and paiement.reference_stripe.startswith(("pi_", "ch_")):
+    if paiement.mode == Paiement.Mode.CARTE and settings.STRIPE_SECRET_KEY and paiement.reference_stripe.startswith(("pi_", "ch_")):
         import stripe
 
         stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -243,9 +243,12 @@ def rembourser(bagage, auteur=None):
     bagage.statut_paiement = Bagage.Paiement.REMBOURSE
     bagage.choix_requis = False
     bagage.save(update_fields=["statut_paiement", "choix_requis"])
-    EvenementBagage.objects.create(
-        bagage=bagage, statut=bagage.statut, message=f"Remboursement de {paiement.montant} {paiement.devise}.", auteur=auteur
-    )
+    texte = f"Remboursement de {paiement.montant} {paiement.devise}"
+    if paiement.mode != Paiement.Mode.CARTE:
+        texte += f" à effectuer au comptoir ({paiement.get_mode_display().lower()})"
+        notifier_admins(f"Remboursement à rendre en main propre : {bagage.numero_suivi} ({paiement.montant} {paiement.devise})",
+                        reverse("gestion_bagage", args=[bagage.numero_suivi]), courriel=False)
+    EvenementBagage.objects.create(bagage=bagage, statut=bagage.statut, message=texte + ".", auteur=auteur)
     return paiement
 
 
@@ -499,3 +502,64 @@ def verifications_periodiques(maintenant=None):
         b.save(update_fields=["rappel_depot_envoye"])
         resultat["rappels_depot"] += 1
     return resultat
+
+
+# --------------------------------------------------------------------------
+# Envoi enregistré au comptoir par l'administrateur (paiement en espèces, etc.)
+# --------------------------------------------------------------------------
+
+
+@transaction.atomic
+def creer_envoi_comptoir(admin, voyage, donnees, client_infos, mode, depose=True, request=None):
+    """
+    Crée l'envoi d'un client qui paie au comptoir.
+    - Si un courriel est fourni : compte client trouvé ou créé (lien d'activation envoyé) → il suit
+      son bagage dans son espace et reçoit les notifications.
+    - Sinon : pas de compte, le client suit son bagage avec le numéro de suivi imprimé sur le reçu.
+    Retourne (bagage, compte_cree).
+    """
+    import secrets as _secrets
+
+    client, compte_cree = None, False
+    courriel = (client_infos.get("courriel") or "").strip().lower()
+    if courriel:
+        client = Utilisateur.objects.filter(email__iexact=courriel).first()
+        if client and client.role != Utilisateur.Role.CLIENT:
+            raise ErreurMetier("Ce courriel appartient à un compte transporteur ou administrateur.")
+        if client is None:
+            client = Utilisateur(email=courriel, role=Utilisateur.Role.CLIENT, email_confirme=True,
+                                 first_name=client_infos.get("prenom", ""), last_name=client_infos.get("nom", ""),
+                                 telephone=client_infos.get("telephone", ""))
+            client.set_password(_secrets.token_urlsafe(24))  # le client choisira le sien via le lien d'activation
+            client.save()
+            compte_cree = True
+
+    bagage = creer_bagage(client, voyage, donnees)
+    paiement = Paiement.objects.create(bagage=bagage, montant=bagage.prix, devise=bagage.devise, mode=mode, encaisse_par=admin)
+    confirmer_paiement(paiement, reference=f"comptoir-{mode}-{paiement.pk}")
+    EvenementBagage.objects.filter(bagage=bagage).update(auteur=admin)
+    if depose:
+        bagage.refresh_from_db()
+        changer_statut(bagage, Bagage.Statut.DEPOSE, admin, notifier_client=False,
+                       message=f"Bagage déposé au comptoir et payé ({paiement.get_mode_display().lower()}).")
+    if not client:
+        # Pas de compte : les infos de contact sont gardées dans l'historique pour le service client
+        nom = f"{client_infos.get('prenom', '')} {client_infos.get('nom', '')}".strip()
+        EvenementBagage.objects.create(bagage=bagage, statut=bagage.statut, auteur=admin,
+                                       message=f"Expéditeur sans compte : {nom} — {client_infos.get('telephone', '')}"[:255])
+        if client_infos.get("telephone"):
+            envoyer_sms(client_infos["telephone"], f"Votre envoi {bagage.numero_suivi} est enregistré. Suivi : "
+                        f"{url_absolue(reverse('suivi_detail', args=[bagage.numero_suivi]))}")
+    if compte_cree:
+        from django.contrib.auth.tokens import default_token_generator
+        from django.utils.encoding import force_bytes
+        from django.utils.http import urlsafe_base64_encode
+
+        lien = reverse("password_reset_confirm", args=[urlsafe_base64_encode(force_bytes(client.pk)),
+                                                       default_token_generator.make_token(client)])
+        envoyer_courriel(client.email, "Votre compte a été créé",
+                         f"Bonjour {client.first_name},\n\nNous avons créé votre compte lors de votre envoi au comptoir. "
+                         f"Choisissez votre mot de passe avec ce lien pour suivre votre bagage {bagage.numero_suivi} "
+                         f"dans votre espace client :", lien)
+    bagage.refresh_from_db()
+    return bagage, compte_cree

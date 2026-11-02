@@ -53,7 +53,15 @@ def recu_pdf(paiement):
         ("PADDING", (0, 0), (-1, -1), 6),
     ]))
     elements += [t, Spacer(1, 8 * mm),
-                 Paragraph(f"Référence de paiement : {paiement.reference_stripe or '—'}", s["Normal"]),
-                 Paragraph("Paiement par carte traité par Stripe. Aucune donnée de carte n'est conservée.", s["Italic"])]
+                 Paragraph(f"Mode de paiement : {paiement.get_mode_display()} · Référence : {paiement.reference_stripe or '—'}", s["Normal"])]
+    if paiement.mode == "carte":
+        elements.append(Paragraph("Paiement par carte traité par Stripe. Aucune donnée de carte n'est conservée.", s["Italic"]))
+    else:
+        elements.append(Paragraph(f"Payé au comptoir{' — encaissé par ' + str(paiement.encaisse_par) if paiement.encaisse_par else ''}.", s["Italic"]))
+    from .services import url_absolue
+    from django.urls import reverse
+    elements += [Spacer(1, 6 * mm),
+                 Paragraph(f"<b>Suivez votre bagage :</b> {url_absolue(reverse('suivi_detail', args=[b.numero_suivi]))}", s["Normal"]),
+                 Paragraph(f"<b>Code de remise à transmettre au destinataire :</b> {b.code_remise}", s["Normal"])]
     doc.build(elements)
     return tampon.getvalue()
