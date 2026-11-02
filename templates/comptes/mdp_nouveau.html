@@ -1,0 +1,7 @@
+{% extends "comptes/_cadre.html" %}{% load i18n %}
+{% block cadre %}
+{% if validlink %}
+<h1 class="h4 fw-bold mb-3">{% translate "Nouveau mot de passe" %}</h1>
+<form method="post">{% csrf_token %}{% include "partials/_form.html" %}<button class="btn btn-primary w-100">{% translate "Enregistrer" %}</button></form>
+{% else %}<p class="mb-0">{% translate "Ce lien n’est plus valide. Faites une nouvelle demande." %}</p>{% endif %}
+{% endblock %}

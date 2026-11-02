@@ -1,0 +1,12 @@
+{% extends "base.html" %}{% load i18n %}
+{% block titre %}{% translate "Conditions générales" %}{% endblock %}
+{% block contenu %}
+<div class="container my-5" style="max-width:820px">
+  <div class="carte carte-ombre p-4 p-md-5">
+    <h1 class="section-titre h3">{% translate "Conditions générales" %}</h1>
+    <p style="white-space:pre-line">{{ parametres.conditions_generales }}</p>
+    <h2 class="section-titre h4 mt-4" id="confidentialite">{% translate "Politique de confidentialité" %}</h2>
+    <p style="white-space:pre-line">{{ parametres.politique_confidentialite }}</p>
+  </div>
+</div>
+{% endblock %}

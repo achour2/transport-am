@@ -1,0 +1,4 @@
+<form method="post" class="d-inline">{% csrf_token %}<input type="hidden" name="pk" value="{{ u.pk }}">
+  <button name="action" value="reinitialiser" class="btn btn-sm btn-outline-secondary" title="Envoyer un lien de réinitialisation du mot de passe"><i class="bi bi-key"></i></button>
+  <button name="action" value="bloquer" class="btn btn-sm {% if u.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %}" title="{% if u.is_active %}Bloquer{% else %}Débloquer{% endif %}"><i class="bi {% if u.is_active %}bi-lock{% else %}bi-unlock{% endif %}"></i></button>
+</form>

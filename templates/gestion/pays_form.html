@@ -1,0 +1,23 @@
+{% extends "gestion/_base.html" %}
+{% block titre %}{% if pays %}Modifier {{ pays.nom }}{% else %}Ajouter un pays{% endif %}{% endblock %}
+{% block gestion %}
+<a href="{% url 'gestion_pays' %}" class="small"><i class="bi bi-arrow-left"></i> Pays et tarifs</a>
+<h1 class="section-titre h3 mt-2 mb-3">{% if pays %}Modifier {{ pays.drapeau }} {{ pays.nom }}{% else %}Ajouter un pays{% endif %}</h1>
+<form method="post" class="carte carte-ombre p-4" style="max-width:900px" novalidate>{% csrf_token %}
+  {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors|join:"<br>" }}</div>{% endif %}
+  <div class="row">
+    {% for f in form.visible_fields %}
+    <div class="{% if f.name in 'villes objets_interdits documents_douane' %}col-md-12 col-lg-4{% elif f.name == 'actif' %}col-12{% else %}col-6 col-md-4 col-lg-3{% endif %} mb-3">
+      {% if f.name == "actif" %}
+        <div class="form-check form-switch">{{ f }} <label class="form-check-label" for="{{ f.id_for_label }}">Pays actif (visible dans les réservations)</label></div>
+      {% else %}
+        <label class="form-label fw-semibold small" for="{{ f.id_for_label }}">{{ f.label|capfirst }}</label>{{ f }}
+        {% if f.help_text %}<div class="form-text">{{ f.help_text }}</div>{% endif %}
+      {% endif %}
+      {% for e in f.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+    </div>
+    {% endfor %}
+  </div>
+  <button class="btn btn-primary"><i class="bi bi-check-lg"></i> Enregistrer</button>
+</form>
+{% endblock %}

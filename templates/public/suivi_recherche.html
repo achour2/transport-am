@@ -1,0 +1,16 @@
+{% extends "base.html" %}{% load i18n %}
+{% block titre %}{% translate "Suivre un bagage" %}{% endblock %}
+{% block contenu %}
+<div class="container my-5" style="max-width:640px">
+  <div class="carte carte-ombre p-4 p-md-5 text-center">
+    <i class="bi bi-search display-5 text-primary"></i>
+    <h1 class="h3 fw-bold mt-3">{% translate "Suivre mon bagage" %}</h1>
+    <p class="text-muted">{% translate "Saisissez le numéro de suivi reçu par courriel (ex. BG-7F3K9Q2A)." %}</p>
+    <form method="get" class="input-group input-group-lg">
+      <label for="numero" class="visually-hidden">{% translate "Numéro de suivi" %}</label>
+      <input id="numero" name="numero" value="{{ numero }}" class="form-control numero text-uppercase" placeholder="BG-XXXXXXXX" required autofocus>
+      <button class="btn btn-primary">{% translate "Suivre" %}</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

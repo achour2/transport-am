@@ -1,0 +1,30 @@
+{% extends "gestion/_base.html" %}
+{% block titre %}Incidents{% endblock %}
+{% block gestion %}
+<h1 class="section-titre h3 mb-3">Incidents</h1>
+<h2 class="h6 fw-bold text-danger">Ouverts</h2>
+{% for i in ouverts %}
+<div class="carte carte-ombre p-4 mb-3 border-danger">
+  <div class="d-flex flex-wrap justify-content-between gap-2">
+    <div>
+      <div class="fw-bold">{{ i.get_type_display }} — {% if i.bagage %}<a class="numero" href="{% url 'gestion_bagage' i.bagage.numero_suivi %}">{{ i.bagage.numero_suivi }}</a>{% else %}tout le voyage{% endif %}</div>
+      <div class="small text-muted">{{ i.voyage }} · signalé par {{ i.signale_par|default:"—" }} le {{ i.cree_le|date:"d/m/Y H:i" }}</div>
+      {% if i.commentaire %}<p class="small mt-2 mb-0">« {{ i.commentaire }} »</p>{% endif %}
+    </div>
+    <form method="post" class="d-flex flex-wrap gap-2 align-items-start">{% csrf_token %}<input type="hidden" name="pk" value="{{ i.pk }}">
+      {% if i.bagage %}
+      <button name="etat" value="retrouve" class="btn btn-sm btn-success">Retrouvé (le suivi reprend)</button>
+      <button name="etat" value="perdu" class="btn btn-sm btn-dark" onclick="return confirm('Déclarer perdu et rembourser le client ?')">Perdu (rembourser)</button>
+      {% endif %}
+      <button name="etat" value="resolu" class="btn btn-sm btn-outline-secondary">Résolu</button>
+    </form>
+  </div>
+</div>
+{% empty %}<p class="text-muted small">Aucun incident ouvert. 🎉</p>
+{% endfor %}
+<h2 class="h6 fw-bold mt-4">Traités récemment</h2>
+<div class="carte carte-ombre table-responsive"><table class="table table-sm mb-0 small">
+  {% for i in traites %}<tr><td>{{ i.cree_le|date:"d/m/Y" }}</td><td>{{ i.get_type_display }}</td><td>{% if i.bagage %}{{ i.bagage.numero_suivi }}{% else %}{{ i.voyage }}{% endif %}</td><td>{{ i.get_etat_display }}</td><td>{{ i.traite_le|date:"d/m/Y H:i" }}</td></tr>
+  {% empty %}<tr><td class="text-muted">—</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

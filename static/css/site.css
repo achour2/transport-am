@@ -1,0 +1,98 @@
+:root {
+  --tb-navy: #1f4e79;
+  --tb-navy-dark: #163a5b;
+  --tb-accent: #f28c28;
+  --tb-accent-dark: #d97515;
+  --tb-bg: #f5f7fa;
+  --tb-border: #dde4ec;
+  --bs-primary: #1f4e79;
+  --bs-primary-rgb: 31, 78, 121;
+  --bs-link-color: #1f4e79;
+  --bs-link-color-rgb: 31, 78, 121;
+  --bs-link-hover-color: #163a5b;
+  --bs-body-font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+body { background: var(--tb-bg); min-height: 100vh; display: flex; flex-direction: column; }
+html[dir="rtl"] body { --bs-body-font-family: "Noto Sans Arabic", system-ui, sans-serif; font-family: var(--bs-body-font-family); }
+main { flex: 1; }
+.btn-primary { --bs-btn-bg: var(--tb-navy); --bs-btn-border-color: var(--tb-navy); --bs-btn-hover-bg: var(--tb-navy-dark); --bs-btn-hover-border-color: var(--tb-navy-dark); --bs-btn-active-bg: var(--tb-navy-dark); }
+.btn-outline-primary { --bs-btn-color: var(--tb-navy); --bs-btn-border-color: var(--tb-navy); --bs-btn-hover-bg: var(--tb-navy); --bs-btn-hover-border-color: var(--tb-navy); }
+.btn-accent { background: var(--tb-accent); border-color: var(--tb-accent); color: #fff; font-weight: 600; }
+.btn-accent:hover, .btn-accent:focus { background: var(--tb-accent-dark); border-color: var(--tb-accent-dark); color: #fff; }
+.text-primary { color: var(--tb-navy) !important; }
+.bg-primary { background-color: var(--tb-navy) !important; }
+
+.navbar-tb { background: var(--tb-navy); }
+.navbar-tb .navbar-brand { font-weight: 800; letter-spacing: -.02em; }
+.navbar-tb .nav-link { color: rgba(255,255,255,.85); }
+.navbar-tb .nav-link:hover, .navbar-tb .nav-link.active { color: #fff; }
+.badge-notif { font-size: .65rem; position: absolute; top: 2px; inset-inline-end: -4px; }
+
+.hero { background: linear-gradient(135deg, var(--tb-navy) 0%, #2d6aa3 100%); color: #fff; position: relative; overflow: hidden; }
+.hero::after { content: ""; position: absolute; inset-inline-end: -120px; top: -80px; width: 420px; height: 420px; border-radius: 50%; background: rgba(255,255,255,.06); }
+.hero h1 { font-weight: 800; letter-spacing: -.03em; }
+.hero .suivi-box { background: #fff; border-radius: 1rem; padding: 1.25rem; color: #212529; box-shadow: 0 20px 40px rgba(0,0,0,.18); position: relative; z-index: 1; }
+
+.carte { background: #fff; border: 1px solid var(--tb-border); border-radius: .9rem; }
+.carte-ombre { box-shadow: 0 2px 10px rgba(16,40,70,.05); }
+.section-titre { font-weight: 700; color: var(--tb-navy); }
+.etape-num { width: 48px; height: 48px; border-radius: 50%; background: #e6eef7; color: var(--tb-navy); display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.2rem; }
+.drapeau { font-size: 2rem; line-height: 1; }
+.kpi { font-size: 1.9rem; font-weight: 800; color: var(--tb-navy); line-height: 1.1; }
+.kpi-label { color: #6c7a89; font-size: .85rem; text-transform: uppercase; letter-spacing: .04em; }
+
+/* Barre de progression du suivi */
+.progression { display: flex; justify-content: space-between; position: relative; margin: 1.5rem 0 .5rem; }
+.progression::before { content: ""; position: absolute; top: 17px; inset-inline: 8%; height: 4px; background: #dfe6ee; z-index: 0; }
+.progression .barre { position: absolute; top: 17px; inset-inline-start: 8%; height: 4px; background: var(--tb-accent); z-index: 0; transition: width .4s; }
+.progression .pas { text-align: center; flex: 1; position: relative; z-index: 1; font-size: .82rem; color: #8695a6; }
+.progression .pas .rond { width: 38px; height: 38px; border-radius: 50%; background: #dfe6ee; color: #fff; display: flex; align-items: center; justify-content: center; margin: 0 auto .35rem; border: 3px solid var(--tb-bg); }
+.progression .pas.fait .rond { background: var(--tb-accent); }
+.progression .pas.actuel .rond { background: var(--tb-navy); box-shadow: 0 0 0 5px rgba(31,78,121,.18); }
+.progression .pas.fait, .progression .pas.actuel { color: #22313f; font-weight: 600; }
+
+.statut-gros { font-size: 1.8rem; font-weight: 800; color: var(--tb-navy); }
+.timeline { list-style: none; padding: 0; margin: 0; }
+.timeline li { position: relative; padding-inline-start: 1.6rem; padding-bottom: 1rem; border-inline-start: 2px solid #dfe6ee; margin-inline-start: .4rem; }
+.timeline li::before { content: ""; position: absolute; inset-inline-start: -7px; top: 3px; width: 12px; height: 12px; border-radius: 50%; background: var(--tb-navy); }
+.timeline li:last-child { border-color: transparent; }
+
+.map { height: 340px; border-radius: .75rem; z-index: 0; }
+.map-lg { height: 420px; }
+
+/* Assistant de réservation */
+.wizard { display: flex; gap: .5rem; margin-bottom: 1.5rem; }
+.wizard .w { flex: 1; padding: .6rem .5rem; border-radius: .6rem; background: #e9eef4; color: #6c7a89; font-size: .85rem; text-align: center; font-weight: 600; }
+.wizard .w.actif { background: var(--tb-navy); color: #fff; }
+.wizard .w.fait { background: #d6e6f6; color: var(--tb-navy); }
+.voyage-choix { cursor: pointer; transition: border-color .15s, box-shadow .15s; }
+.voyage-choix:hover { border-color: var(--tb-navy); }
+.voyage-choix:has(input:checked) { border-color: var(--tb-navy); box-shadow: 0 0 0 3px rgba(31,78,121,.18); background: #f3f8fd; }
+
+/* Transporteur : gros boutons pour le téléphone */
+.btn-geant { font-size: 1.25rem; padding: 1.1rem; border-radius: 1rem; font-weight: 700; }
+.retard { color: #c62828; font-weight: 700; }
+
+/* Admin */
+.gestion-nav .nav-link { color: #3c4b5c; border-radius: .5rem; padding: .55rem .85rem; }
+.gestion-nav .nav-link.active, .gestion-nav .nav-link:hover { background: #e6eef7; color: var(--tb-navy); font-weight: 600; }
+.calendrier td { vertical-align: top; height: 110px; width: 14.28%; font-size: .8rem; }
+.calendrier td.hors { background: #f7f9fb; color: #aab4bf; }
+.calendrier td.aujourdhui { background: #fff8ef; }
+.calendrier .ev { display: block; border-radius: .35rem; padding: 2px 5px; margin-top: 3px; color: #fff; text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.table thead th { font-size: .78rem; text-transform: uppercase; letter-spacing: .03em; color: #6c7a89; font-weight: 600; }
+.notif-non-lue { font-weight: 700; background: #f3f8fd; }
+.code-remise { font-family: ui-monospace, monospace; font-size: 1.8rem; letter-spacing: .35em; font-weight: 800; color: var(--tb-navy); }
+.numero { font-family: ui-monospace, SFMono-Regular, monospace; font-weight: 700; }
+footer { background: #12304d; color: rgba(255,255,255,.75); }
+footer a { color: rgba(255,255,255,.85); text-decoration: none; }
+footer a:hover { color: #fff; }
+.avis { font-style: italic; }
+.etoiles { color: var(--tb-accent); }
+@media (max-width: 575px) {
+  .progression .pas { font-size: .68rem; }
+  .progression .pas .rond { width: 30px; height: 30px; }
+  .progression::before, .progression .barre { top: 13px; }
+  .calendrier td { height: 70px; font-size: .7rem; }
+}
+:focus-visible { outline: 3px solid var(--tb-accent); outline-offset: 2px; }

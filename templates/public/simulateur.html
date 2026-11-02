@@ -1,0 +1,54 @@
+{% extends "base.html" %}{% load i18n %}
+{% block titre %}{% translate "Simulateur de prix" %}{% endblock %}
+{% block contenu %}
+<div class="container my-5">
+  <h1 class="section-titre h2 mb-1">{% translate "Simulateur de prix" %}</h1>
+  <p class="text-muted mb-4">{% translate "Un prix exact, avant même de créer un compte." %}</p>
+  <div class="row g-4">
+    <div class="col-lg-5">
+      <form class="carte carte-ombre p-4" method="get" action="{% url 'simulateur' %}"
+            hx-get="{% url 'simulateur' %}" hx-target="#resultat" hx-trigger="input delay:400ms, change, submit" hx-push-url="true">
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="{{ form.pays.id_for_label }}">{{ form.pays.label }}</label>
+          {{ form.pays }}
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="{{ form.ville.id_for_label }}">{{ form.ville.label }}</label>
+          {{ form.ville }}
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="{{ form.poids.id_for_label }}">{{ form.poids.label }}</label>
+          <div class="input-group">{{ form.poids }}<span class="input-group-text">kg</span></div>
+          {% for e in form.poids.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+        </div>
+        <fieldset class="mb-3">
+          <legend class="form-label fw-semibold fs-6">{% translate "Dimensions (optionnel)" %}</legend>
+          <div class="row g-2">
+            <div class="col">{{ form.longueur }}</div><div class="col">{{ form.largeur }}</div><div class="col">{{ form.hauteur }}</div>
+          </div>
+          <div class="form-text">{% translate "Longueur × largeur × hauteur, en cm" %}</div>
+        </fieldset>
+        <button class="btn btn-primary w-100"><i class="bi bi-calculator"></i> {% translate "Calculer" %}</button>
+      </form>
+    </div>
+    <div class="col-lg-7" id="resultat" aria-live="polite">
+      {% include "public/_resultat_simulation.html" %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  document.getElementById("id_longueur").placeholder = "L";
+  document.getElementById("id_largeur").placeholder = "l";
+  document.getElementById("id_hauteur").placeholder = "h";
+  var pays = document.getElementById("id_pays"), ville = document.getElementById("id_ville");
+  pays.addEventListener("change", function () {
+    fetch("{% url 'villes_pays' %}?pays=" + pays.value).then(r => r.text()).then(h => { ville.innerHTML = h; });
+  });
+  if (pays.value) {
+    var sel = ville.value;
+    fetch("{% url 'villes_pays' %}?pays=" + pays.value).then(r => r.text()).then(h => { ville.innerHTML = h; ville.value = sel; });
+  }
+</script>
+{% endblock %}

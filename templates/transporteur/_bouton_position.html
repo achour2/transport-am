@@ -1,0 +1,8 @@
+{% load i18n %}
+<form method="post" action="{% url 'transporteur_position' %}" class="form-position">{% csrf_token %}
+  <input type="hidden" name="voyage" value="{{ voyage.pk }}">
+  <input type="hidden" name="latitude"><input type="hidden" name="longitude">
+  <input type="hidden" name="next" value="{{ request.get_full_path }}">
+  <button type="button" class="btn btn-accent btn-geant w-100 btn-gps"><i class="bi bi-crosshair"></i> {% translate "Mettre à jour ma position" %}</button>
+  <div class="small text-muted mt-2 etat-gps" aria-live="polite"></div>
+</form>

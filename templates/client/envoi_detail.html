@@ -1,0 +1,87 @@
+{% extends "base.html" %}{% load i18n outils %}
+{% block titre %}{% translate "Envoi" %} {{ bagage.numero_suivi }}{% endblock %}
+{% block contenu %}
+<div class="container my-4 my-md-5">
+  <nav aria-label="breadcrumb"><ol class="breadcrumb small"><li class="breadcrumb-item"><a href="{% url 'client_tableau' %}">{% translate "Mon espace" %}</a></li><li class="breadcrumb-item active">{{ bagage.numero_suivi }}</li></ol></nav>
+
+  {% if bagage.choix_requis %}
+  <div class="carte border-danger p-4 mb-4">
+    <h2 class="h5 fw-bold text-danger"><i class="bi bi-exclamation-triangle"></i> {% translate "Votre voyage a été annulé" %}</h2>
+    <p>{% translate "Choisissez un autre voyage (même prix) ou un remboursement intégral." %}</p>
+    <form method="post" action="{% url 'client_choix' bagage.numero_suivi %}" class="row g-2 align-items-end">{% csrf_token %}
+      <div class="col-md-8">
+        <label class="form-label small" for="voyage">{% translate "Autre voyage" %}</label>
+        <select class="form-select" name="voyage" id="voyage" {% if not autres_voyages %}disabled{% endif %}>
+          {% for v in autres_voyages %}<option value="{{ v.pk }}">{{ v }} ({{ v.kilos_restants|floatformat:0 }} kg)</option>{% empty %}<option>{% translate "Aucun autre voyage disponible" %}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-md-4 d-grid"><button class="btn btn-primary" name="choix" value="deplacer" {% if not autres_voyages %}disabled{% endif %}>{% translate "Choisir ce voyage" %}</button></div>
+      <div class="col-12"><button class="btn btn-outline-danger" name="choix" value="rembourser">{% translate "Je préfère être remboursé" %}</button></div>
+    </form>
+  </div>
+  {% endif %}
+
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+    <div><div class="text-muted small">{% translate "Numéro de suivi" %}</div><h1 class="h4 numero mb-0">{{ bagage.numero_suivi }}</h1></div>
+    <div class="d-flex flex-wrap gap-2">
+      {% if paiement %}<a href="{% url 'client_recu' bagage.numero_suivi %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-file-earmark-pdf"></i> {% translate "Reçu PDF" %}</a>{% endif %}
+      <a href="{% url 'suivi_detail' bagage.numero_suivi %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-link-45deg"></i> {% translate "Page de suivi publique" %}</a>
+      <a href="{% url 'aide' %}#contact" class="btn btn-outline-secondary btn-sm"><i class="bi bi-headset"></i> {% translate "Contacter le service client" %}</a>
+      {% if bagage.annulable and not bagage.choix_requis %}
+      <form method="post" action="{% url 'client_annuler' bagage.numero_suivi %}" onsubmit="return confirm('{% translate "Annuler cet envoi ? Vous serez remboursé intégralement." %}')">{% csrf_token %}
+        <button class="btn btn-outline-danger btn-sm"><i class="bi bi-x-circle"></i> {% translate "Annuler" %}</button></form>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="carte carte-ombre p-4 mb-4">
+    <div class="statut-gros">{{ bagage.get_statut_display }}{% if bagage.statut_paiement == "rembourse" %} <span class="badge bg-info fs-6 align-middle">{% translate "Remboursé" %}</span>{% endif %}</div>
+    {% if bagage.statut not in "incident perdu annule" %}{% include "partials/_progression.html" %}{% endif %}
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="carte carte-ombre p-3 mb-4">{% include "partials/_carte.html" %}</div>
+      <div class="carte carte-ombre p-4">
+        <h2 class="h6 fw-bold mb-3">{% translate "Historique" %}</h2>
+        {% include "partials/_historique.html" %}
+      </div>
+    </div>
+    <div class="col-lg-4">
+      {% if bagage.est_actif and bagage.statut_paiement == "paye" %}
+      <div class="carte carte-ombre p-4 mb-4 text-center">
+        <div class="small text-muted">{% translate "Code de remise à transmettre au destinataire" %}</div>
+        <div class="code-remise my-2">{{ bagage.code_remise }}</div>
+        <div class="small text-muted">{% translate "Le bagage est remis uniquement contre ce code." %}</div>
+      </div>
+      {% endif %}
+      {% if bagage.statut == "enregistre" and not bagage.choix_requis %}
+      <div class="alert alert-info small">
+        <i class="bi bi-geo-alt"></i> <strong>{% translate "Déposez votre bagage" %}</strong> {% translate "au" %} {{ voyage.lieu_depot }}{% if voyage.heure_depot %} ({{ voyage.heure_depot }}){% endif %}<br>
+        {% translate "avant le" %} <strong>{{ voyage.date_limite_depot|tz:voyage.pays_depart.fuseau|date:"l j F, H\hi" }}</strong>
+      </div>
+      {% endif %}
+      <div class="carte carte-ombre p-4 mb-4">
+        <dl class="small mb-0">
+          <dt>{% translate "Trajet" %}</dt><dd>{{ voyage.ville_depart }} → {{ voyage.ville_arrivee }}</dd>
+          <dt>{% translate "Départ" %}</dt><dd>{{ voyage.depart|tz:voyage.pays_depart.fuseau|date:"d/m/Y H:i" }} ({{ voyage.pays_depart.fuseau|nom_tz }})</dd>
+          <dt>{% translate "Arrivée prévue" %}</dt><dd>{{ voyage.arrivee_prevue|tz:voyage.pays_arrivee.fuseau|date:"d/m/Y H:i" }} ({{ voyage.pays_arrivee.fuseau|nom_tz }})</dd>
+          <dt>{% translate "Contenu" %}</dt><dd>{{ bagage.description }} · {{ bagage.poids|floatformat:"-2" }} kg {% if bagage.dimensions %}· {{ bagage.dimensions }}{% endif %}</dd>
+          <dt>{% translate "Valeur déclarée" %}</dt><dd>{{ bagage.valeur_declaree|argent:bagage.devise }}</dd>
+          <dt>{% translate "Destinataire" %}</dt><dd>{{ bagage.dest_nom }}<br>{{ bagage.dest_telephone }}<br>{{ bagage.dest_adresse }}</dd>
+          <dt>{% translate "Paiement" %}</dt><dd>{{ bagage.prix|argent:bagage.devise }} — <span class="badge bg-{{ bagage.statut_paiement|couleur }}">{{ bagage.get_statut_paiement_display }}</span>{% if paiement %}<br><span class="text-muted">{% translate "Reçu" %} {{ paiement.numero_recu }}</span>{% endif %}</dd>
+        </dl>
+      </div>
+      {% if bagage.photo_depot or bagage.photo_livraison %}
+      <div class="carte carte-ombre p-3">
+        <div class="row g-2">
+          {% if bagage.photo_depot %}<div class="col-6"><img src="{{ bagage.photo_depot.url }}" class="img-fluid rounded" alt="{% translate 'Photo du bagage au dépôt' %}"><div class="small text-muted">{% translate "Dépôt" %}</div></div>{% endif %}
+          {% if bagage.photo_livraison %}<div class="col-6"><img src="{{ bagage.photo_livraison.url }}" class="img-fluid rounded" alt="{% translate 'Photo de la remise' %}"><div class="small text-muted">{% translate "Livraison" %}</div></div>{% endif %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}{% include "partials/_leaflet.html" %}{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "base.html" %}{% load i18n outils %}
+{% block titre %}{% translate "Mise à jour de la position" %}{% endblock %}
+{% block contenu %}
+<div class="container my-4" style="max-width:560px">
+  <h1 class="section-titre h4 mb-3">{% translate "Ma position" %}</h1>
+  {% if voyage %}
+  <div class="carte carte-ombre p-4">
+    <div class="fw-bold mb-1">{{ voyage.ville_depart.nom }} → {{ voyage.ville_arrivee.nom }}</div>
+    {% with p=voyage.derniere_position %}<div class="small text-muted mb-3">{% if p %}{% translate "Dernier envoi" %} : {{ p.envoyee_le|date:"H:i" }} ({{ p.envoyee_le|depuis }}){% else %}{% translate "Aucune position envoyée" %}{% endif %}</div>{% endwith %}
+    {% include "transporteur/_bouton_position.html" %}
+    <hr class="my-4">
+    <form method="post">{% csrf_token %}
+      <input type="hidden" name="voyage" value="{{ voyage.pk }}">
+      <p class="small fw-semibold mb-2">{% translate "Le GPS ne marche pas ? Saisissez le lieu :" %}</p>
+      <div class="mb-3"><label class="form-label small" for="lieu">{% translate "Nom du lieu" %}</label><input id="lieu" name="lieu" class="form-control" placeholder="ex. Aéroport de Montréal" required></div>
+      <div class="mb-3"><label class="form-label small" for="commentaire">{% translate "Commentaire" %}</label><input id="commentaire" name="commentaire" class="form-control"></div>
+      <button class="btn btn-primary w-100">{% translate "Envoyer" %}</button>
+    </form>
+  </div>
+  {% else %}
+  <div class="carte p-4 text-muted">{% translate "Aucun voyage en cours. La position s’envoie une fois le voyage démarré." %}</div>
+  {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}{% include "transporteur/_gps.html" %}{% endblock %}

@@ -1,0 +1,3 @@
+{% extends "comptes/_cadre.html" %}{% load i18n %}
+{% block cadre %}<h1 class="h4 fw-bold"><i class="bi bi-check-circle text-success"></i> {% translate "Mot de passe modifié" %}</h1>
+<a href="{% url 'connexion' %}" class="btn btn-primary mt-3">{% translate "Se connecter" %}</a>{% endblock %}

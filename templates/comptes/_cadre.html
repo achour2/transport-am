@@ -1,0 +1,8 @@
+{% extends "base.html" %}{% load i18n %}
+{% block contenu %}
+<div class="container my-5" style="max-width:{% block largeur %}480px{% endblock %}">
+  <div class="carte carte-ombre p-4 p-md-5">
+    {% block cadre %}{% endblock %}
+  </div>
+</div>
+{% endblock %}

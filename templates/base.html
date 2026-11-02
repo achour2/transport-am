@@ -1,0 +1,154 @@
+{% load static i18n %}<!doctype html>
+{% get_current_language as LANG %}{% get_current_language_bidi as RTL %}
+<html lang="{{ LANG }}" dir="{% if RTL %}rtl{% else %}ltr{% endif %}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titre %}{% translate "Transport de bagages entre pays" %}{% endblock %} · {{ parametres.nom_entreprise }}</title>
+  <meta name="description" content="{% translate 'Envoyez vos bagages et colis entre le Canada, l’Algérie, la France, le Maroc et la Tunisie. Réservation en ligne, suivi en temps réel.' %}">
+  {% if RTL %}
+  <link rel="stylesheet" href="{% static 'vendor/bootstrap/bootstrap.rtl.min.css' %}">
+  {% else %}
+  <link rel="stylesheet" href="{% static 'vendor/bootstrap/bootstrap.min.css' %}">
+  {% endif %}
+  <link rel="stylesheet" href="{% static 'vendor/bootstrap-icons/bootstrap-icons.min.css' %}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Noto+Sans+Arabic:wght@400;700&display=swap">
+  {% block head %}{% endblock %}
+  <link rel="stylesheet" href="{% static 'css/site.css' %}">
+</head>
+<body>
+<a class="visually-hidden-focusable btn btn-light position-absolute m-2" href="#contenu">{% translate "Aller au contenu" %}</a>
+<nav class="navbar navbar-expand-lg navbar-dark navbar-tb sticky-top">
+  <div class="container">
+    <a class="navbar-brand" href="{% url 'accueil' %}"><i class="bi bi-luggage-fill text-warning"></i> {{ parametres.nom_entreprise }}</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-controls="nav" aria-expanded="false" aria-label="{% translate 'Menu' %}">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="nav">
+      <ul class="navbar-nav me-auto">
+        {% if user.is_authenticated and user.est_transporteur %}
+          <li class="nav-item"><a class="nav-link" href="{% url 'transporteur_voyages' %}"><i class="bi bi-truck"></i> {% translate "Mes voyages" %}</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'transporteur_position' %}"><i class="bi bi-geo-alt"></i> {% translate "Ma position" %}</a></li>
+        {% elif user.is_authenticated and user.est_admin %}
+          <li class="nav-item"><a class="nav-link" href="{% url 'gestion_tableau' %}"><i class="bi bi-speedometer2"></i> {% translate "Gestion" %}</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'destinations' %}">{% translate "Destinations" %}</a></li>
+        {% else %}
+          <li class="nav-item"><a class="nav-link" href="{% url 'destinations' %}">{% translate "Destinations et tarifs" %}</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'simulateur' %}">{% translate "Simulateur" %}</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'suivi' %}">{% translate "Suivre un bagage" %}</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'aide' %}">{% translate "Aide" %}</a></li>
+        {% endif %}
+      </ul>
+      <ul class="navbar-nav align-items-lg-center gap-lg-1">
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-translate"></i> {{ LANG|upper }}</a>
+          <ul class="dropdown-menu dropdown-menu-end">
+            {% get_available_languages as LANGS %}
+            {% for code, nom in LANGS %}
+            <li>
+              <form action="{% url 'set_language' %}" method="post">{% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <button class="dropdown-item {% if code == LANG %}active{% endif %}" name="language" value="{{ code }}">{{ nom }}</button>
+              </form>
+            </li>
+            {% endfor %}
+          </ul>
+        </li>
+        {% if user.is_authenticated %}
+          <li class="nav-item position-relative">
+            <a class="nav-link" href="{% url 'notifications' %}" aria-label="{% translate 'Notifications' %}"><i class="bi bi-bell-fill"></i>
+              {% if notifs_non_lues %}<span class="badge rounded-pill bg-danger badge-notif">{{ notifs_non_lues }}</span>{% endif %}
+            </a>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-person-circle"></i> {{ user.first_name|default:user.email }}</a>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item" href="{{ user.espace_url }}">{% translate "Mon espace" %}</a></li>
+              {% if user.est_client %}
+              <li><a class="dropdown-item" href="{% url 'client_envoi_nouveau' %}">{% translate "Nouvel envoi" %}</a></li>
+              <li><a class="dropdown-item" href="{% url 'client_profil' %}">{% translate "Profil et préférences" %}</a></li>
+              {% endif %}
+              <li><a class="dropdown-item" href="{% url 'mdp_changer' %}">{% translate "Changer mon mot de passe" %}</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><form method="post" action="{% url 'deconnexion' %}">{% csrf_token %}<button class="dropdown-item text-danger">{% translate "Déconnexion" %}</button></form></li>
+            </ul>
+          </li>
+        {% else %}
+          <li class="nav-item"><a class="nav-link" href="{% url 'connexion' %}">{% translate "Connexion" %}</a></li>
+          <li class="nav-item"><a class="btn btn-accent btn-sm ms-lg-2" href="{% url 'client_envoi_nouveau' %}">{% translate "Envoyer un bagage" %}</a></li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+</nav>
+
+{% if user.is_authenticated and user.est_client and not user.email_confirme %}
+<div class="bg-warning-subtle border-bottom small py-2">
+  <div class="container d-flex flex-wrap gap-2 align-items-center">
+    <i class="bi bi-envelope-exclamation"></i> {% translate "Confirmez votre courriel pour sécuriser votre compte." %}
+    <a href="{% url 'renvoyer_confirmation' %}">{% translate "Renvoyer le lien" %}</a>
+  </div>
+</div>
+{% endif %}
+
+<main id="contenu">
+  {% if messages %}
+  <div class="container mt-3">
+    {% for m in messages %}
+    <div class="alert alert-{% if m.tags == 'error' %}danger{% else %}{{ m.tags|default:'info' }}{% endif %} alert-dismissible fade show" role="alert">
+      {{ m }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% block contenu %}{% endblock %}
+</main>
+
+<footer class="mt-5 pt-5 pb-4">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="h5 text-white fw-bold"><i class="bi bi-luggage-fill text-warning"></i> {{ parametres.nom_entreprise }}</div>
+        <p class="small">{% translate "Vos bagages et colis entre le Canada et le Maghreb / l’Europe, suivis en temps réel." %}</p>
+      </div>
+      <div class="col-6 col-md-2">
+        <div class="fw-semibold text-white mb-2">{% translate "Service" %}</div>
+        <ul class="list-unstyled small">
+          <li><a href="{% url 'destinations' %}">{% translate "Destinations" %}</a></li>
+          <li><a href="{% url 'simulateur' %}">{% translate "Simulateur" %}</a></li>
+          <li><a href="{% url 'suivi' %}">{% translate "Suivi" %}</a></li>
+        </ul>
+      </div>
+      <div class="col-6 col-md-2">
+        <div class="fw-semibold text-white mb-2">{% translate "Aide" %}</div>
+        <ul class="list-unstyled small">
+          <li><a href="{% url 'aide' %}">FAQ</a></li>
+          <li><a href="{% url 'aide' %}#contact">{% translate "Contact" %}</a></li>
+          <li><a href="{% url 'conditions' %}">{% translate "Conditions et confidentialité" %}</a></li>
+        </ul>
+      </div>
+      <div class="col-md-4 small">
+        <div class="fw-semibold text-white mb-2">{% translate "Point de dépôt" %}</div>
+        <div><i class="bi bi-geo-alt"></i> {{ parametres.adresse_depot }}</div>
+        <div><i class="bi bi-clock"></i> {{ parametres.horaires }}</div>
+        <div><i class="bi bi-telephone"></i> {{ parametres.telephone }} · <i class="bi bi-envelope"></i> {{ parametres.courriel }}</div>
+        <div class="mt-2 fs-5 d-flex gap-3">
+          <a href="#" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+          <a href="#" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+          <a href="#" aria-label="WhatsApp"><i class="bi bi-whatsapp"></i></a>
+        </div>
+      </div>
+    </div>
+    <hr class="border-secondary">
+    <div class="small">© {% now "Y" %} {{ parametres.nom_entreprise }}</div>
+  </div>
+</footer>
+<script src="{% static 'vendor/bootstrap/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'vendor/htmx/htmx.min.js' %}"></script>
+<script>
+document.querySelectorAll("main input[type=password]:not(.form-control), main input[type=email]:not(.form-control)").forEach(function (el) { el.classList.add("form-control"); });
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

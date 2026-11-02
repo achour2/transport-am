@@ -1,0 +1,11 @@
+{% load i18n %}
+<div id="{{ id_carte|default:'carte' }}" class="map {{ classe_carte }}" role="img" aria-label="{% translate 'Carte du trajet' %}"></div>
+<script>
+window.cartes = window.cartes || [];
+window.cartes.push({
+  id: "{{ id_carte|default:'carte' }}",
+  depart: {% if voyage.ville_depart.latitude is not None %}[{{ voyage.ville_depart.latitude|stringformat:"f" }}, {{ voyage.ville_depart.longitude|stringformat:"f" }}, "{{ voyage.ville_depart.nom|escapejs }}"]{% else %}null{% endif %},
+  arrivee: {% if voyage.ville_arrivee.latitude is not None %}[{{ voyage.ville_arrivee.latitude|stringformat:"f" }}, {{ voyage.ville_arrivee.longitude|stringformat:"f" }}, "{{ voyage.ville_arrivee.nom|escapejs }}"]{% else %}null{% endif %},
+  positions: [{% for p in positions %}{% if p.latitude is not None %}[{{ p.latitude|stringformat:"f" }}, {{ p.longitude|stringformat:"f" }}, "{{ p.lieu|default:''|escapejs }}", "{{ p.envoyee_le|date:'d/m H:i' }}"],{% endif %}{% endfor %}]
+});
+</script>

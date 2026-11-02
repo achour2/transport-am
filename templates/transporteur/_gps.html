@@ -1,0 +1,17 @@
+<script>
+document.querySelectorAll(".form-position").forEach(function (f) {
+  var btn = f.querySelector(".btn-gps"), etat = f.querySelector(".etat-gps");
+  btn.addEventListener("click", function () {
+    if (!navigator.geolocation) { etat.textContent = "GPS indisponible : saisissez le lieu à la main."; return; }
+    btn.disabled = true; etat.textContent = "Récupération de la position GPS…";
+    navigator.geolocation.getCurrentPosition(function (pos) {
+      f.latitude.value = pos.coords.latitude.toFixed(6);
+      f.longitude.value = pos.coords.longitude.toFixed(6);
+      etat.textContent = "Envoi…"; f.submit();
+    }, function () {
+      btn.disabled = false;
+      etat.innerHTML = "Le GPS ne répond pas. <a href='{% url 'transporteur_position' %}'>Saisir le lieu à la main</a>.";
+    }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 });
+  });
+});
+</script>

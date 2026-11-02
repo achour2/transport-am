@@ -1,0 +1,14 @@
+{% extends "gestion/_base.html" %}
+{% block titre %}Messages{% endblock %}
+{% block gestion %}
+<h1 class="section-titre h3 mb-3">Messages de contact</h1>
+{% for m in liste %}
+<div class="carte carte-ombre p-3 mb-2 {% if not m.traite %}border-primary{% endif %}">
+  <div class="d-flex justify-content-between gap-2">
+    <div><strong>{{ m.sujet }}</strong> — {{ m.nom }} &lt;<a href="mailto:{{ m.courriel }}?subject=Re: {{ m.sujet|urlencode }}">{{ m.courriel }}</a>&gt;<div class="small text-muted">{{ m.cree_le|date:"d/m/Y H:i" }}</div></div>
+    {% if not m.traite %}<form method="post">{% csrf_token %}<input type="hidden" name="pk" value="{{ m.pk }}"><button class="btn btn-sm btn-outline-success">Marquer traité</button></form>{% else %}<span class="badge bg-success align-self-start">Traité</span>{% endif %}
+  </div>
+  <p class="mb-0 mt-2 small" style="white-space:pre-line">{{ m.message }}</p>
+</div>
+{% empty %}<p class="text-muted">Aucun message.</p>{% endfor %}
+{% endblock %}

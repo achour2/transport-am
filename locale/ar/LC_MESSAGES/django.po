@@ -1,0 +1,410 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: ar\n"
+
+msgid "Actualiser"
+msgstr "تحديث"
+
+msgid "Aide"
+msgstr "مساعدة"
+
+msgid "Aller au contenu"
+msgstr "انتقل إلى المحتوى"
+
+msgid "Annuler"
+msgstr "إلغاء"
+
+msgid "Annulé"
+msgstr "ملغى"
+
+msgid "Apportez votre bagage au point de dépôt avant la date limite."
+msgstr "أحضر أمتعتك إلى نقطة الإيداع قبل الموعد النهائي."
+
+msgid "Arrivé"
+msgstr "وصل"
+
+msgid "Arrivé à destination"
+msgstr "وصل إلى الوجهة"
+
+msgid "Arrivée"
+msgstr "الوصول"
+
+msgid "Arrivée prévue"
+msgstr "الوصول المتوقع"
+
+msgid "Aucun départ planifié pour le moment. Revenez bientôt !"
+msgstr "لا توجد رحلات مبرمجة حالياً. عد قريباً!"
+
+msgid "Aucun voyage disponible pour ce poids pour l’instant."
+msgstr "لا توجد رحلة متاحة لهذا الوزن حالياً."
+
+msgid "Aucun événement pour le moment."
+msgstr "لا توجد أحداث بعد."
+
+msgid "Aucune destination."
+msgstr "لا توجد وجهات."
+
+msgid "Avion"
+msgstr "طائرة"
+
+msgid "Bagage"
+msgstr "الأمتعة"
+
+msgid "Bateau"
+msgstr "سفينة"
+
+msgid "Calculer"
+msgstr "احسب"
+
+msgid "Camion"
+msgstr "شاحنة"
+
+msgid "Carte du trajet"
+msgstr "خريطة المسار"
+
+msgid "Changer mon mot de passe"
+msgstr "تغيير كلمة المرور"
+
+msgid "Chargé"
+msgstr "تم التحميل"
+
+msgid "Choisissez le voyage, décrivez le bagage, payez par carte."
+msgstr "اختر الرحلة، صف الأمتعة، وادفع بالبطاقة."
+
+msgid "Choisissez un pays et saisissez le poids : le prix s’affiche instantanément."
+msgstr "اختر بلداً وأدخل الوزن: يظهر السعر فوراً."
+
+msgid "Code de remise à transmettre au destinataire"
+msgstr "رمز التسليم لإعطائه للمستلم"
+
+msgid "Comment ça marche"
+msgstr "كيف يعمل"
+
+msgid "Complet"
+msgstr "مكتمل"
+
+msgid "Conditions et confidentialité"
+msgstr "الشروط والخصوصية"
+
+msgid "Confirmez votre courriel pour sécuriser votre compte."
+msgstr "أكّد بريدك الإلكتروني لتأمين حسابك."
+
+msgid "Connexion"
+msgstr "تسجيل الدخول"
+
+msgid "Contact"
+msgstr "اتصل بنا"
+
+msgid "Continuer"
+msgstr "متابعة"
+
+msgid "Courriel"
+msgstr "البريد الإلكتروني"
+
+msgid "Courriel ou mot de passe incorrect."
+msgstr "البريد الإلكتروني أو كلمة المرور غير صحيحة."
+
+msgid "Créer un compte"
+msgstr "إنشاء حساب"
+
+msgid "Dernière position"
+msgstr "آخر موقع"
+
+msgid "Destinataire"
+msgstr "المستلم"
+
+msgid "Destination"
+msgstr "الوجهة"
+
+msgid "Destinations"
+msgstr "الوجهات"
+
+msgid "Destinations et tarifs"
+msgstr "الوجهات والأسعار"
+
+msgid "Dimensions (optionnel)"
+msgstr "الأبعاد (اختياري)"
+
+msgid "Documents demandés à la douane"
+msgstr "الوثائق المطلوبة في الجمارك"
+
+msgid "Déconnexion"
+msgstr "تسجيل الخروج"
+
+msgid "Délai"
+msgstr "المدة"
+
+msgid "Délai estimé"
+msgstr "المدة المقدرة"
+
+msgid "Départ"
+msgstr "المغادرة"
+
+msgid "Déposer"
+msgstr "الإيداع"
+
+msgid "Déposé"
+msgstr "تم الإيداع"
+
+msgid "En cours"
+msgstr "جارية"
+
+msgid "En transit"
+msgstr "في الطريق"
+
+msgid "Enregistrer"
+msgstr "حفظ"
+
+msgid "Enregistré"
+msgstr "مسجّل"
+
+msgid "Envois en cours"
+msgstr "الإرساليات الجارية"
+
+msgid "Envoyer un bagage"
+msgstr "أرسل أمتعة"
+
+msgid "Envoyez vos bagages entre pays"
+msgstr "أرسل أمتعتك بين البلدان"
+
+msgid "Envoyez vos bagages et colis entre le Canada, l’Algérie, la France, le Maroc et la Tunisie. Réservation en ligne, suivi en temps réel."
+msgstr "أرسل أمتعتك وطرودك بين كندا والجزائر وفرنسا والمغرب وتونس. حجز عبر الإنترنت وتتبع مباشر."
+
+msgid "Filtrer par pays"
+msgstr "تصفية حسب البلد"
+
+msgid "Frais fixes"
+msgstr "رسوم ثابتة"
+
+msgid "Gestion"
+msgstr "الإدارة"
+
+msgid "Historique"
+msgstr "السجل"
+
+msgid "Ils nous font confiance"
+msgstr "يثقون بنا"
+
+msgid "Incident en cours"
+msgstr "حادث قيد المعالجة"
+
+msgid "Kilos restants"
+msgstr "الكيلوغرامات المتبقية"
+
+msgid "La position du voyage s’affichera dès que le bagage sera en transit."
+msgstr "سيظهر موقع الرحلة بمجرد أن تكون الأمتعة في الطريق."
+
+msgid "Le destinataire présente son code à 6 chiffres et récupère le bagage."
+msgstr "يقدّم المستلم رمزه المكون من 6 أرقام ويستلم الأمتعة."
+
+msgid "Le numéro de suivi figure dans votre courriel de confirmation."
+msgstr "رقم التتبع موجود في بريد التأكيد."
+
+msgid "Lien copié"
+msgstr "تم نسخ الرابط"
+
+msgid "Livré"
+msgstr "تم التسليم"
+
+msgid "Longueur × largeur × hauteur, en cm"
+msgstr "الطول × العرض × الارتفاع، بالسنتيمتر"
+
+msgid "Ma position"
+msgstr "موقعي"
+
+msgid "Max"
+msgstr "الحد الأقصى"
+
+msgid "Menu"
+msgstr "القائمة"
+
+msgid "Mes voyages"
+msgstr "رحلاتي"
+
+msgid "Mettre à jour ma position"
+msgstr "تحديث موقعي"
+
+msgid "Mon espace"
+msgstr "حسابي"
+
+msgid "Mot de passe"
+msgstr "كلمة المرور"
+
+msgid "Mot de passe oublié ?"
+msgstr "نسيت كلمة المرور؟"
+
+msgid "Notifications"
+msgstr "الإشعارات"
+
+msgid "Nouvel envoi"
+msgstr "إرسال جديد"
+
+msgid "Numéro de suivi"
+msgstr "رقم التتبع"
+
+msgid "Objets interdits"
+msgstr "المواد الممنوعة"
+
+msgid "Paiement"
+msgstr "الدفع"
+
+msgid "Par kilo"
+msgstr "للكيلو"
+
+msgid "Partager le lien"
+msgstr "مشاركة الرابط"
+
+msgid "Pas encore de compte ?"
+msgstr "ليس لديك حساب؟"
+
+msgid "Payer"
+msgstr "ادفع"
+
+msgid "Pays desservis"
+msgstr "البلدان المخدومة"
+
+msgid "Perdu"
+msgstr "مفقود"
+
+msgid "Planifié"
+msgstr "مبرمج"
+
+msgid "Point de dépôt"
+msgstr "نقطة الإيداع"
+
+msgid "Prix = frais fixes + (poids × tarif par kilo). Départs depuis le Canada."
+msgstr "السعر = رسوم ثابتة + (الوزن × السعر للكيلو). المغادرة من كندا."
+
+msgid "Prix total"
+msgstr "السعر الإجمالي"
+
+msgid "Prochain départ"
+msgstr "المغادرة القادمة"
+
+msgid "Prochains départs"
+msgstr "المغادرات القادمة"
+
+msgid "Prochains voyages disponibles"
+msgstr "الرحلات المتاحة القادمة"
+
+msgid "Profil et préférences"
+msgstr "الملف الشخصي والتفضيلات"
+
+msgid "Progression du bagage"
+msgstr "تقدم الأمتعة"
+
+msgid "Recevoir"
+msgstr "الاستلام"
+
+msgid "Renvoyer le lien"
+msgstr "إعادة إرسال الرابط"
+
+msgid "Retour"
+msgstr "رجوع"
+
+msgid "Reçu PDF"
+msgstr "إيصال PDF"
+
+msgid "Récapitulatif"
+msgstr "الملخص"
+
+msgid "Réserver"
+msgstr "احجز"
+
+msgid "Réserver ce prix"
+msgstr "احجز بهذا السعر"
+
+msgid "Réserver vers ce pays"
+msgstr "احجز إلى هذا البلد"
+
+msgid "Réservez en moins de 3 minutes, déposez votre bagage, et suivez-le sur la carte jusqu’à sa remise au destinataire."
+msgstr "احجز في أقل من 3 دقائق، أودِع أمتعتك، وتابعها على الخريطة حتى تسليمها للمستلم."
+
+msgid "Saisissez le numéro de suivi reçu par courriel (ex. BG-7F3K9Q2A)."
+msgstr "أدخل رقم التتبع الذي وصلك بالبريد (مثال BG-7F3K9Q2A)."
+
+msgid "Se connecter"
+msgstr "دخول"
+
+msgid "Service"
+msgstr "الخدمة"
+
+msgid "Simulateur"
+msgstr "حاسبة السعر"
+
+msgid "Simulateur de prix"
+msgstr "حاسبة السعر"
+
+msgid "Simuler"
+msgstr "احسب السعر"
+
+msgid "Simuler un prix"
+msgstr "احسب السعر"
+
+msgid "Suivez le trajet sur la carte, notifié à chaque étape."
+msgstr "تابع المسار على الخريطة مع إشعار في كل مرحلة."
+
+msgid "Suivi"
+msgstr "التتبع"
+
+msgid "Suivi en temps réel · Paiement sécurisé"
+msgstr "تتبع مباشر · دفع آمن"
+
+msgid "Suivre"
+msgstr "تتبع"
+
+msgid "Suivre mon bagage"
+msgstr "تتبع أمتعتي"
+
+msgid "Suivre un bagage"
+msgstr "تتبع أمتعة"
+
+msgid "S’abonner"
+msgstr "اشترك"
+
+msgid "Terminé"
+msgstr "منتهية"
+
+msgid "Total"
+msgstr "المجموع"
+
+msgid "Tous les pays"
+msgstr "كل البلدان"
+
+msgid "Toutes les destinations"
+msgstr "كل الوجهات"
+
+msgid "Transport de bagages entre pays"
+msgstr "نقل الأمتعة بين البلدان"
+
+msgid "Un prix exact, avant même de créer un compte."
+msgstr "سعر دقيق قبل إنشاء حساب."
+
+msgid "Volume"
+msgstr "الحجم"
+
+msgid "Vos bagages arrivent. Vous savez où ils sont."
+msgstr "أمتعتك تصل. وأنت تعرف أين هي."
+
+msgid "Vos bagages et colis entre le Canada et le Maghreb / l’Europe, suivis en temps réel."
+msgstr "أمتعتك وطرودك بين كندا والمغرب العربي / أوروبا، مع تتبع مباشر."
+
+msgid "frais fixes"
+msgstr "رسوم ثابتة"
+
+msgid "mise à jour"
+msgstr "تم التحديث"
+
+msgid "restants"
+msgstr "متبقية"
+
+msgid "Être prévenu par courriel"
+msgstr "استلم الإشعارات بالبريد"
+
+msgid "à partir de"
+msgstr "ابتداءً من"
+
+msgid "à venir"
+msgstr "قريباً"
+

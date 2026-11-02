@@ -1,0 +1,14 @@
+{% extends "comptes/_cadre.html" %}{% load i18n %}
+{% block titre %}{% translate "Connexion" %}{% endblock %}
+{% block cadre %}
+<h1 class="h3 fw-bold mb-4 text-center">{% translate "Connexion" %}</h1>
+<form method="post" novalidate>{% csrf_token %}
+  {% if form.errors %}<div class="alert alert-danger small">{% translate "Courriel ou mot de passe incorrect." %}</div>{% endif %}
+  <div class="mb-3"><label class="form-label fw-semibold" for="id_username">{% translate "Courriel" %}</label>{{ form.username }}</div>
+  <div class="mb-2"><label class="form-label fw-semibold" for="id_password">{% translate "Mot de passe" %}</label>{{ form.password }}</div>
+  <div class="text-end mb-3"><a href="{% url 'mdp_oublie' %}" class="small">{% translate "Mot de passe oublié ?" %}</a></div>
+  <input type="hidden" name="next" value="{{ next }}">
+  <button class="btn btn-primary w-100 btn-lg">{% translate "Se connecter" %}</button>
+</form>
+<p class="text-center mt-4 mb-0">{% translate "Pas encore de compte ?" %} <a href="{% url 'inscription' %}{% if next %}?next={{ next|urlencode }}{% endif %}">{% translate "Créer un compte" %}</a></p>
+{% endblock %}

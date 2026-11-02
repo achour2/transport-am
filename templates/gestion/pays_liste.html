@@ -1,0 +1,38 @@
+{% extends "gestion/_base.html" %}{% load outils %}
+{% block titre %}Pays et tarifs{% endblock %}
+{% block gestion %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="section-titre h3 mb-0">Pays et tarifs</h1>
+  <a href="{% url 'gestion_pays_ajouter' %}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Ajouter un pays</a>
+</div>
+<div class="carte carte-ombre table-responsive">
+  <table class="table table-hover align-middle mb-0">
+    <thead><tr><th>Pays</th><th>Villes</th><th class="text-end">Frais fixes</th><th class="text-end">Tarif / kg</th><th class="text-end">Poids max</th><th>Délai</th><th class="text-center">Voyages</th><th>Actif</th><th></th></tr></thead>
+    <tbody>
+    {% for p in pays_list %}
+    <tr class="{% if not p.actif %}text-muted{% endif %}">
+      <td><span class="fs-5">{{ p.drapeau }}</span> <strong>{{ p.nom }}</strong> <span class="small text-muted">{{ p.code }} · {{ p.devise }}</span></td>
+      <td class="small">{% for v in p.villes.all %}{{ v.nom }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+      <td class="text-end">{{ p.frais_fixes|argent:p.devise }}</td>
+      <td class="text-end">{{ p.tarif_kg|argent:p.devise }}</td>
+      <td class="text-end">{{ p.poids_max|floatformat:0 }} kg</td>
+      <td class="small">{{ p.delai_texte }}</td>
+      <td class="text-center">{{ p.nb_voyages }}</td>
+      <td>
+        <form method="post" action="{% url 'gestion_pays_basculer' p.pk %}">{% csrf_token %}
+          <div class="form-check form-switch mb-0"><input class="form-check-input" type="checkbox" role="switch" {% if p.actif %}checked{% endif %} onchange="this.form.submit()" aria-label="Activer {{ p.nom }}"></div>
+        </form>
+      </td>
+      <td class="text-end text-nowrap">
+        <a href="{% url 'gestion_pays_modifier' p.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+        <form method="post" action="{% url 'gestion_pays_supprimer' p.pk %}" class="d-inline" onsubmit="return confirm('{% if p.nb_voyages %}Ce pays est utilisé par des voyages : il sera désactivé.{% else %}Supprimer {{ p.nom }} ?{% endif %}')">{% csrf_token %}
+          <button class="btn btn-sm btn-outline-danger" aria-label="Supprimer"><i class="bi bi-trash"></i></button></form>
+      </td>
+    </tr>
+    {% empty %}<tr><td colspan="9" class="text-muted">Aucun pays.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+<p class="small text-muted mt-2">Modifier un tarif ne change pas le prix des envois déjà payés. Un pays utilisé par des voyages ne peut pas être supprimé : il est désactivé.</p>
+{% endblock %}

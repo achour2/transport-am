@@ -1,0 +1,36 @@
+{% extends "base.html" %}{% load i18n %}
+{% block titre %}{% translate "FAQ et contact" %}{% endblock %}
+{% block contenu %}
+<div class="container my-5">
+  <h1 class="section-titre h2 mb-4">{% translate "Questions fréquentes" %}</h1>
+  <div class="row g-4">
+    <div class="col-lg-7">
+      {% for theme, questions in faq %}
+      <h2 class="h5 fw-bold mt-3">{{ theme }}</h2>
+      <div class="accordion mb-3" id="faq{{ forloop.counter }}">
+        {% for q, r in questions %}
+        <div class="accordion-item">
+          <h3 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#q{{ forloop.parentloop.counter }}-{{ forloop.counter }}">{{ q }}</button></h3>
+          <div id="q{{ forloop.parentloop.counter }}-{{ forloop.counter }}" class="accordion-collapse collapse" data-bs-parent="#faq{{ forloop.parentloop.counter }}"><div class="accordion-body">{{ r }}</div></div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endfor %}
+    </div>
+    <div class="col-lg-5" id="contact">
+      <div class="carte carte-ombre p-4 mb-4">
+        <h2 class="h5 fw-bold">{% translate "Nous joindre" %}</h2>
+        <p class="mb-1"><i class="bi bi-telephone text-primary"></i> {{ parametres.telephone }}</p>
+        <p class="mb-1"><i class="bi bi-envelope text-primary"></i> {{ parametres.courriel }}</p>
+        <p class="mb-1"><i class="bi bi-geo-alt text-primary"></i> {% translate "Point de dépôt" %} : {{ parametres.adresse_depot }}</p>
+        <p class="mb-0"><i class="bi bi-clock text-primary"></i> {{ parametres.horaires }}</p>
+      </div>
+      <form method="post" class="carte carte-ombre p-4" novalidate>{% csrf_token %}
+        <h2 class="h5 fw-bold mb-3">{% translate "Envoyer un message" %}</h2>
+        {% include "partials/_form.html" %}
+        <button class="btn btn-primary w-100">{% translate "Envoyer" %}</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

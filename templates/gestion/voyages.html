@@ -1,0 +1,73 @@
+{% extends "gestion/_base.html" %}{% load outils %}
+{% block titre %}Voyages et calendrier{% endblock %}
+{% block gestion %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <h1 class="section-titre h3 mb-0">Voyages et calendrier</h1>
+  <div class="d-flex gap-2">
+    <div class="btn-group">
+      <a href="?vue=liste" class="btn btn-sm btn-outline-primary {% if vue == 'liste' %}active{% endif %}"><i class="bi bi-list-ul"></i> Liste</a>
+      <a href="?vue=calendrier" class="btn btn-sm btn-outline-primary {% if vue == 'calendrier' %}active{% endif %}"><i class="bi bi-calendar3"></i> Calendrier</a>
+    </div>
+    <a href="{% url 'gestion_voyage_creer' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Créer un voyage</a>
+  </div>
+</div>
+
+{% if vue == "calendrier" %}
+<div class="carte carte-ombre p-3">
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <a class="btn btn-sm btn-light" href="?vue=calendrier&annee={{ prec.year }}&mois={{ prec.month }}"><i class="bi bi-chevron-left"></i></a>
+    <h2 class="h5 mb-0 text-capitalize">{{ titre_mois }}</h2>
+    <a class="btn btn-sm btn-light" href="?vue=calendrier&annee={{ suiv.year }}&mois={{ suiv.month }}"><i class="bi bi-chevron-right"></i></a>
+  </div>
+  <div class="table-responsive">
+  <table class="table table-bordered calendrier mb-0">
+    <thead><tr>{% for j in "LMMJVSD" %}<th class="text-center">{{ j }}</th>{% endfor %}</tr></thead>
+    <tbody>
+    {% for semaine in semaines %}<tr>
+      {% for jour, liste, du_mois in semaine %}
+      <td class="{% if not du_mois %}hors{% endif %} {% if jour == aujourdhui %}aujourdhui{% endif %}">
+        <div class="fw-semibold">{{ jour.day }}</div>
+        {% for v in liste %}
+        <a class="ev bg-{{ v.statut|couleur }}" href="{% url 'gestion_voyage_modifier' v.pk %}" title="{{ v }} — {{ v.kilos_reserves|floatformat:0 }}/{{ v.capacite_kg|floatformat:0 }} kg">{{ v.depart|date:"H:i" }} {{ v.ville_depart.nom|slice:":3" }}→{{ v.ville_arrivee.nom }}</a>
+        {% endfor %}
+      </td>
+      {% endfor %}
+    </tr>{% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+{% else %}
+<div class="d-flex flex-wrap gap-2 mb-3">
+  <a href="{% url_param quand='a_venir' page=1 %}" class="btn btn-sm {% if quand == 'a_venir' %}btn-primary{% else %}btn-light{% endif %}">À venir</a>
+  <a href="{% url_param quand='tous' page=1 %}" class="btn btn-sm {% if quand == 'tous' %}btn-primary{% else %}btn-light{% endif %}">Tous</a>
+  <span class="vr"></span>
+  <a href="{% url_param statut='' page=1 %}" class="btn btn-sm {% if not statut %}btn-secondary{% else %}btn-light{% endif %}">Tous statuts</a>
+  {% for code, lib in statuts %}<a href="{% url_param statut=code page=1 %}" class="btn btn-sm {% if statut == code %}btn-secondary{% else %}btn-light{% endif %}">{{ lib }}</a>{% endfor %}
+</div>
+<div class="carte carte-ombre table-responsive">
+  <table class="table table-hover align-middle mb-0">
+    <thead><tr><th>Trajet</th><th>Départ</th><th>Arrivée prévue</th><th>Transporteur</th><th>Remplissage</th><th>Statut</th><th></th></tr></thead>
+    <tbody>
+    {% for v in voyages %}
+    <tr>
+      <td><strong>{{ v.pays_depart.drapeau }} {{ v.ville_depart.nom }} → {{ v.pays_arrivee.drapeau }} {{ v.ville_arrivee.nom }}</strong><div class="small text-muted">{{ v.get_moyen_display }}</div></td>
+      <td class="small">{{ v.depart|tz:v.pays_depart.fuseau|date:"d/m/Y H:i" }}</td>
+      <td class="small">{{ v.arrivee_prevue|tz:v.pays_arrivee.fuseau|date:"d/m/Y H:i" }}</td>
+      <td class="small">{{ v.transporteur|default:"<span class='text-danger'>Non assigné</span>" }}</td>
+      <td style="min-width:140px"><div class="small">{{ v.kilos_reserves|floatformat:0 }} / {{ v.capacite_kg|floatformat:0 }} kg</div>
+        <div class="progress" style="height:5px"><div class="progress-bar {% if v.taux_remplissage >= 90 %}bg-danger{% else %}bg-warning{% endif %}" style="width:{{ v.taux_remplissage }}%"></div></div></td>
+      <td><span class="badge bg-{{ v.statut|couleur }}">{{ v.etat_affiche }}</span></td>
+      <td class="text-end text-nowrap">
+        <a href="{% url 'gestion_voyage_modifier' v.pk %}" class="btn btn-sm btn-outline-primary" title="Modifier"><i class="bi bi-pencil"></i></a>
+        <a href="{% url 'gestion_voyage_dupliquer' v.pk %}" class="btn btn-sm btn-outline-secondary" title="Dupliquer (+7 jours)"><i class="bi bi-copy"></i></a>
+      </td>
+    </tr>
+    {% empty %}<tr><td colspan="7" class="text-muted">Aucun voyage.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "gestion/_pagination.html" with page=voyages %}
+{% endif %}
+{% endblock %}

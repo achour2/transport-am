@@ -1,0 +1,81 @@
+{% extends "gestion/_base.html" %}{% load static outils %}
+{% block titre %}Tableau de bord{% endblock %}
+{% block gestion %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <h1 class="section-titre h3 mb-0">Tableau de bord</h1>
+  <div class="d-flex gap-2">
+    <a href="{% url 'gestion_voyage_creer' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Créer un voyage</a>
+    <a href="{% url 'gestion_export' %}" class="btn btn-outline-success btn-sm"><i class="bi bi-file-earmark-excel"></i> Exporter en Excel</a>
+  </div>
+</div>
+<div class="row g-3 mb-4">
+  <div class="col-6 col-xl-3"><div class="carte carte-ombre p-3 h-100"><div class="kpi-label">Envois du mois</div><div class="kpi">{{ nb_envois }}</div></div></div>
+  <div class="col-6 col-xl-3"><div class="carte carte-ombre p-3 h-100"><div class="kpi-label">Revenus du mois</div>
+    {% for r in revenus %}<div class="kpi">{{ r.t|argent:r.devise }}</div>{% empty %}<div class="kpi">0</div>{% endfor %}</div></div>
+  <div class="col-6 col-xl-3"><div class="carte carte-ombre p-3 h-100"><div class="kpi-label">Kilos transportés</div><div class="kpi">{{ kilos|floatformat:0 }} kg</div></div></div>
+  <div class="col-6 col-xl-3"><div class="carte carte-ombre p-3 h-100"><div class="kpi-label">Voyages en cours</div><div class="kpi">{{ en_cours|length }}</div></div></div>
+</div>
+
+{% if sans_position or incidents or presque_complets or messages_contact %}
+<div class="carte carte-ombre p-3 mb-4 border-warning">
+  <h2 class="h6 fw-bold"><i class="bi bi-bell text-warning"></i> Alertes</h2>
+  <ul class="list-unstyled mb-0 small">
+    {% for v in sans_position %}<li class="text-danger mb-1"><i class="bi bi-geo-alt"></i> Aucune position depuis {{ v.minutes_depuis_position|default:0|floatformat:0 }} min — {{ v }} ({{ v.transporteur }}) <a href="{% url 'gestion_voyage_modifier' v.pk %}">voir</a></li>{% endfor %}
+    {% for i in incidents %}<li class="text-danger mb-1"><i class="bi bi-exclamation-octagon"></i> Incident « {{ i.get_type_display }} » — {% if i.bagage %}{{ i.bagage.numero_suivi }}{% else %}{{ i.voyage }}{% endif %} <a href="{% url 'gestion_incidents' %}">traiter</a></li>{% endfor %}
+    {% for v in presque_complets %}<li class="text-warning-emphasis mb-1"><i class="bi bi-box-seam"></i> Presque complet ({{ v.taux_remplissage }} %) — {{ v }}</li>{% endfor %}
+    {% if messages_contact %}<li><i class="bi bi-chat-left-text"></i> {{ messages_contact }} message(s) de contact non traité(s) <a href="{% url 'gestion_messages' %}">voir</a></li>{% endif %}
+  </ul>
+</div>
+{% endif %}
+
+<div class="row g-4">
+  <div class="col-xl-7">
+    <div class="carte carte-ombre p-3 h-100">
+      <h2 class="h6 fw-bold">Voyages en cours</h2>
+      <div id="carte-admin" class="map map-lg"></div>
+      {% if not en_cours %}<p class="small text-muted mt-2 mb-0">Aucun voyage en cours.</p>{% endif %}
+    </div>
+  </div>
+  <div class="col-xl-5">
+    <div class="carte carte-ombre p-3 mb-4">
+      <h2 class="h6 fw-bold">Dernières réservations</h2>
+      <div class="table-responsive"><table class="table table-sm align-middle mb-0">
+        {% for b in reservations %}<tr><td><a class="numero small" href="{% url 'gestion_bagage' b.numero_suivi %}">{{ b.numero_suivi }}</a></td><td class="small">{{ b.client|default:"—" }}</td><td class="small">{{ b.voyage.ville_arrivee.nom }}</td><td class="small text-end">{{ b.poids|floatformat:"-1" }} kg</td></tr>
+        {% empty %}<tr><td class="text-muted small">Aucune réservation.</td></tr>{% endfor %}
+      </table></div>
+    </div>
+    <div class="carte carte-ombre p-3">
+      <h2 class="h6 fw-bold">Derniers paiements</h2>
+      <div class="table-responsive"><table class="table table-sm align-middle mb-0">
+        {% for p in paiements %}<tr><td class="small">{{ p.cree_le|date:"d/m H:i" }}</td><td class="small">{{ p.bagage.client|default:"—" }}</td><td class="small text-end fw-semibold">{{ p.montant|argent:p.devise }}</td><td><span class="badge bg-{{ p.statut|couleur }}">{{ p.get_statut_display }}</span></td></tr>
+        {% empty %}<tr><td class="text-muted small">Aucun paiement.</td></tr>{% endfor %}
+      </table></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.css' %}">
+<script src="{% static 'vendor/leaflet/leaflet.js' %}"></script>
+<script>
+var map = L.map("carte-admin", { scrollWheelZoom: false }).setView([40, -25], 3);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 18, attribution: "&copy; OpenStreetMap" }).addTo(map);
+fetch("{% url 'api_voyages_en_cours' %}").then(r => r.json()).then(function (voyages) {
+  var pts = [];
+  voyages.forEach(function (v) {
+    var a = [v.depart.latitude, v.depart.longitude], b = [v.arrivee.latitude, v.arrivee.longitude];
+    if (a[0] == null || b[0] == null) return;
+    pts.push(a, b);
+    L.polyline([a, b], { color: "#1f4e79", weight: 2, dashArray: "6 8" }).addTo(map);
+    var p = v.derniere_position;
+    if (p && p.latitude != null) {
+      var retard = v.minutes_depuis_position >= 240;
+      L.circleMarker([p.latitude, p.longitude], { radius: 9, color: "#fff", weight: 2, fillColor: retard ? "#c62828" : "#f28c28", fillOpacity: 1 })
+        .addTo(map).bindPopup("<b>" + v.trajet + "</b><br>" + (p.lieu || "") + "<br><small>il y a " + v.minutes_depuis_position + " min</small>");
+      pts.push([p.latitude, p.longitude]);
+    }
+  });
+  if (pts.length) map.fitBounds(pts, { padding: [30, 30], maxZoom: 6 });
+});
+</script>
+{% endblock %}

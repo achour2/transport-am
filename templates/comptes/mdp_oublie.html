@@ -1,0 +1,10 @@
+{% extends "comptes/_cadre.html" %}{% load i18n %}
+{% block titre %}{% translate "Mot de passe oublié" %}{% endblock %}
+{% block cadre %}
+<h1 class="h4 fw-bold">{% translate "Mot de passe oublié" %}</h1>
+<p class="text-muted">{% translate "Indiquez votre courriel : nous vous enverrons un lien pour choisir un nouveau mot de passe." %}</p>
+<form method="post">{% csrf_token %}
+  <div class="mb-3"><label class="form-label" for="id_email">{% translate "Courriel" %}</label><input type="email" name="email" id="id_email" class="form-control" required></div>
+  <button class="btn btn-primary w-100">{% translate "Envoyer le lien" %}</button>
+</form>
+{% endblock %}

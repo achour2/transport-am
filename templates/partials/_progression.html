@@ -1,0 +1,10 @@
+{% load i18n %}
+<div class="progression" role="list" aria-label="{% translate 'Progression du bagage' %}">
+  <div class="barre" style="width: {% if bagage.rang <= 0 %}0{% elif bagage.rang == 1 %}21{% elif bagage.rang == 2 %}42{% elif bagage.rang == 3 %}63{% else %}84{% endif %}%"></div>
+  {% for code, libelle in bagage.ETAPES %}
+  <div class="pas {% if forloop.counter0 < bagage.rang %}fait{% elif forloop.counter0 == bagage.rang %}actuel{% endif %}" role="listitem">
+    <div class="rond">{% if forloop.counter0 < bagage.rang %}<i class="bi bi-check-lg"></i>{% elif forloop.counter0 == bagage.rang %}<i class="bi bi-circle-fill" style="font-size:.5rem"></i>{% endif %}</div>
+    {{ libelle }}
+  </div>
+  {% endfor %}
+</div>

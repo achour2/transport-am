@@ -1,0 +1,34 @@
+{% extends "gestion/_base.html" %}{% load outils %}
+{% block titre %}Bagages{% endblock %}
+{% block gestion %}
+<h1 class="section-titre h3 mb-3">Bagages</h1>
+<form method="get" class="carte carte-ombre p-3 mb-3 row g-2 align-items-end">
+  <div class="col-md-3"><label class="form-label small" for="q">Recherche</label><input id="q" name="q" value="{{ q }}" class="form-control" placeholder="Numéro, client, destinataire"></div>
+  <div class="col-6 col-md-2"><label class="form-label small" for="statut">Statut</label><select id="statut" name="statut" class="form-select"><option value="">Tous</option>{% for c, l in statuts %}<option value="{{ c }}" {% if f.statut == c %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+  <div class="col-6 col-md-2"><label class="form-label small" for="pays">Pays</label><select id="pays" name="pays" class="form-select"><option value="">Tous</option>{% for p in pays_list %}<option value="{{ p.pk }}" {% if f.pays == p.pk|stringformat:'s' %}selected{% endif %}>{{ p.nom }}</option>{% endfor %}</select></div>
+  <div class="col-6 col-md-2"><label class="form-label small" for="voyage">Voyage</label><select id="voyage" name="voyage" class="form-select"><option value="">Tous</option>{% for v in voyages_list %}<option value="{{ v.pk }}" {% if f.voyage == v.pk|stringformat:'s' %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></div>
+  <div class="col-6 col-md-2"><label class="form-label small" for="date">Date de réservation</label><input type="date" id="date" name="date" value="{{ f.date }}" class="form-control"></div>
+  <div class="col-md-1 d-grid"><button class="btn btn-primary"><i class="bi bi-search"></i></button></div>
+</form>
+<div class="carte carte-ombre table-responsive">
+  <table class="table table-hover align-middle mb-0">
+    <thead><tr><th>Numéro</th><th>Client</th><th>Destinataire</th><th>Trajet</th><th class="text-end">Poids</th><th class="text-end">Prix</th><th>Paiement</th><th>Statut</th></tr></thead>
+    <tbody>
+    {% for b in bagages %}
+    <tr>
+      <td><a class="numero" href="{% url 'gestion_bagage' b.numero_suivi %}">{{ b.numero_suivi }}</a><div class="small text-muted">{{ b.cree_le|date:"d/m/Y" }}</div></td>
+      <td class="small">{{ b.client|default:"(compte supprimé)" }}</td>
+      <td class="small">{{ b.dest_nom }}</td>
+      <td class="small">{{ b.voyage.ville_depart.nom }} → {{ b.voyage.ville_arrivee.nom }}<div class="text-muted">{{ b.voyage.depart|date:"d/m/Y" }}</div></td>
+      <td class="text-end">{{ b.poids|floatformat:"-1" }} kg</td>
+      <td class="text-end">{{ b.prix|argent:b.devise }}</td>
+      <td><span class="badge bg-{{ b.statut_paiement|couleur }}">{{ b.get_statut_paiement_display }}</span></td>
+      <td><span class="badge bg-{{ b.statut|couleur }}">{{ b.get_statut_display }}</span>{% if b.choix_requis %} <i class="bi bi-exclamation-triangle text-danger" title="Choix client requis"></i>{% endif %}</td>
+    </tr>
+    {% empty %}<tr><td colspan="8" class="text-muted">Aucun bagage trouvé.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "gestion/_pagination.html" with page=bagages %}
+{% endblock %}

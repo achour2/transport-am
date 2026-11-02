@@ -1,0 +1,42 @@
+{% load i18n outils %}
+{% if resultat %}
+  {% if resultat.erreur %}
+  <div class="alert alert-danger"><i class="bi bi-exclamation-triangle"></i> {{ resultat.erreur }}</div>
+  {% else %}
+  <div class="carte carte-ombre p-4">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+      <div>
+        <div class="kpi-label">{% translate "Prix total" %}</div>
+        <div class="display-5 fw-bold text-primary">{{ resultat.prix|argent:resultat.pays.devise }}</div>
+        <div class="text-muted small">{{ resultat.pays.frais_fixes|argent:resultat.pays.devise }} {% translate "frais fixes" %} + {{ resultat.poids|floatformat:"-2" }} kg × {{ resultat.pays.tarif_kg|argent:resultat.pays.devise }} = {{ resultat.detail_kilos|argent:resultat.pays.devise }}</div>
+      </div>
+      <div class="text-end">
+        <div class="kpi-label">{% translate "Délai estimé" %}</div>
+        <div class="fs-4 fw-bold">{{ resultat.pays.delai_texte }}</div>
+        <div class="drapeau">{{ resultat.pays.drapeau }}</div>
+      </div>
+    </div>
+    {% if resultat.volume_l %}<div class="small text-muted mt-2"><i class="bi bi-box"></i> {% translate "Volume" %} : {{ resultat.volume_l }} L</div>{% endif %}
+    <hr>
+    <h2 class="h6 fw-bold">{% translate "Prochains voyages disponibles" %}</h2>
+    <div class="list-group list-group-flush">
+      {% for v in resultat.voyages %}
+      <div class="list-group-item px-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+          <div class="fw-semibold">{{ v.ville_depart.nom }} → {{ v.ville_arrivee.nom }}</div>
+          <div class="small text-muted">{{ v.depart|tz:v.pays_depart.fuseau|date:"l j F, H\hi" }} · {{ v.kilos_restants|floatformat:0 }} kg {% translate "restants" %}</div>
+        </div>
+        <a class="btn btn-accent btn-sm" href="{% url 'client_envoi_nouveau' %}?voyage={{ v.pk }}&poids={{ resultat.poids }}">{% translate "Réserver ce prix" %}</a>
+      </div>
+      {% empty %}
+      <p class="text-muted small mb-0">{% translate "Aucun voyage disponible pour ce poids pour l’instant." %}</p>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+{% else %}
+<div class="carte p-5 text-center text-muted h-100 d-flex flex-column justify-content-center">
+  <i class="bi bi-calculator display-4 mb-3"></i>
+  <p class="mb-0">{% translate "Choisissez un pays et saisissez le poids : le prix s’affiche instantanément." %}</p>
+</div>
+{% endif %}

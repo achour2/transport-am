@@ -1,0 +1,68 @@
+{% extends "base.html" %}{% load i18n outils %}
+{% block titre %}{% translate "Suivi" %} {{ bagage.numero_suivi }}{% endblock %}
+{% block head %}<meta name="robots" content="noindex">{% endblock %}
+{% block contenu %}
+<div class="container my-4 my-md-5">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+    <div>
+      <div class="text-muted small">{% translate "Numéro de suivi" %}</div>
+      <h1 class="h4 numero mb-0">{{ bagage.numero_suivi }}</h1>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="" class="btn btn-outline-primary btn-sm"><i class="bi bi-arrow-clockwise"></i> {% translate "Actualiser" %}</a>
+      <button class="btn btn-outline-primary btn-sm" type="button" onclick="navigator.clipboard && navigator.clipboard.writeText(location.href); this.innerHTML='<i class=\'bi bi-check2\'></i> {% translate 'Lien copié' %}'"><i class="bi bi-share"></i> {% translate "Partager le lien" %}</button>
+    </div>
+  </div>
+
+  <div class="carte carte-ombre p-4 mb-4">
+    <div class="statut-gros">{{ bagage.get_statut_display }}</div>
+    {% if bagage.statut in "incident perdu annule" %}
+      <div class="alert alert-{% if bagage.statut == 'incident' %}warning{% else %}secondary{% endif %} mt-3 mb-0">{{ bagage.evenements.last.message }}</div>
+    {% else %}
+      {% include "partials/_progression.html" %}
+    {% endif %}
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="carte carte-ombre p-3">
+        {% include "partials/_carte.html" with classe_carte="map-lg" %}
+        <div class="small text-muted mt-2 px-1">
+          {% with p=voyage.derniere_position %}
+          {% if positions and p %}<i class="bi bi-geo-alt-fill text-warning"></i> {% translate "Dernière position" %} : <strong>{{ p.lieu|default:"—" }}</strong> · {% translate "mise à jour" %} {{ p.envoyee_le|depuis }} ({{ p.envoyee_le|date:"d/m H:i" }})
+          {% else %}{% translate "La position du voyage s’affichera dès que le bagage sera en transit." %}{% endif %}
+          {% endwith %}
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="carte carte-ombre p-4 mb-4">
+        <dl class="mb-0">
+          <dt class="small text-muted fw-normal">{% translate "Départ" %}</dt>
+          <dd class="fw-semibold">{{ voyage.pays_depart.drapeau }} {{ voyage.ville_depart.nom }}, {{ voyage.pays_depart.nom }}<br><span class="small fw-normal">{{ voyage.depart|tz:voyage.pays_depart.fuseau|date:"d/m/Y H:i" }} ({{ voyage.pays_depart.fuseau|nom_tz }})</span></dd>
+          <dt class="small text-muted fw-normal">{% translate "Arrivée" %}</dt>
+          <dd class="fw-semibold">{{ voyage.pays_arrivee.drapeau }} {{ voyage.ville_arrivee.nom }}, {{ voyage.pays_arrivee.nom }}</dd>
+          <dt class="small text-muted fw-normal">{% translate "Arrivée prévue" %}</dt>
+          <dd class="fw-semibold">{{ voyage.arrivee_prevue|tz:voyage.pays_arrivee.fuseau|date:"l j F Y, H\hi" }} <span class="small fw-normal">({{ voyage.pays_arrivee.fuseau|nom_tz }})</span></dd>
+          <dt class="small text-muted fw-normal">{% translate "Destinataire" %}</dt>
+          <dd class="fw-semibold mb-0">{{ bagage.dest_nom_masque }}</dd>
+        </dl>
+      </div>
+      <div class="carte carte-ombre p-4 mb-4">
+        <h2 class="h6 fw-bold mb-3">{% translate "Historique" %}</h2>
+        {% include "partials/_historique.html" %}
+      </div>
+      <form method="post" class="carte carte-ombre p-4">{% csrf_token %}
+        <h2 class="h6 fw-bold"><i class="bi bi-envelope"></i> {% translate "Être prévenu par courriel" %}</h2>
+        <div class="input-group">
+          <label class="visually-hidden" for="id_courriel">{% translate "Courriel" %}</label>
+          {{ form.courriel }}
+          <button class="btn btn-primary">{% translate "S’abonner" %}</button>
+        </div>
+        {% for e in form.courriel.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}{% include "partials/_leaflet.html" %}{% endblock %}

@@ -1,0 +1,100 @@
+{% extends "base.html" %}{% load i18n outils %}
+{% block titre %}{% translate "Envoyez vos bagages entre pays" %}{% endblock %}
+{% block contenu %}
+<section class="hero py-5">
+  <div class="container py-lg-4">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-7">
+        <span class="badge bg-warning text-dark mb-3"><i class="bi bi-shield-check"></i> {% translate "Suivi en temps réel · Paiement sécurisé" %}</span>
+        <h1 class="display-5 mb-3">{% translate "Vos bagages arrivent. Vous savez où ils sont." %}</h1>
+        <p class="lead opacity-75 mb-4">{% translate "Réservez en moins de 3 minutes, déposez votre bagage, et suivez-le sur la carte jusqu’à sa remise au destinataire." %}</p>
+        <div class="d-flex flex-wrap gap-2">
+          <a href="{% url 'client_envoi_nouveau' %}" class="btn btn-accent btn-lg"><i class="bi bi-send"></i> {% translate "Envoyer un bagage" %}</a>
+          <a href="{% url 'simulateur' %}" class="btn btn-outline-light btn-lg"><i class="bi bi-calculator"></i> {% translate "Simuler un prix" %}</a>
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <form class="suivi-box" action="{% url 'suivi' %}" method="get">
+          <label for="numero" class="h5 fw-bold d-block mb-2"><i class="bi bi-search text-primary"></i> {% translate "Suivre mon bagage" %}</label>
+          <div class="input-group input-group-lg">
+            <input id="numero" name="numero" class="form-control numero text-uppercase" placeholder="BG-7F3K9Q2A" required autocomplete="off">
+            <button class="btn btn-primary">{% translate "Suivre" %}</button>
+          </div>
+          <div class="form-text">{% translate "Le numéro de suivi figure dans votre courriel de confirmation." %}</div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="container my-5">
+  <div class="d-flex justify-content-between align-items-end mb-3">
+    <h2 class="section-titre h3 mb-0">{% translate "Prochains départs" %}</h2>
+    <a href="{% url 'destinations' %}">{% translate "Toutes les destinations" %} <i class="bi bi-arrow-right"></i></a>
+  </div>
+  <div class="row g-3">
+    {% for v in prochains %}
+    <div class="col-md-4">
+      <div class="carte carte-ombre p-4 h-100">
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <span class="drapeau">{{ v.pays_depart.drapeau }}</span><i class="bi bi-arrow-right text-muted"></i><span class="drapeau">{{ v.pays_arrivee.drapeau }}</span>
+        </div>
+        <div class="fw-bold fs-5">{{ v.ville_depart.nom }} → {{ v.ville_arrivee.nom }}</div>
+        <div class="text-muted"><i class="bi bi-calendar-event"></i> {{ v.depart|tz:v.pays_depart.fuseau|date:"l j F, H\hi" }}</div>
+        <div class="my-3">
+          <div class="d-flex justify-content-between small"><span>{% translate "Kilos restants" %}</span><strong>{{ v.kilos_restants|floatformat:0 }} kg</strong></div>
+          <div class="progress" style="height:6px" role="progressbar" aria-valuenow="{{ v.taux_remplissage }}" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar bg-warning" style="width: {{ v.taux_remplissage }}%"></div></div>
+        </div>
+        {% if v.est_complet %}<span class="badge bg-secondary">{% translate "Complet" %}</span>
+        {% else %}<a href="{% url 'client_envoi_nouveau' %}?voyage={{ v.pk }}" class="btn btn-outline-primary btn-sm">{% translate "Réserver" %}</a>{% endif %}
+      </div>
+    </div>
+    {% empty %}
+    <div class="col"><div class="carte p-4 text-muted">{% translate "Aucun départ planifié pour le moment. Revenez bientôt !" %}</div></div>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="bg-white border-top border-bottom py-5">
+  <div class="container">
+    <h2 class="section-titre h3 text-center mb-5">{% translate "Comment ça marche" %}</h2>
+    <div class="row g-4 text-center">
+      <div class="col-6 col-lg-3"><div class="etape-num mb-3"><i class="bi bi-cart-check"></i></div><h3 class="h5 fw-bold">1. {% translate "Réserver" %}</h3><p class="text-muted small">{% translate "Choisissez le voyage, décrivez le bagage, payez par carte." %}</p></div>
+      <div class="col-6 col-lg-3"><div class="etape-num mb-3"><i class="bi bi-box-seam"></i></div><h3 class="h5 fw-bold">2. {% translate "Déposer" %}</h3><p class="text-muted small">{% translate "Apportez votre bagage au point de dépôt avant la date limite." %}</p></div>
+      <div class="col-6 col-lg-3"><div class="etape-num mb-3"><i class="bi bi-geo-alt"></i></div><h3 class="h5 fw-bold">3. {% translate "Suivre" %}</h3><p class="text-muted small">{% translate "Suivez le trajet sur la carte, notifié à chaque étape." %}</p></div>
+      <div class="col-6 col-lg-3"><div class="etape-num mb-3"><i class="bi bi-hand-thumbs-up"></i></div><h3 class="h5 fw-bold">4. {% translate "Recevoir" %}</h3><p class="text-muted small">{% translate "Le destinataire présente son code à 6 chiffres et récupère le bagage." %}</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="container my-5">
+  <h2 class="section-titre h3 mb-4">{% translate "Pays desservis" %}</h2>
+  <div class="row g-3">
+    {% for p in pays_list %}{% if p.code != "CA" %}
+    <div class="col-6 col-md-3">
+      <a href="{% url 'destinations' %}?pays={{ p.code }}" class="carte carte-ombre p-3 d-block text-decoration-none text-body h-100">
+        <div class="drapeau mb-1">{{ p.drapeau }}</div>
+        <div class="fw-bold">{{ p.nom }}</div>
+        <div class="small text-muted">{% translate "à partir de" %} <strong class="text-primary">{{ p.frais_fixes|add:p.tarif_kg|argent:p.devise }}</strong></div>
+        <div class="small text-muted">{{ p.delai_texte }}</div>
+      </a>
+    </div>
+    {% endif %}{% endfor %}
+  </div>
+</section>
+
+{% if avis %}
+<section class="container my-5">
+  <h2 class="section-titre h3 mb-4">{% translate "Ils nous font confiance" %}</h2>
+  <div class="row g-3">
+    {% for a in avis %}
+    <div class="col-md-4"><div class="carte p-4 h-100">
+      <div class="etoiles mb-2">{% for i in "12345" %}{% if forloop.counter <= a.note %}<i class="bi bi-star-fill"></i>{% else %}<i class="bi bi-star"></i>{% endif %}{% endfor %}</div>
+      <p class="avis">« {{ a.texte }} »</p>
+      <div class="small fw-semibold">{{ a.nom }}{% if a.ville %} · {{ a.ville }}{% endif %}</div>
+    </div></div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+{% endblock %}

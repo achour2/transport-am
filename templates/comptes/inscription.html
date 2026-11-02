@@ -1,0 +1,28 @@
+{% extends "comptes/_cadre.html" %}{% load i18n %}
+{% block titre %}{% translate "Créer un compte" %}{% endblock %}
+{% block largeur %}640px{% endblock %}
+{% block cadre %}
+<h1 class="h3 fw-bold mb-1">{% translate "Créer un compte" %}</h1>
+<p class="text-muted mb-4">{% translate "Pour réserver, payer et suivre vos envois." %}</p>
+<form method="post" novalidate>{% csrf_token %}
+  {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors|join:"<br>" }}</div>{% endif %}
+  <div class="row">
+    {% for f in form.visible_fields %}
+    {% if f.name == "accepte_conditions" %}
+    <div class="col-12">
+      <div class="form-check mb-3">{{ f }} <label class="form-check-label" for="{{ f.id_for_label }}">{% translate "J’accepte les" %} <a href="{% url 'conditions' %}" target="_blank">{% translate "conditions générales" %}</a> {% translate "et la" %} <a href="{% url 'conditions' %}#confidentialite" target="_blank">{% translate "politique de confidentialité" %}</a></label>
+      {% for e in f.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}</div>
+    </div>
+    {% else %}
+    <div class="col-md-6 mb-3">
+      <label class="form-label fw-semibold" for="{{ f.id_for_label }}">{{ f.label }}{% if f.field.required %} <span class="text-danger">*</span>{% endif %}</label>
+      {{ f }}
+      {% for e in f.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+  <button class="btn btn-primary w-100 btn-lg">{% translate "Créer mon compte" %}</button>
+</form>
+<p class="text-center mt-4 mb-0">{% translate "Déjà inscrit ?" %} <a href="{% url 'connexion' %}">{% translate "Se connecter" %}</a></p>
+{% endblock %}

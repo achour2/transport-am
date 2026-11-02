@@ -1,0 +1,62 @@
+{% extends "base.html" %}{% load i18n outils %}
+{% block titre %}{% translate "Destinations et tarifs" %}{% endblock %}
+{% block contenu %}
+<div class="container my-5">
+  <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+    <div>
+      <h1 class="section-titre h2 mb-1">{% translate "Destinations et tarifs" %}</h1>
+      <p class="text-muted mb-0">{% translate "Prix = frais fixes + (poids × tarif par kilo). Départs depuis le Canada." %}</p>
+    </div>
+    <form method="get" class="d-flex gap-2">
+      <label class="visually-hidden" for="filtre-pays">{% translate "Filtrer par pays" %}</label>
+      <select id="filtre-pays" name="pays" class="form-select" onchange="this.form.submit()">
+        <option value="">{% translate "Tous les pays" %}</option>
+        {% for p in tous_pays %}<option value="{{ p.code }}" {% if p.code == filtre %}selected{% endif %}>{{ p.drapeau }} {{ p.nom }}</option>{% endfor %}
+      </select>
+      <noscript><button class="btn btn-primary">OK</button></noscript>
+    </form>
+  </div>
+  <div class="row g-4">
+    {% for p in pays_list %}
+    <div class="col-lg-6">
+      <article class="carte carte-ombre p-4 h-100">
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <span class="drapeau" style="font-size:2.6rem">{{ p.drapeau }}</span>
+          <div>
+            <h2 class="h4 fw-bold mb-0">{{ p.nom }}</h2>
+            <div class="small text-muted">{% for v in p.villes.all %}{{ v.nom }}{% if not forloop.last %} · {% endif %}{% endfor %}</div>
+          </div>
+        </div>
+        <div class="row text-center g-2 mb-3">
+          <div class="col-3"><div class="bg-light rounded p-2"><div class="small text-muted">{% translate "Frais fixes" %}</div><div class="fw-bold">{{ p.frais_fixes|argent:p.devise }}</div></div></div>
+          <div class="col-3"><div class="bg-light rounded p-2"><div class="small text-muted">{% translate "Par kilo" %}</div><div class="fw-bold">{{ p.tarif_kg|argent:p.devise }}</div></div></div>
+          <div class="col-3"><div class="bg-light rounded p-2"><div class="small text-muted">{% translate "Max" %}</div><div class="fw-bold">{{ p.poids_max|floatformat:0 }} kg</div></div></div>
+          <div class="col-3"><div class="bg-light rounded p-2"><div class="small text-muted">{% translate "Délai" %}</div><div class="fw-bold">{{ p.delai_min }}–{{ p.delai_max }} j</div></div></div>
+        </div>
+        {% with prochain=p.prochain_depart %}
+        <p class="mb-3"><i class="bi bi-calendar-event text-primary"></i> {% translate "Prochain départ" %} :
+          {% if prochain %}<strong>{{ prochain.depart|tz:prochain.pays_depart.fuseau|date:"j F Y" }}</strong> ({{ prochain.ville_depart.nom }} → {{ prochain.ville_arrivee.nom }}, {{ prochain.kilos_restants|floatformat:0 }} kg {% translate "restants" %})
+          {% else %}<span class="text-muted">{% translate "à venir" %}</span>{% endif %}
+        </p>
+        {% endwith %}
+        <div class="accordion accordion-flush mb-3" id="acc-{{ p.code }}">
+          <div class="accordion-item">
+            <h3 class="accordion-header"><button class="accordion-button collapsed px-0" type="button" data-bs-toggle="collapse" data-bs-target="#int-{{ p.code }}"><i class="bi bi-slash-circle text-danger me-2"></i>{% translate "Objets interdits" %}</button></h3>
+            <div id="int-{{ p.code }}" class="accordion-collapse collapse"><ul class="small mb-3">{% for o in p.liste_objets_interdits %}<li>{{ o }}</li>{% empty %}<li>—</li>{% endfor %}</ul></div>
+          </div>
+          <div class="accordion-item">
+            <h3 class="accordion-header"><button class="accordion-button collapsed px-0" type="button" data-bs-toggle="collapse" data-bs-target="#doc-{{ p.code }}"><i class="bi bi-file-earmark-text text-primary me-2"></i>{% translate "Documents demandés à la douane" %}</button></h3>
+            <div id="doc-{{ p.code }}" class="accordion-collapse collapse"><ul class="small mb-3">{% for o in p.liste_documents %}<li>{{ o }}</li>{% empty %}<li>—</li>{% endfor %}</ul></div>
+          </div>
+        </div>
+        <div class="d-flex gap-2">
+          <a href="{% url 'client_envoi_nouveau' %}?pays={{ p.pk }}" class="btn btn-accent">{% translate "Réserver vers ce pays" %}</a>
+          <a href="{% url 'simulateur' %}?pays={{ p.pk }}" class="btn btn-outline-primary">{% translate "Simuler" %}</a>
+        </div>
+      </article>
+    </div>
+    {% empty %}<p class="text-muted">{% translate "Aucune destination." %}</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

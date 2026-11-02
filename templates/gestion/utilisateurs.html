@@ -1,0 +1,41 @@
+{% extends "gestion/_base.html" %}
+{% block titre %}Utilisateurs{% endblock %}
+{% block gestion %}
+<h1 class="section-titre h3 mb-3">Utilisateurs</h1>
+<div class="row g-4">
+  <div class="col-xl-8">
+    <div class="carte carte-ombre mb-4">
+      <div class="p-3 border-bottom fw-bold">Transporteurs</div>
+      <div class="table-responsive"><table class="table align-middle mb-0">
+        <thead><tr><th>Nom</th><th>Courriel</th><th>Téléphone</th><th class="text-center">Voyages</th><th></th></tr></thead>
+        {% for u in transporteurs %}
+        <tr class="{% if not u.is_active %}text-muted{% endif %}"><td>{{ u }}{% if not u.is_active %} <span class="badge bg-secondary">bloqué</span>{% endif %}</td><td class="small">{{ u.email }}</td><td class="small">{{ u.telephone }}</td><td class="text-center">{{ u.nb }}</td>
+          <td class="text-end text-nowrap">{% include "gestion/_actions_user.html" %}</td></tr>
+        {% empty %}<tr><td colspan="5" class="text-muted">Aucun transporteur.</td></tr>{% endfor %}
+      </table></div>
+    </div>
+    <div class="carte carte-ombre">
+      <div class="p-3 border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <span class="fw-bold">Clients</span>
+        <form method="get" class="d-flex gap-1"><input name="q" value="{{ q }}" class="form-control form-control-sm" placeholder="Rechercher" aria-label="Rechercher un client"><button class="btn btn-sm btn-primary"><i class="bi bi-search"></i></button></form>
+      </div>
+      <div class="table-responsive"><table class="table align-middle mb-0">
+        <thead><tr><th>Nom</th><th>Courriel</th><th>Pays</th><th class="text-center">Envois</th><th>Inscrit</th><th></th></tr></thead>
+        {% for u in clients %}
+        <tr class="{% if not u.is_active %}text-muted{% endif %}"><td>{{ u }}{% if not u.is_active %} <span class="badge bg-secondary">bloqué</span>{% endif %}</td><td class="small">{{ u.email }}{% if not u.email_confirme %} <i class="bi bi-envelope-exclamation text-warning" title="Courriel non confirmé"></i>{% endif %}</td><td class="small">{{ u.pays_residence }}</td>
+          <td class="text-center"><a href="{% url 'gestion_bagages' %}?q={{ u.email|urlencode }}">{{ u.nb }}</a></td><td class="small">{{ u.date_joined|date:"d/m/Y" }}</td>
+          <td class="text-end text-nowrap">{% include "gestion/_actions_user.html" %}</td></tr>
+        {% empty %}<tr><td colspan="6" class="text-muted">Aucun client.</td></tr>{% endfor %}
+      </table></div>
+    </div>
+    {% include "gestion/_pagination.html" with page=clients %}
+  </div>
+  <div class="col-xl-4">
+    <form method="post" class="carte carte-ombre p-4" novalidate>{% csrf_token %}<input type="hidden" name="action" value="creer">
+      <h2 class="h6 fw-bold">Créer un compte transporteur</h2>
+      {% include "partials/_form.html" %}
+      <button class="btn btn-primary w-100">Créer le compte</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

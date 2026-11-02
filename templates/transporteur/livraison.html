@@ -1,0 +1,32 @@
+{% extends "base.html" %}{% load i18n %}
+{% block titre %}{% translate "Remise au destinataire" %}{% endblock %}
+{% block contenu %}
+<div class="container my-4" style="max-width:560px">
+  <a href="{% url 'transporteur_voyage' bagage.voyage_id %}" class="small"><i class="bi bi-arrow-left"></i> {% translate "Retour au voyage" %}</a>
+  <div class="carte carte-ombre p-4 mt-2">
+    <h1 class="h4 fw-bold">{% translate "Remise au destinataire" %}</h1>
+    <div class="numero mb-3">{{ bagage.numero_suivi }}</div>
+    <div class="bg-light rounded p-3 mb-4">
+      <div class="fw-bold fs-5">{{ bagage.dest_nom }}</div>
+      <div><i class="bi bi-telephone"></i> <a href="tel:{{ bagage.dest_telephone }}">{{ bagage.dest_telephone }}</a></div>
+      <div class="small text-muted">{{ bagage.dest_adresse }}</div>
+    </div>
+    {% if bagage.statut == "livre" %}
+      <div class="alert alert-success mb-0">{% translate "Ce bagage a déjà été livré." %}</div>
+    {% else %}
+    <form method="post" enctype="multipart/form-data">{% csrf_token %}
+      <div class="mb-3">
+        <label class="form-label fw-semibold" for="id_code">{{ form.code.label }}</label>
+        <input type="text" name="code" id="id_code" class="form-control form-control-lg code-remise text-center" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="off" required>
+        {% for e in form.code.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+      </div>
+      <div class="mb-4">
+        <label class="form-label fw-semibold" for="id_photo">{{ form.photo.label }}</label>
+        <input type="file" name="photo" id="id_photo" class="form-control" accept="image/*" capture="environment">
+      </div>
+      <button class="btn btn-success btn-geant w-100"><i class="bi bi-check2-circle"></i> {% translate "Valider la livraison" %}</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

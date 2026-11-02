@@ -1,0 +1,134 @@
+{% extends "base.html" %}{% load i18n outils %}
+{% block titre %}{% translate "Nouvel envoi" %}{% endblock %}
+{% block contenu %}
+<div class="container my-4 my-md-5" style="max-width:860px">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="section-titre h3 mb-0">{% translate "Nouvel envoi" %}</h1>
+    <a href="{% url 'client_envoi_recommencer' %}" class="small text-muted">{% translate "Recommencer" %}</a>
+  </div>
+  <nav class="wizard" aria-label="{% translate 'Étapes' %}">
+    <div class="w {% if etape == 1 %}actif{% elif etape > 1 %}fait{% endif %}">1. {% translate "Destination" %}</div>
+    <div class="w {% if etape == 2 %}actif{% elif etape > 2 %}fait{% endif %}">2. {% translate "Bagage" %}</div>
+    <div class="w {% if etape == 3 %}actif{% elif etape > 3 %}fait{% endif %}">3. {% translate "Destinataire" %}</div>
+    <div class="w {% if etape == 4 %}actif{% endif %}">4. {% translate "Paiement" %}</div>
+  </nav>
+
+  <div class="carte carte-ombre p-4 p-md-5">
+  {% if etape == 1 %}
+    <form method="post" id="form-dest">{% csrf_token %}
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label fw-semibold" for="id_pays">{% translate "Pays d’arrivée" %}</label>
+          {{ form.pays }}
+        </div>
+        <div class="col-md-6 mb-3">
+          <label class="form-label fw-semibold" for="id_ville">{% translate "Ville d’arrivée" %}</label>
+          {{ form.ville }}
+        </div>
+      </div>
+      {% if pays_choisi %}
+      <div class="small text-muted mb-3">{{ pays_choisi.drapeau }} {{ pays_choisi.nom }} : {{ pays_choisi.frais_fixes|argent:pays_choisi.devise }} + {{ pays_choisi.tarif_kg|argent:pays_choisi.devise }}/kg · max {{ pays_choisi.poids_max|floatformat:0 }} kg · {{ pays_choisi.delai_texte }}</div>
+      <fieldset>
+        <legend class="form-label fw-semibold fs-6">{% translate "Choisissez votre voyage" %}</legend>
+        {% for e in form.voyage.errors %}<div class="alert alert-danger small">{{ e }}</div>{% endfor %}
+        {% for v in voyages %}
+        <label class="carte voyage-choix p-3 mb-2 d-flex align-items-center gap-3">
+          <input type="radio" name="voyage" value="{{ v.pk }}" class="form-check-input mt-0" {% if form.voyage.value|stringformat:"s" == v.pk|stringformat:"s" %}checked{% endif %} required>
+          <div class="flex-grow-1">
+            <div class="fw-semibold">{{ v.ville_depart.nom }} → {{ v.ville_arrivee.nom }} <span class="badge bg-light text-dark border">{{ v.get_moyen_display }}</span></div>
+            <div class="small text-muted">{% translate "Départ" %} {{ v.depart|tz:v.pays_depart.fuseau|date:"l j F, H\hi" }} · {% translate "dépôt avant le" %} {{ v.date_limite_depot|tz:v.pays_depart.fuseau|date:"j F H\hi" }}</div>
+          </div>
+          <div class="text-end"><div class="fw-bold">{{ v.kilos_restants|floatformat:0 }} kg</div><div class="small text-muted">{% translate "restants" %}</div></div>
+        </label>
+        {% empty %}
+        <div class="alert alert-info">{% translate "Aucun voyage disponible vers cette destination pour le moment." %}</div>
+        {% endfor %}
+      </fieldset>
+      {% endif %}
+      <div class="d-flex justify-content-end mt-4">
+        <button class="btn btn-primary btn-lg" {% if not voyages %}disabled{% endif %}>{% translate "Continuer" %} <i class="bi bi-arrow-right"></i></button>
+      </div>
+    </form>
+  {% elif etape == 2 %}
+    <div class="alert alert-light border small"><i class="bi bi-airplane"></i> {{ voyage }} · {% translate "max" %} {{ pays.poids_max|floatformat:0 }} kg · {{ voyage.kilos_restants|floatformat:0 }} kg {% translate "restants" %}</div>
+    <form method="post" enctype="multipart/form-data" novalidate>{% csrf_token %}
+      {% include "partials/_form.html" %}
+      {% if resa.bagage.photo_tmp %}<div class="small text-success mb-3"><i class="bi bi-image"></i> {% translate "Photo déjà ajoutée" %}</div>{% endif %}
+      {% if pays.liste_objets_interdits %}
+      <div class="alert alert-warning small"><strong>{% translate "Objets interdits vers" %} {{ pays.nom }} :</strong> {{ pays.liste_objets_interdits|join:", " }}</div>
+      {% endif %}
+      <div class="d-flex justify-content-between mt-4">
+        <a href="{% url 'client_envoi_etape' 1 %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> {% translate "Retour" %}</a>
+        <button class="btn btn-primary btn-lg">{% translate "Continuer" %} <i class="bi bi-arrow-right"></i></button>
+      </div>
+    </form>
+  {% elif etape == 3 %}
+    <form method="post" novalidate>{% csrf_token %}
+      {% include "partials/_form.html" %}
+      <div class="d-flex justify-content-between mt-4">
+        <a href="{% url 'client_envoi_etape' 2 %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> {% translate "Retour" %}</a>
+        <button class="btn btn-primary btn-lg">{% translate "Continuer" %} <i class="bi bi-arrow-right"></i></button>
+      </div>
+    </form>
+  {% else %}
+    <h2 class="h5 fw-bold mb-3">{% translate "Récapitulatif" %}</h2>
+    <div class="row g-4">
+      <div class="col-md-6">
+        <dl class="small mb-0">
+          <dt>{% translate "Voyage" %}</dt><dd>{{ voyage.ville_depart }} → {{ voyage.ville_arrivee }}<br>{% translate "Départ" %} {{ voyage.depart|tz:voyage.pays_depart.fuseau|date:"l j F Y, H\hi" }}</dd>
+          <dt>{% translate "Bagage" %}</dt><dd>{{ bagage.description }} · {{ poids|floatformat:"-2" }} kg{% if bagage.longueur_cm %} · {{ bagage.longueur_cm }}×{{ bagage.largeur_cm }}×{{ bagage.hauteur_cm }} cm{% endif %}</dd>
+          <dt>{% translate "Destinataire" %}</dt><dd>{{ dest.dest_nom }} · {{ dest.dest_telephone }}<br>{{ dest.dest_adresse }}</dd>
+        </dl>
+      </div>
+      <div class="col-md-6">
+        <div class="bg-light rounded p-3">
+          <div class="d-flex justify-content-between"><span>{% translate "Frais fixes" %}</span><span>{{ pays.frais_fixes|argent:pays.devise }}</span></div>
+          <div class="d-flex justify-content-between"><span>{{ poids|floatformat:"-2" }} kg × {{ pays.tarif_kg|argent:pays.devise }}</span><span>{{ montant_kilos|argent:pays.devise }}</span></div>
+          <hr>
+          <div class="d-flex justify-content-between fs-4 fw-bold text-primary"><span>{% translate "Total" %}</span><span>{{ prix|argent:pays.devise }}</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="alert alert-info mt-4 small mb-3">
+      <i class="bi bi-geo-alt"></i> <strong>{% translate "Dépôt" %} :</strong> {{ voyage.lieu_depot }}{% if voyage.heure_depot %} ({{ voyage.heure_depot }}){% endif %}<br>
+      <i class="bi bi-alarm"></i> <strong>{% translate "Date limite de dépôt" %} :</strong> {{ voyage.date_limite_depot|tz:voyage.pays_depart.fuseau|date:"l j F Y, H\hi" }}
+    </div>
+    <form method="post">{% csrf_token %}
+      <div class="form-check mb-4">
+        <input class="form-check-input" type="checkbox" name="accepte" id="accepte" required>
+        <label class="form-check-label small" for="accepte">{% translate "J’accepte les" %} <a href="{% url 'conditions' %}" target="_blank">{% translate "conditions générales" %}</a> {% translate "et confirme que le bagage ne contient aucun objet interdit." %}</label>
+      </div>
+      <div class="d-flex justify-content-between">
+        <a href="{% url 'client_envoi_etape' 3 %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> {% translate "Retour" %}</a>
+        <button class="btn btn-accent btn-lg"><i class="bi bi-lock-fill"></i> {% translate "Payer" %} {{ prix|argent:pays.devise }}</button>
+      </div>
+    </form>
+  {% endif %}
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+{% if etape == 1 %}
+<script>
+  var f = document.getElementById("form-dest");
+  ["id_pays", "id_ville"].forEach(function (id) {
+    document.getElementById(id).addEventListener("change", function () {
+      var url = new URL(location.href);
+      url.searchParams.delete("voyage");
+      var p = document.getElementById("id_pays").value;
+      url.searchParams.set("pays", p);
+      if (id === "id_ville") url.searchParams.set("ville", this.value); else url.searchParams.delete("ville");
+      location.href = url.toString();
+    });
+  });
+</script>
+{% endif %}
+{% if etape == 3 %}
+<script>
+  var sel = document.getElementById("id_enregistre");
+  function maj() { ["dest_nom","dest_telephone","dest_adresse","dest_courriel","enregistrer"].forEach(function (n) {
+    var el = document.getElementById("id_" + n); if (el) el.closest(".mb-3, .form-check").style.display = sel.value ? "none" : ""; }); }
+  if (sel) { sel.addEventListener("change", maj); maj(); }
+</script>
+{% endif %}
+{% endblock %}

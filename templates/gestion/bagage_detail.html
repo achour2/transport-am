@@ -1,0 +1,74 @@
+{% extends "gestion/_base.html" %}{% load outils %}
+{% block titre %}{{ bagage.numero_suivi }}{% endblock %}
+{% block gestion %}
+<a href="{% url 'gestion_bagages' %}" class="small"><i class="bi bi-arrow-left"></i> Bagages</a>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-2 mb-3">
+  <h1 class="h3 numero mb-0">{{ bagage.numero_suivi }} <span class="badge bg-{{ bagage.statut|couleur }} fs-6 align-middle">{{ bagage.get_statut_display }}</span> <span class="badge bg-{{ bagage.statut_paiement|couleur }} fs-6 align-middle">{{ bagage.get_statut_paiement_display }}</span></h1>
+  <a href="{% url 'suivi_detail' bagage.numero_suivi %}" class="btn btn-sm btn-outline-primary" target="_blank"><i class="bi bi-box-arrow-up-right"></i> Page de suivi</a>
+</div>
+<div class="row g-4">
+  <div class="col-xl-7">
+    <div class="carte carte-ombre p-4 mb-4">
+      <div class="row small">
+        <div class="col-md-6">
+          <dl>
+            <dt>Client</dt><dd>{{ bagage.client|default:"(compte supprimé)" }}{% if bagage.client %}<br>{{ bagage.client.email }} · {{ bagage.client.telephone }}{% endif %}</dd>
+            <dt>Voyage</dt><dd><a href="{% url 'gestion_voyage_modifier' bagage.voyage_id %}">{{ bagage.voyage }}</a></dd>
+            <dt>Contenu</dt><dd>{{ bagage.description }} · {{ bagage.poids }} kg {% if bagage.dimensions %}· {{ bagage.dimensions }}{% endif %}<br>Valeur déclarée : {{ bagage.valeur_declaree|argent:bagage.devise }}</dd>
+          </dl>
+        </div>
+        <div class="col-md-6">
+          <dl>
+            <dt>Destinataire</dt><dd>{{ bagage.dest_nom }}<br>{{ bagage.dest_telephone }}<br>{{ bagage.dest_adresse }}{% if bagage.dest_courriel %}<br>{{ bagage.dest_courriel }}{% endif %}</dd>
+            <dt>Prix (figé)</dt><dd>{{ bagage.frais_fixes|argent:bagage.devise }} + {{ bagage.poids }} × {{ bagage.tarif_kg|argent:bagage.devise }} = <strong>{{ bagage.prix|argent:bagage.devise }}</strong></dd>
+            <dt>Code de remise</dt><dd class="numero">{{ bagage.code_remise }}</dd>
+          </dl>
+        </div>
+      </div>
+      {% if bagage.photo_depot or bagage.photo_livraison %}
+      <div class="d-flex gap-3">
+        {% if bagage.photo_depot %}<figure class="mb-0"><img src="{{ bagage.photo_depot.url }}" alt="Photo au dépôt" style="max-height:140px" class="rounded"><figcaption class="small text-muted">Dépôt</figcaption></figure>{% endif %}
+        {% if bagage.photo_livraison %}<figure class="mb-0"><img src="{{ bagage.photo_livraison.url }}" alt="Photo de livraison" style="max-height:140px" class="rounded"><figcaption class="small text-muted">Livraison</figcaption></figure>{% endif %}
+      </div>
+      {% endif %}
+    </div>
+    <div class="carte carte-ombre p-4 mb-4">
+      <h2 class="h6 fw-bold">Historique</h2>
+      {% include "partials/_historique.html" with montrer_auteur=True %}
+    </div>
+    <div class="carte carte-ombre p-4">
+      <h2 class="h6 fw-bold">Paiements</h2>
+      <table class="table table-sm small mb-0">
+        {% for p in paiements %}<tr><td>{{ p.numero_recu }}</td><td>{{ p.cree_le|date:"d/m/Y H:i" }}</td><td>{{ p.montant|argent:p.devise }}</td><td><span class="badge bg-{{ p.statut|couleur }}">{{ p.get_statut_display }}</span></td><td class="text-muted">{{ p.reference_stripe }}</td></tr>
+        {% empty %}<tr><td class="text-muted">Aucun paiement.</td></tr>{% endfor %}
+      </table>
+    </div>
+  </div>
+  <div class="col-xl-5">
+    <form method="post" class="carte carte-ombre p-4 mb-3">{% csrf_token %}<input type="hidden" name="action" value="statut">
+      <h2 class="h6 fw-bold">Changer le statut</h2>
+      {% include "partials/_form.html" with form=sform %}
+      <button class="btn btn-primary btn-sm">Mettre à jour et notifier</button>
+    </form>
+    <form method="post" class="carte carte-ombre p-4 mb-3">{% csrf_token %}<input type="hidden" name="action" value="deplacer">
+      <h2 class="h6 fw-bold">Déplacer vers un autre voyage</h2>
+      {% include "partials/_form.html" with form=dform %}
+      <button class="btn btn-outline-primary btn-sm">Déplacer</button>
+    </form>
+    <form method="post" class="carte carte-ombre p-4 mb-3">{% csrf_token %}<input type="hidden" name="action" value="incident">
+      <h2 class="h6 fw-bold">Ouvrir un incident</h2>
+      <select name="type" class="form-select mb-2" aria-label="Type d'incident">{% for c, l in types_incident %}<option value="{{ c }}">{{ l }}</option>{% endfor %}</select>
+      <textarea name="commentaire" class="form-control mb-2" rows="2" placeholder="Commentaire" aria-label="Commentaire"></textarea>
+      <button class="btn btn-outline-danger btn-sm">Ouvrir l’incident</button>
+    </form>
+    {% if bagage.statut_paiement == "paye" %}
+    <form method="post" class="carte border-danger p-4" onsubmit="return confirm('Rembourser {{ bagage.prix }} {{ bagage.devise }} ?')">{% csrf_token %}<input type="hidden" name="action" value="rembourser">
+      <h2 class="h6 fw-bold text-danger">Rembourser</h2>
+      <p class="small text-muted">Remboursement intégral via Stripe ({{ bagage.prix|argent:bagage.devise }}). Les kilos sont libérés.</p>
+      <button class="btn btn-danger btn-sm">Rembourser</button>
+    </form>
+    {% endif %}
+    {% for i in incidents %}<div class="alert alert-{% if i.etat == 'ouvert' %}danger{% else %}secondary{% endif %} small mt-3 mb-0">Incident {{ i.get_type_display }} ({{ i.get_etat_display }}) — {{ i.cree_le|date:"d/m H:i" }}</div>{% endfor %}
+  </div>
+</div>
+{% endblock %}

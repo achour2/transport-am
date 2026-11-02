@@ -1,0 +1,22 @@
+{% extends "base.html" %}{% load i18n %}
+{% block contenu %}
+<div class="container-fluid px-lg-4 my-4">
+  <div class="row g-4">
+    <aside class="col-lg-2">
+      {% with u=request.resolver_match.url_name %}
+      <nav class="nav flex-lg-column gestion-nav carte p-2 flex-nowrap overflow-auto" aria-label="Gestion">
+        <a class="nav-link text-nowrap {% if u == 'gestion_tableau' %}active{% endif %}" href="{% url 'gestion_tableau' %}"><i class="bi bi-speedometer2"></i> Tableau de bord</a>
+        <a class="nav-link text-nowrap {% if 'pays' in u %}active{% endif %}" href="{% url 'gestion_pays' %}"><i class="bi bi-globe2"></i> Pays et tarifs</a>
+        <a class="nav-link text-nowrap {% if 'voyage' in u %}active{% endif %}" href="{% url 'gestion_voyages' %}"><i class="bi bi-calendar3"></i> Voyages</a>
+        <a class="nav-link text-nowrap {% if 'bagage' in u %}active{% endif %}" href="{% url 'gestion_bagages' %}"><i class="bi bi-luggage"></i> Bagages</a>
+        <a class="nav-link text-nowrap {% if u == 'gestion_incidents' %}active{% endif %}" href="{% url 'gestion_incidents' %}"><i class="bi bi-exclamation-octagon"></i> Incidents</a>
+        <a class="nav-link text-nowrap {% if u == 'gestion_utilisateurs' %}active{% endif %}" href="{% url 'gestion_utilisateurs' %}"><i class="bi bi-people"></i> Utilisateurs</a>
+        <a class="nav-link text-nowrap {% if u == 'gestion_messages' %}active{% endif %}" href="{% url 'gestion_messages' %}"><i class="bi bi-chat-left-text"></i> Messages</a>
+        <a class="nav-link text-nowrap {% if u == 'gestion_parametres' %}active{% endif %}" href="{% url 'gestion_parametres' %}"><i class="bi bi-gear"></i> Paramètres</a>
+      </nav>
+      {% endwith %}
+    </aside>
+    <div class="col-lg-10">{% block gestion %}{% endblock %}</div>
+  </div>
+</div>
+{% endblock %}

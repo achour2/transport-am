@@ -1,0 +1,410 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: en\n"
+
+msgid "Actualiser"
+msgstr "Refresh"
+
+msgid "Aide"
+msgstr "Help"
+
+msgid "Aller au contenu"
+msgstr "Skip to content"
+
+msgid "Annuler"
+msgstr "Cancel"
+
+msgid "Annulé"
+msgstr "Cancelled"
+
+msgid "Apportez votre bagage au point de dépôt avant la date limite."
+msgstr "Bring your luggage to the drop-off point before the deadline."
+
+msgid "Arrivé"
+msgstr "Arrived"
+
+msgid "Arrivé à destination"
+msgstr "Arrived at destination"
+
+msgid "Arrivée"
+msgstr "Arrival"
+
+msgid "Arrivée prévue"
+msgstr "Expected arrival"
+
+msgid "Aucun départ planifié pour le moment. Revenez bientôt !"
+msgstr "No departures scheduled yet. Check back soon!"
+
+msgid "Aucun voyage disponible pour ce poids pour l’instant."
+msgstr "No trip available for this weight right now."
+
+msgid "Aucun événement pour le moment."
+msgstr "No events yet."
+
+msgid "Aucune destination."
+msgstr "No destinations."
+
+msgid "Avion"
+msgstr "Plane"
+
+msgid "Bagage"
+msgstr "Luggage"
+
+msgid "Bateau"
+msgstr "Ship"
+
+msgid "Calculer"
+msgstr "Calculate"
+
+msgid "Camion"
+msgstr "Truck"
+
+msgid "Carte du trajet"
+msgstr "Route map"
+
+msgid "Changer mon mot de passe"
+msgstr "Change my password"
+
+msgid "Chargé"
+msgstr "Loaded"
+
+msgid "Choisissez le voyage, décrivez le bagage, payez par carte."
+msgstr "Pick the trip, describe the luggage, pay by card."
+
+msgid "Choisissez un pays et saisissez le poids : le prix s’affiche instantanément."
+msgstr "Choose a country and enter the weight: the price appears instantly."
+
+msgid "Code de remise à transmettre au destinataire"
+msgstr "Handover code to give the recipient"
+
+msgid "Comment ça marche"
+msgstr "How it works"
+
+msgid "Complet"
+msgstr "Full"
+
+msgid "Conditions et confidentialité"
+msgstr "Terms and privacy"
+
+msgid "Confirmez votre courriel pour sécuriser votre compte."
+msgstr "Confirm your email to secure your account."
+
+msgid "Connexion"
+msgstr "Log in"
+
+msgid "Contact"
+msgstr "Contact"
+
+msgid "Continuer"
+msgstr "Continue"
+
+msgid "Courriel"
+msgstr "Email"
+
+msgid "Courriel ou mot de passe incorrect."
+msgstr "Incorrect email or password."
+
+msgid "Créer un compte"
+msgstr "Create an account"
+
+msgid "Dernière position"
+msgstr "Last position"
+
+msgid "Destinataire"
+msgstr "Recipient"
+
+msgid "Destination"
+msgstr "Destination"
+
+msgid "Destinations"
+msgstr "Destinations"
+
+msgid "Destinations et tarifs"
+msgstr "Destinations and rates"
+
+msgid "Dimensions (optionnel)"
+msgstr "Dimensions (optional)"
+
+msgid "Documents demandés à la douane"
+msgstr "Documents required by customs"
+
+msgid "Déconnexion"
+msgstr "Log out"
+
+msgid "Délai"
+msgstr "Lead time"
+
+msgid "Délai estimé"
+msgstr "Estimated time"
+
+msgid "Départ"
+msgstr "Departure"
+
+msgid "Déposer"
+msgstr "Drop off"
+
+msgid "Déposé"
+msgstr "Dropped off"
+
+msgid "En cours"
+msgstr "In progress"
+
+msgid "En transit"
+msgstr "In transit"
+
+msgid "Enregistrer"
+msgstr "Save"
+
+msgid "Enregistré"
+msgstr "Registered"
+
+msgid "Envois en cours"
+msgstr "Shipments in progress"
+
+msgid "Envoyer un bagage"
+msgstr "Send luggage"
+
+msgid "Envoyez vos bagages entre pays"
+msgstr "Send your luggage between countries"
+
+msgid "Envoyez vos bagages et colis entre le Canada, l’Algérie, la France, le Maroc et la Tunisie. Réservation en ligne, suivi en temps réel."
+msgstr "Ship luggage and parcels between Canada, Algeria, France, Morocco and Tunisia. Online booking, real-time tracking."
+
+msgid "Filtrer par pays"
+msgstr "Filter by country"
+
+msgid "Frais fixes"
+msgstr "Fixed fee"
+
+msgid "Gestion"
+msgstr "Management"
+
+msgid "Historique"
+msgstr "History"
+
+msgid "Ils nous font confiance"
+msgstr "They trust us"
+
+msgid "Incident en cours"
+msgstr "Incident in progress"
+
+msgid "Kilos restants"
+msgstr "Kilos left"
+
+msgid "La position du voyage s’affichera dès que le bagage sera en transit."
+msgstr "The trip position will show as soon as the luggage is in transit."
+
+msgid "Le destinataire présente son code à 6 chiffres et récupère le bagage."
+msgstr "The recipient shows their 6-digit code and collects the luggage."
+
+msgid "Le numéro de suivi figure dans votre courriel de confirmation."
+msgstr "The tracking number is in your confirmation email."
+
+msgid "Lien copié"
+msgstr "Link copied"
+
+msgid "Livré"
+msgstr "Delivered"
+
+msgid "Longueur × largeur × hauteur, en cm"
+msgstr "Length × width × height, in cm"
+
+msgid "Ma position"
+msgstr "My position"
+
+msgid "Max"
+msgstr "Max"
+
+msgid "Menu"
+msgstr "Menu"
+
+msgid "Mes voyages"
+msgstr "My trips"
+
+msgid "Mettre à jour ma position"
+msgstr "Update my position"
+
+msgid "Mon espace"
+msgstr "My account"
+
+msgid "Mot de passe"
+msgstr "Password"
+
+msgid "Mot de passe oublié ?"
+msgstr "Forgot password?"
+
+msgid "Notifications"
+msgstr "Notifications"
+
+msgid "Nouvel envoi"
+msgstr "New shipment"
+
+msgid "Numéro de suivi"
+msgstr "Tracking number"
+
+msgid "Objets interdits"
+msgstr "Prohibited items"
+
+msgid "Paiement"
+msgstr "Payment"
+
+msgid "Par kilo"
+msgstr "Per kilo"
+
+msgid "Partager le lien"
+msgstr "Share link"
+
+msgid "Pas encore de compte ?"
+msgstr "No account yet?"
+
+msgid "Payer"
+msgstr "Pay"
+
+msgid "Pays desservis"
+msgstr "Countries served"
+
+msgid "Perdu"
+msgstr "Lost"
+
+msgid "Planifié"
+msgstr "Scheduled"
+
+msgid "Point de dépôt"
+msgstr "Drop-off point"
+
+msgid "Prix = frais fixes + (poids × tarif par kilo). Départs depuis le Canada."
+msgstr "Price = fixed fee + (weight × rate per kilo). Departures from Canada."
+
+msgid "Prix total"
+msgstr "Total price"
+
+msgid "Prochain départ"
+msgstr "Next departure"
+
+msgid "Prochains départs"
+msgstr "Upcoming departures"
+
+msgid "Prochains voyages disponibles"
+msgstr "Next available trips"
+
+msgid "Profil et préférences"
+msgstr "Profile and preferences"
+
+msgid "Progression du bagage"
+msgstr "Luggage progress"
+
+msgid "Recevoir"
+msgstr "Receive"
+
+msgid "Renvoyer le lien"
+msgstr "Resend link"
+
+msgid "Retour"
+msgstr "Back"
+
+msgid "Reçu PDF"
+msgstr "PDF receipt"
+
+msgid "Récapitulatif"
+msgstr "Summary"
+
+msgid "Réserver"
+msgstr "Book"
+
+msgid "Réserver ce prix"
+msgstr "Book at this price"
+
+msgid "Réserver vers ce pays"
+msgstr "Book to this country"
+
+msgid "Réservez en moins de 3 minutes, déposez votre bagage, et suivez-le sur la carte jusqu’à sa remise au destinataire."
+msgstr "Book in under 3 minutes, drop off your luggage, and follow it on the map until it reaches the recipient."
+
+msgid "Saisissez le numéro de suivi reçu par courriel (ex. BG-7F3K9Q2A)."
+msgstr "Enter the tracking number from your email (e.g. BG-7F3K9Q2A)."
+
+msgid "Se connecter"
+msgstr "Log in"
+
+msgid "Service"
+msgstr "Service"
+
+msgid "Simulateur"
+msgstr "Price calculator"
+
+msgid "Simulateur de prix"
+msgstr "Price calculator"
+
+msgid "Simuler"
+msgstr "Estimate"
+
+msgid "Simuler un prix"
+msgstr "Estimate a price"
+
+msgid "Suivez le trajet sur la carte, notifié à chaque étape."
+msgstr "Follow the route on the map, notified at every step."
+
+msgid "Suivi"
+msgstr "Tracking"
+
+msgid "Suivi en temps réel · Paiement sécurisé"
+msgstr "Real-time tracking · Secure payment"
+
+msgid "Suivre"
+msgstr "Track"
+
+msgid "Suivre mon bagage"
+msgstr "Track my luggage"
+
+msgid "Suivre un bagage"
+msgstr "Track luggage"
+
+msgid "S’abonner"
+msgstr "Subscribe"
+
+msgid "Terminé"
+msgstr "Completed"
+
+msgid "Total"
+msgstr "Total"
+
+msgid "Tous les pays"
+msgstr "All countries"
+
+msgid "Toutes les destinations"
+msgstr "All destinations"
+
+msgid "Transport de bagages entre pays"
+msgstr "Luggage transport between countries"
+
+msgid "Un prix exact, avant même de créer un compte."
+msgstr "An exact price, before you even sign up."
+
+msgid "Volume"
+msgstr "Volume"
+
+msgid "Vos bagages arrivent. Vous savez où ils sont."
+msgstr "Your luggage arrives. You know where it is."
+
+msgid "Vos bagages et colis entre le Canada et le Maghreb / l’Europe, suivis en temps réel."
+msgstr "Your luggage and parcels between Canada and North Africa / Europe, tracked in real time."
+
+msgid "frais fixes"
+msgstr "fixed fee"
+
+msgid "mise à jour"
+msgstr "updated"
+
+msgid "restants"
+msgstr "left"
+
+msgid "Être prévenu par courriel"
+msgstr "Get email updates"
+
+msgid "à partir de"
+msgstr "from"
+
+msgid "à venir"
+msgstr "coming soon"
+

@@ -1,0 +1,5 @@
+{% extends "comptes/_cadre.html" %}{% load i18n %}
+{% block cadre %}
+<h1 class="h4 fw-bold mb-3">{% translate "Changer mon mot de passe" %}</h1>
+<form method="post">{% csrf_token %}{% include "partials/_form.html" %}<button class="btn btn-primary w-100">{% translate "Enregistrer" %}</button></form>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}{% load i18n outils %}
+{% block titre %}{% translate "Paiement" %}{% endblock %}
+{% block contenu %}
+<div class="container my-5" style="max-width:560px">
+  <div class="carte carte-ombre p-4 p-md-5">
+    <h1 class="h4 fw-bold mb-1"><i class="bi bi-lock-fill text-success"></i> {% translate "Paiement sécurisé" %}</h1>
+    <p class="text-muted small">{{ bagage.description }} · {{ bagage.poids|floatformat:"-2" }} kg → {{ bagage.voyage.ville_arrivee }}</p>
+    <div class="d-flex justify-content-between align-items-center bg-light rounded p-3 mb-4">
+      <span>{% translate "Montant" %}</span><span class="fs-3 fw-bold text-primary">{{ bagage.prix|argent:bagage.devise }}</span>
+    </div>
+    <div class="alert alert-warning small"><i class="bi bi-info-circle"></i> <strong>{% translate "Mode démonstration" %}</strong> — {% translate "Stripe n’est pas encore configuré. Utilisez la carte 4242 4242 4242 4242 (acceptée) ou 4000 0000 0000 0002 (refusée)." %}</div>
+    <form method="post">{% csrf_token %}
+      <div class="mb-3"><label class="form-label" for="carte">{% translate "Numéro de carte" %}</label><input id="carte" name="carte" class="form-control form-control-lg" inputmode="numeric" autocomplete="cc-number" value="4242 4242 4242 4242" required></div>
+      <div class="row">
+        <div class="col-6 mb-3"><label class="form-label" for="exp">{% translate "Expiration" %}</label><input id="exp" class="form-control" value="12/30" autocomplete="cc-exp"></div>
+        <div class="col-6 mb-3"><label class="form-label" for="cvc">CVC</label><input id="cvc" class="form-control" value="123" autocomplete="cc-csc"></div>
+      </div>
+      <button class="btn btn-accent btn-lg w-100">{% translate "Payer" %} {{ bagage.prix|argent:bagage.devise }}</button>
+    </form>
+    <p class="small text-muted text-center mt-3 mb-0">{% translate "Aucune donnée de carte n’est conservée sur notre site." %}</p>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,11 @@
+{% load i18n outils %}
+<ul class="timeline">
+  {% for e in evenements reversed %}
+  <li>
+    <div class="fw-semibold">{{ e.get_statut_display }}</div>
+    <div class="small">{{ e.message }}</div>
+    <div class="small text-muted">{{ e.cree_le|date:"d/m/Y H:i" }}{% if montrer_auteur and e.auteur %} · {{ e.auteur }}{% endif %}</div>
+  </li>
+  {% empty %}<li class="text-muted">{% translate "Aucun événement pour le moment." %}</li>
+  {% endfor %}
+</ul>

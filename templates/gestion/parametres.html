@@ -1,0 +1,17 @@
+{% extends "gestion/_base.html" %}
+{% block titre %}Paramètres{% endblock %}
+{% block gestion %}
+<h1 class="section-titre h3 mb-3">Paramètres</h1>
+<form method="post" class="carte carte-ombre p-4" style="max-width:900px" novalidate>{% csrf_token %}
+  <div class="row">
+  {% for f in form.visible_fields %}
+    <div class="{% if f.field.widget.input_type == 'textarea' or 'texte' in f.name or 'conditions' in f.name or 'politique' in f.name %}col-12{% else %}col-md-6{% endif %} mb-3">
+      <label class="form-label fw-semibold small" for="{{ f.id_for_label }}">{{ f.label|capfirst }}</label>{{ f }}
+      {% if f.help_text %}<div class="form-text">{{ f.help_text }}</div>{% endif %}
+      {% for e in f.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+    </div>
+  {% endfor %}
+  </div>
+  <button class="btn btn-primary"><i class="bi bi-check-lg"></i> Enregistrer les paramètres</button>
+</form>
+{% endblock %}

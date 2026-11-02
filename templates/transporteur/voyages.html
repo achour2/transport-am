@@ -1,0 +1,39 @@
+{% extends "base.html" %}{% load i18n outils %}
+{% block titre %}{% translate "Mes voyages" %}{% endblock %}
+{% block contenu %}
+<div class="container my-4" style="max-width:720px">
+  <h1 class="section-titre h4 mb-3">{% translate "Mes voyages" %}</h1>
+  {% for voyage in en_cours %}
+  <div class="carte carte-ombre p-4 mb-4 border-primary">
+    <span class="badge bg-primary mb-2">{% translate "En cours" %}</span>
+    <div class="fs-5 fw-bold">{{ voyage.ville_depart.nom }} → {{ voyage.ville_arrivee.nom }}</div>
+    {% with m=voyage.minutes_depuis_position p=voyage.derniere_position %}
+    <div class="mb-3 {% if m is not None and m >= 120 %}retard{% else %}text-muted{% endif %}">
+      <i class="bi bi-clock-history"></i>
+      {% if p %}{% translate "Dernière position" %} : {{ p.lieu|default:"GPS" }} · {{ p.envoyee_le|depuis }}{% else %}{% translate "Aucune position envoyée depuis le départ" %}{% endif %}
+    </div>
+    {% endwith %}
+    {% include "transporteur/_bouton_position.html" %}
+    <a href="{% url 'transporteur_voyage' voyage.pk %}" class="btn btn-outline-primary w-100 mt-3">{% translate "Ouvrir le voyage" %}</a>
+  </div>
+  {% endfor %}
+
+  <h2 class="h6 fw-bold text-muted text-uppercase mt-4">{% translate "Prochains voyages" %}</h2>
+  {% for v in prochains %}
+  <a href="{% url 'transporteur_voyage' v.pk %}" class="carte carte-ombre p-3 mb-2 d-block text-decoration-none text-body">
+    <div class="d-flex justify-content-between">
+      <div><div class="fw-bold">{{ v.ville_depart.nom }} → {{ v.ville_arrivee.nom }}</div>
+        <div class="small text-muted">{{ v.depart|tz:v.pays_depart.fuseau|date:"l j F, H\hi" }} · {{ v.get_moyen_display }}</div></div>
+      <div class="text-end small"><div class="fw-bold">{{ v.bagages.count }} {% translate "bagages" %}</div><div class="text-muted">{{ v.kilos_reserves|floatformat:0 }} / {{ v.capacite_kg|floatformat:0 }} kg</div></div>
+    </div>
+  </a>
+  {% empty %}<p class="text-muted small">{% translate "Aucun voyage planifié." %}</p>
+  {% endfor %}
+
+  {% if termines %}
+  <h2 class="h6 fw-bold text-muted text-uppercase mt-4">{% translate "Voyages terminés" %}</h2>
+  <div class="list-group">{% for v in termines %}<a class="list-group-item list-group-item-action small" href="{% url 'transporteur_voyage' v.pk %}">{{ v }}</a>{% endfor %}</div>
+  {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}{% include "transporteur/_gps.html" %}{% endblock %}
