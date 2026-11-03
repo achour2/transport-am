@@ -24,6 +24,8 @@ from ..models import Bagage, DestinataireEnregistre, Paiement, Pays, Voyage
 from ..pdf import recu_pdf
 from ..services import (
     ErreurMetier,
+    annuler_reservation_comptoir,
+    reserver_paiement_comptoir,
     annuler_envoi,
     confirmer_paiement,
     creer_bagage,
@@ -40,13 +42,17 @@ SESSION = "reservation"
 
 @client_requis
 def tableau(request):
+    a_payer = request.user.bagages.filter(paiement_au_comptoir=True, statut_paiement="en_attente").exclude(
+        statut="annule").select_related("voyage__ville_depart__pays", "voyage__ville_arrivee__pays")
     envois = request.user.bagages.filter(statut_paiement__in=["paye", "rembourse"]).select_related(
         "voyage__ville_depart__pays", "voyage__ville_arrivee__pays")
     return render(request, "client/tableau.html", {
         "en_cours": [b for b in envois if b.est_actif and b.statut_paiement == "paye"],
         "termines": [b for b in envois if not b.est_actif or b.statut_paiement == "rembourse"],
         "notifications": request.user.notifications.all()[:8],
-        "en_attente": request.user.bagages.filter(statut_paiement__in=["en_attente", "echoue"], statut="enregistre")[:3],
+        "en_attente": request.user.bagages.filter(statut_paiement__in=["en_attente", "echoue"], statut="enregistre",
+                                                  paiement_au_comptoir=False)[:3] if settings.PAIEMENT_EN_LIGNE else [],
+        "a_payer": a_payer,
     })
 
 
@@ -161,7 +167,10 @@ def envoi_nouveau(request, etape=1):
                 "valeur_declaree": Decimal(b.get("valeur_declaree") or 0), **resa["destinataire"],
             }
             try:
-                bagage = creer_bagage(request.user, voyage, donnees)
+                if settings.PAIEMENT_EN_LIGNE:
+                    bagage = creer_bagage(request.user, voyage, donnees)
+                else:
+                    bagage = reserver_paiement_comptoir(request.user, voyage, donnees)
             except ErreurMetier as e:
                 messages.error(request, str(e))
                 return redirect("client_envoi_etape", etape=1)
@@ -170,6 +179,10 @@ def envoi_nouveau(request, etape=1):
                     bagage.photo_depot.save(b["photo_tmp"].split("/")[-1], f, save=True)
                 default_storage.delete(b["photo_tmp"])
             request.session.pop(SESSION, None)
+            if not settings.PAIEMENT_EN_LIGNE:
+                messages.success(request, f"Réservation {bagage.numero_suivi} enregistrée ! Vos kilos sont réservés : "
+                                          "payez au point de dépôt avant la date limite.")
+                return redirect("client_envoi", numero=bagage.numero_suivi)
             return redirect("client_payer", numero=bagage.numero_suivi)
     return render(request, "client/envoi_nouveau.html", ctx)
 
@@ -193,6 +206,9 @@ def _bagage_client(request, numero):
 def payer(request, numero):
     bagage = _bagage_client(request, numero)
     if bagage.statut_paiement == Bagage.Paiement.PAYE:
+        return redirect("client_envoi", numero=numero)
+    if not settings.PAIEMENT_EN_LIGNE or bagage.paiement_au_comptoir:
+        messages.info(request, "Le paiement se fait au point de dépôt (espèces, carte au terminal ou virement).")
         return redirect("client_envoi", numero=numero)
     try:
         verifier_reservation(bagage.voyage, bagage.poids)
@@ -296,7 +312,7 @@ def stripe_webhook(request):
 @client_requis
 def envoi_detail(request, numero):
     bagage = _bagage_client(request, numero)
-    if bagage.statut_paiement in (Bagage.Paiement.EN_ATTENTE, Bagage.Paiement.ECHOUE):
+    if bagage.statut_paiement in (Bagage.Paiement.EN_ATTENTE, Bagage.Paiement.ECHOUE) and not bagage.paiement_au_comptoir:
         return redirect("client_payer", numero=numero)
     autres_voyages = []
     if bagage.choix_requis:
@@ -327,6 +343,10 @@ def recu(request, numero):
 def annuler(request, numero):
     bagage = _bagage_client(request, numero)
     try:
+        if bagage.a_encaisser:
+            annuler_reservation_comptoir(bagage, request.user)
+            messages.success(request, "Réservation annulée. Rien n'a été payé, il n'y a rien à rembourser.")
+            return redirect("client_envoi", numero=numero)
         annuler_envoi(bagage, request.user)
         messages.success(request, "Envoi annulé. Le remboursement intégral est en cours.")
     except ErreurMetier as e:

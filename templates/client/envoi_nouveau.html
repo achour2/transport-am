@@ -10,7 +10,7 @@
     <div class="w {% if etape == 1 %}actif{% elif etape > 1 %}fait{% endif %}">1. {% translate "Destination" %}</div>
     <div class="w {% if etape == 2 %}actif{% elif etape > 2 %}fait{% endif %}">2. {% translate "Bagage" %}</div>
     <div class="w {% if etape == 3 %}actif{% elif etape > 3 %}fait{% endif %}">3. {% translate "Destinataire" %}</div>
-    <div class="w {% if etape == 4 %}actif{% endif %}">4. {% translate "Paiement" %}</div>
+    <div class="w {% if etape == 4 %}actif{% endif %}">4. {% if paiement_en_ligne %}{% translate "Paiement" %}{% else %}{% translate "Récapitulatif" %}{% endif %}</div>
   </nav>
 
   <div class="carte carte-ombre p-4 p-md-5">
@@ -93,6 +93,9 @@
       <i class="bi bi-geo-alt"></i> <strong>{% translate "Dépôt" %} :</strong> {{ voyage.lieu_depot }}{% if voyage.heure_depot %} ({{ voyage.heure_depot }}){% endif %}<br>
       <i class="bi bi-alarm"></i> <strong>{% translate "Date limite de dépôt" %} :</strong> {{ voyage.date_limite_depot|tz:voyage.pays_depart.fuseau|date:"l j F Y, H\hi" }}
     </div>
+    {% if not paiement_en_ligne %}
+    <div class="alert alert-warning small"><i class="bi bi-cash-coin"></i> <strong>{% translate "Paiement au point de dépôt" %}</strong> — {% translate "vous payez" %} {{ prix|argent:pays.devise }} {% translate "en déposant votre bagage (espèces, carte au terminal ou virement). Vos kilos sont réservés jusqu’à la date limite de dépôt." %}</div>
+    {% endif %}
     <form method="post">{% csrf_token %}
       <div class="form-check mb-4">
         <input class="form-check-input" type="checkbox" name="accepte" id="accepte" required>
@@ -100,7 +103,11 @@
       </div>
       <div class="d-flex justify-content-between">
         <a href="{% url 'client_envoi_etape' 3 %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> {% translate "Retour" %}</a>
+        {% if paiement_en_ligne %}
         <button class="btn btn-accent btn-lg"><i class="bi bi-lock-fill"></i> {% translate "Payer" %} {{ prix|argent:pays.devise }}</button>
+        {% else %}
+        <button class="btn btn-accent btn-lg"><i class="bi bi-check2-circle"></i> {% translate "Réserver" %} — {% translate "paiement au dépôt" %}</button>
+        {% endif %}
       </div>
     </form>
   {% endif %}

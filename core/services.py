@@ -162,7 +162,14 @@ def confirmer_paiement(paiement, reference=""):
         return paiement
     bagage = paiement.bagage
     voyage = Voyage.objects.select_for_update().get(pk=bagage.voyage_id)
-    if bagage.poids > voyage.kilos_restants:
+    restants = voyage.kilos_restants
+    if bagage.a_encaisser and timezone.now() < voyage.date_limite_depot:
+        restants += bagage.poids  # ses kilos sont déjà comptés comme réservés
+    if bagage.poids > restants:
+        if bagage.paiement_au_comptoir:
+            paiement.delete()
+            raise ErreurMetier(f"Capacité insuffisante : il ne reste que {restants} kg sur ce voyage. "
+                               "Déplacez l'envoi vers un autre voyage avant d'encaisser.")
         paiement.statut = Paiement.Statut.ECHOUE
         paiement.save()
         bagage.statut_paiement = Bagage.Paiement.ECHOUE
@@ -484,6 +491,14 @@ def verifications_periodiques(maintenant=None):
                 voyage.save(update_fields=["derniere_alerte_admin"])
                 resultat["alertes"] += 1
 
+    expirees = Bagage.objects.filter(
+        paiement_au_comptoir=True, statut_paiement=Bagage.Paiement.EN_ATTENTE,
+        voyage__date_limite_depot__lte=maintenant,
+    ).exclude(statut=Bagage.Statut.ANNULE)
+    for b in expirees:
+        annuler_reservation_comptoir(b, None, f"Réservation {b.numero_suivi} annulée : non payée avant la date limite de dépôt.")
+        resultat["expirees"] = resultat.get("expirees", 0) + 1
+
     limite = maintenant + timezone.timedelta(hours=24)
     a_rappeler = Bagage.objects.filter(
         statut=Bagage.Statut.ENREGISTRE, statut_paiement=Bagage.Paiement.PAYE, rappel_depot_envoye=False,
@@ -563,3 +578,64 @@ def creer_envoi_comptoir(admin, voyage, donnees, client_infos, mode, depose=True
                          f"dans votre espace client :", lien)
     bagage.refresh_from_db()
     return bagage, compte_cree
+
+
+# --------------------------------------------------------------------------
+# Réservation en ligne, paiement au comptoir (tant que le paiement par carte est désactivé)
+# --------------------------------------------------------------------------
+
+
+@transaction.atomic
+def reserver_paiement_comptoir(client, voyage, donnees):
+    """Réservation en ligne : les kilos sont bloqués jusqu'à la date limite de dépôt, paiement au point de dépôt."""
+    voyage = Voyage.objects.select_for_update().get(pk=voyage.pk)
+    bagage = creer_bagage(client, voyage, donnees)
+    bagage.paiement_au_comptoir = True
+    bagage.save(update_fields=["paiement_au_comptoir"])
+    EvenementBagage.objects.create(bagage=bagage, statut=Bagage.Statut.ENREGISTRE, auteur=client,
+                                   message="Réservation enregistrée — à payer au point de dépôt.")
+    from zoneinfo import ZoneInfo
+
+    params = Parametres.charger()
+    limite = timezone.localtime(voyage.date_limite_depot, ZoneInfo(voyage.pays_depart.fuseau))
+    lien = reverse("client_envoi", args=[bagage.numero_suivi])
+    if client:
+        Notification.objects.create(destinataire=client, lien=lien,
+                                    message=f"Réservation {bagage.numero_suivi} : {bagage.prix} {bagage.devise} à payer au dépôt")
+        envoyer_courriel(
+            client.email, f"Réservation {bagage.numero_suivi} — paiement au point de dépôt",
+            f"Votre réservation est enregistrée et vos {bagage.poids} kg sont réservés sur le voyage "
+            f"{voyage.ville_depart.nom} → {voyage.ville_arrivee.nom}.\n\n"
+            f"Numéro de réservation : {bagage.numero_suivi}\n"
+            f"Montant à payer au dépôt : {bagage.prix} {bagage.devise} (espèces, carte au terminal ou virement)\n"
+            f"Lieu de dépôt : {voyage.lieu_depot}\n"
+            f"Date limite : {limite:%d/%m/%Y à %H:%M}\n\n"
+            "Sans paiement avant la date limite, la réservation est annulée automatiquement. "
+            f"Contact : {params.telephone}", lien)
+    notifier_admins(f"Nouvelle réservation à encaisser au comptoir : {bagage.numero_suivi} ({bagage.prix} {bagage.devise})",
+                    reverse("gestion_bagage", args=[bagage.numero_suivi]), courriel=False)
+    return bagage
+
+
+@transaction.atomic
+def encaisser_reservation(bagage, admin, mode, depose=True):
+    """L'admin encaisse au comptoir une réservation faite en ligne."""
+    if not bagage.a_encaisser:
+        raise ErreurMetier("Cette réservation n'est pas en attente de paiement.")
+    if bagage.voyage.statut != Voyage.Statut.PLANIFIE:
+        raise ErreurMetier("Le voyage n'est plus planifié : déplacez l'envoi vers un autre voyage.")
+    paiement = Paiement.objects.create(bagage=bagage, montant=bagage.prix, devise=bagage.devise, mode=mode, encaisse_par=admin)
+    confirmer_paiement(paiement, reference=f"comptoir-{mode}-{paiement.pk}")
+    bagage.refresh_from_db()
+    if depose:
+        changer_statut(bagage, Bagage.Statut.DEPOSE, admin, notifier_client=False,
+                       message=f"Payé au comptoir ({paiement.get_mode_display().lower()}) et bagage déposé.")
+    return bagage
+
+
+def annuler_reservation_comptoir(bagage, auteur, message=None):
+    """Annule une réservation non payée (aucun remboursement : rien n'a été encaissé)."""
+    if not bagage.a_encaisser:
+        raise ErreurMetier("Cette réservation est déjà payée ou annulée.")
+    return changer_statut(bagage, Bagage.Statut.ANNULE, auteur,
+                          message or f"Réservation {bagage.numero_suivi} annulée (non payée).")

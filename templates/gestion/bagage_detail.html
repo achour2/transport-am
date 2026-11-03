@@ -3,7 +3,7 @@
 {% block gestion %}
 <a href="{% url 'gestion_bagages' %}" class="small"><i class="bi bi-arrow-left"></i> Bagages</a>
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-2 mb-3">
-  <h1 class="h3 numero mb-0">{{ bagage.numero_suivi }} <span class="badge bg-{{ bagage.statut|couleur }} fs-6 align-middle">{{ bagage.get_statut_display }}</span> <span class="badge bg-{{ bagage.statut_paiement|couleur }} fs-6 align-middle">{{ bagage.get_statut_paiement_display }}</span></h1>
+  <h1 class="h3 numero mb-0">{{ bagage.numero_suivi }} <span class="badge bg-{{ bagage.statut|couleur }} fs-6 align-middle">{{ bagage.get_statut_display }}</span> {% if bagage.a_encaisser %}<span class="badge bg-warning text-dark fs-6 align-middle">À encaisser</span>{% else %}<span class="badge bg-{{ bagage.statut_paiement|couleur }} fs-6 align-middle">{{ bagage.get_statut_paiement_display }}</span>{% endif %}</h1>
   <div class="d-flex gap-2">
     {% if bagage.statut_paiement != "en_attente" %}<a href="{% url 'gestion_recu' bagage.numero_suivi %}" class="btn btn-sm {% if request.GET.nouveau %}btn-accent{% else %}btn-outline-primary{% endif %}" target="_blank"><i class="bi bi-printer"></i> Imprimer le reçu</a>{% endif %}
     <a href="{% url 'suivi_detail' bagage.numero_suivi %}" class="btn btn-sm btn-outline-primary" target="_blank"><i class="bi bi-box-arrow-up-right"></i> Page de suivi</a>
@@ -48,6 +48,22 @@
     </div>
   </div>
   <div class="col-xl-5">
+    {% if bagage.a_encaisser %}
+    <form method="post" class="carte border-warning p-4 mb-3">{% csrf_token %}<input type="hidden" name="action" value="encaisser">
+      <h2 class="h5 fw-bold"><i class="bi bi-cash-coin text-warning"></i> Encaisser au comptoir</h2>
+      <p class="mb-2">Réservé en ligne par le client. Montant à encaisser : <strong class="fs-4 text-primary">{{ bagage.prix|argent:bagage.devise }}</strong></p>
+      {% if bagage.reservation_expiree %}<div class="alert alert-danger small py-2">Date limite de dépôt dépassée : les kilos ne sont plus bloqués. Vous pouvez encaisser s'il reste de la place.</div>{% endif %}
+      <label class="form-label small fw-semibold" for="mode">Mode de paiement</label>
+      <select name="mode" id="mode" class="form-select mb-2">
+        <option value="especes">Espèces</option><option value="terminal">Terminal de paiement (comptoir)</option><option value="virement">Virement / Interac</option>
+      </select>
+      <div class="form-check mb-3"><input class="form-check-input" type="checkbox" name="depose" id="depose" checked><label class="form-check-label" for="depose">Le bagage est déposé maintenant</label></div>
+      <button class="btn btn-accent w-100"><i class="bi bi-check2-circle"></i> Encaisser {{ bagage.prix|argent:bagage.devise }}</button>
+    </form>
+    <form method="post" class="mb-3" onsubmit="return confirm('Annuler cette réservation non payée ? Les kilos seront libérés.')">{% csrf_token %}<input type="hidden" name="action" value="annuler_reservation">
+      <button class="btn btn-link text-danger btn-sm p-0">Annuler la réservation (non payée)</button>
+    </form>
+    {% endif %}
     <form method="post" class="carte carte-ombre p-4 mb-3">{% csrf_token %}<input type="hidden" name="action" value="statut">
       <h2 class="h6 fw-bold">Changer le statut</h2>
       {% include "partials/_form.html" with form=sform %}

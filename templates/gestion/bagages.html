@@ -5,6 +5,10 @@
   <h1 class="section-titre h3 mb-0">Bagages</h1>
   <a href="{% url 'gestion_envoi_comptoir' %}" class="btn btn-accent"><i class="bi bi-cash-coin"></i> Envoi au comptoir (paiement en espèces)</a>
 </div>
+<div class="d-flex gap-2 mb-3">
+  <a href="{% url 'gestion_bagages' %}" class="btn btn-sm {% if not a_encaisser %}btn-primary{% else %}btn-light{% endif %}">Tous</a>
+  <a href="?a_encaisser=1" class="btn btn-sm {% if a_encaisser %}btn-warning{% else %}btn-light{% endif %}"><i class="bi bi-cash-coin"></i> À encaisser au comptoir <span class="badge bg-dark">{{ nb_a_encaisser }}</span></a>
+</div>
 <form method="get" class="carte carte-ombre p-3 mb-3 row g-2 align-items-end">
   <div class="col-md-3"><label class="form-label small" for="q">Recherche</label><input id="q" name="q" value="{{ q }}" class="form-control" placeholder="Numéro, client, destinataire"></div>
   <div class="col-6 col-md-2"><label class="form-label small" for="statut">Statut</label><select id="statut" name="statut" class="form-select"><option value="">Tous</option>{% for c, l in statuts %}<option value="{{ c }}" {% if f.statut == c %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
@@ -25,7 +29,7 @@
       <td class="small">{{ b.voyage.ville_depart.nom }} → {{ b.voyage.ville_arrivee.nom }}<div class="text-muted">{{ b.voyage.depart|date:"d/m/Y" }}</div></td>
       <td class="text-end">{{ b.poids|floatformat:"-1" }} kg</td>
       <td class="text-end">{{ b.prix|argent:b.devise }}</td>
-      <td><span class="badge bg-{{ b.statut_paiement|couleur }}">{{ b.get_statut_paiement_display }}</span></td>
+      <td>{% if b.a_encaisser %}<span class="badge bg-warning text-dark">À encaisser</span>{% else %}<span class="badge bg-{{ b.statut_paiement|couleur }}">{{ b.get_statut_paiement_display }}</span>{% endif %}</td>
       <td><span class="badge bg-{{ b.statut|couleur }}">{{ b.get_statut_display }}</span>{% if b.choix_requis %} <i class="bi bi-exclamation-triangle text-danger" title="Choix client requis"></i>{% endif %}</td>
     </tr>
     {% empty %}<tr><td colspan="8" class="text-muted">Aucun bagage trouvé.</td></tr>

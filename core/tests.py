@@ -14,7 +14,7 @@ from core import services
 from core.models import Bagage, Incident, Notification, Paiement, Pays, Position, Utilisateur, Ville, Voyage
 
 
-@override_settings(STRIPE_SECRET_KEY="", EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+@override_settings(STRIPE_SECRET_KEY="", PAIEMENT_EN_LIGNE=True, EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
 class Base(TestCase):
     def setUp(self):
         self.admin = Utilisateur.objects.create_user("admin@t.ca", "x-Pass-1234", role="admin", first_name="Admin")
@@ -417,3 +417,60 @@ class SuppressionDemo(TestCase):
         self.assertFalse(Bagage.objects.exists())
         self.assertTrue(Utilisateur.objects.filter(pk=reel.pk).exists())
         self.assertTrue(Pays.objects.filter(code="DZ").exists())
+
+
+@override_settings(PAIEMENT_EN_LIGNE=False)
+class ReservationPaiementComptoir(Base):
+    """Paiement en ligne désactivé : le client réserve en ligne, l'admin encaisse au comptoir."""
+
+    def reserver_en_ligne(self, voyage, poids="18"):
+        self.client.force_login(self.sara)
+        self.client.post(reverse("client_envoi_nouveau"), {"pays": self.algerie.pk, "voyage": voyage.pk})
+        self.client.post(reverse("client_envoi_etape", args=[2]), {"description": "Valise", "poids": poids, "valeur_declaree": "0"})
+        self.client.post(reverse("client_envoi_etape", args=[3]), {"dest_nom": "Mère", "dest_telephone": "+213", "dest_adresse": "Alger"})
+        return self.client.post(reverse("client_envoi_etape", args=[4]), {"accepte": "on"})
+
+    def test_reservation_bloque_les_kilos_puis_admin_encaisse(self):
+        voyage = self.creer_voyage(capacite=300)
+        r = self.reserver_en_ligne(voyage)
+        b = Bagage.objects.get()
+        self.assertRedirects(r, reverse("client_envoi", args=[b.numero_suivi]))
+        self.assertTrue(b.a_encaisser)
+        self.assertEqual(voyage.kilos_restants, Decimal("282"))  # kilos bloqués
+        self.assertContains(self.client.get(reverse("client_envoi", args=[b.numero_suivi])), "payer au point de dépôt")
+        # La carte de test ne peut plus être utilisée
+        self.client.post(reverse("client_payer", args=[b.numero_suivi]), {"carte": "4242424242424242"})
+        b.refresh_from_db()
+        self.assertEqual(b.statut_paiement, "en_attente")
+        self.assertFalse(Paiement.objects.exists())
+        # L'admin encaisse en espèces
+        self.client.force_login(self.admin)
+        self.assertContains(self.client.get(reverse("gestion_bagages") + "?a_encaisser=1"), b.numero_suivi)
+        self.client.post(reverse("gestion_bagage", args=[b.numero_suivi]), {"action": "encaisser", "mode": "especes", "depose": "on"})
+        b.refresh_from_db()
+        self.assertEqual((b.statut_paiement, b.statut), ("paye", "depose"))
+        self.assertEqual(b.paiements.get().mode, "especes")
+        self.assertEqual(voyage.kilos_restants, Decimal("282"))  # pas compté deux fois
+        self.assertEqual(self.client.get(reverse("suivi_detail", args=[b.numero_suivi])).status_code, 200)
+
+    def test_capacite_tient_compte_des_reservations(self):
+        voyage = self.creer_voyage(capacite=20)
+        self.reserver_en_ligne(voyage, "18")
+        with self.assertRaises(services.ErreurMetier):
+            services.creer_bagage(self.sara, voyage, {"description": "x", "poids": Decimal(5), "dest_nom": "a",
+                                                      "dest_telephone": "1", "dest_adresse": "b"})
+
+    def test_annulation_et_expiration_liberent_les_kilos(self):
+        voyage = self.creer_voyage(capacite=100)
+        self.reserver_en_ligne(voyage, "10")
+        b = Bagage.objects.get()
+        self.client.post(reverse("client_annuler", args=[b.numero_suivi]))
+        b.refresh_from_db()
+        self.assertEqual(b.statut, "annule")
+        self.assertEqual(voyage.kilos_restants, Decimal("100"))
+        # Expiration à la date limite de dépôt
+        self.reserver_en_ligne(voyage, "10")
+        b2 = Bagage.objects.exclude(pk=b.pk).get()
+        r = services.verifications_periodiques(voyage.date_limite_depot + timedelta(minutes=1))
+        b2.refresh_from_db()
+        self.assertEqual((r.get("expirees"), b2.statut), (1, "annule"))

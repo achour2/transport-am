@@ -183,6 +183,9 @@ SITE_URL = env("SITE_URL", f"https://{RENDER_HOST}" if RENDER_HOST else "http://
 STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY", "")
 STRIPE_PUBLIC_KEY = env("STRIPE_PUBLIC_KEY", "")
 STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET", "")
+# Paiement par carte sur le site. Désactivé (= réservation en ligne, paiement au comptoir)
+# tant que Stripe n'est pas configuré, sauf si PAIEMENT_EN_LIGNE=true (mode démo / développement).
+PAIEMENT_EN_LIGNE = env_bool("PAIEMENT_EN_LIGNE", bool(STRIPE_SECRET_KEY))
 
 # Celery + Redis (rappels toutes les 2 h, alertes de retard)
 CELERY_BROKER_URL = env("REDIS_URL", "redis://localhost:6379/0")

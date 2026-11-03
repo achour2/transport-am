@@ -53,6 +53,8 @@ def tableau(request):
         "paiements": Paiement.objects.select_related("bagage__client").exclude(statut="en_attente")[:8],
         "reservations": Bagage.objects.filter(statut_paiement="paye").select_related("client", "voyage__ville_arrivee")[:8],
         "messages_contact": MessageContact.objects.filter(traite=False).count(),
+        "a_encaisser": Bagage.objects.filter(paiement_au_comptoir=True, statut_paiement="en_attente",
+                                             voyage__date_limite_depot__gt=timezone.now()).exclude(statut="annule").count(),
         "notifications": request.user.notifications.filter(lue=False)[:6],
     })
 
@@ -209,7 +211,8 @@ def voyage_form(request, pk=None, dupliquer=None):
                 notifier_voyage_assigne(v)
             messages.success(request, "Voyage enregistré.")
         return redirect("gestion_voyages")
-    bagages = voyage.bagages.filter(statut_paiement="paye").select_related("client") if voyage else []
+    bagages = voyage.bagages.filter(Q(statut_paiement="paye") | Q(paiement_au_comptoir=True, statut_paiement="en_attente")).exclude(
+        statut="annule").select_related("client") if voyage else []
     return render(request, "gestion/voyage_form.html", {"form": form, "voyage": voyage, "bagages": bagages, "duplique": dupliquer})
 
 
@@ -232,8 +235,10 @@ def voyage_annuler(request, pk):
 
 @admin_requis
 def bagages(request):
-    qs = Bagage.objects.exclude(statut_paiement="en_attente").select_related(
+    qs = Bagage.objects.filter(Q(paiement_au_comptoir=True) | ~Q(statut_paiement="en_attente")).select_related(
         "client", "voyage__ville_depart", "voyage__ville_arrivee__pays")
+    if request.GET.get("a_encaisser"):
+        qs = qs.filter(paiement_au_comptoir=True, statut_paiement="en_attente").exclude(statut="annule")
     q = request.GET.get("q", "").strip()
     if q:
         qs = qs.filter(Q(numero_suivi__icontains=q) | Q(client__first_name__icontains=q) | Q(client__last_name__icontains=q)
@@ -249,7 +254,8 @@ def bagages(request):
         qs = qs.filter(cree_le__date=f["date"])
     return render(request, "gestion/bagages.html", {
         "bagages": Paginator(qs, 30).get_page(request.GET.get("page")), "q": q, "f": f,
-        "statuts": Bagage.Statut.choices, "pays_list": Pays.objects.all(),
+        "statuts": Bagage.Statut.choices, "pays_list": Pays.objects.all(), "a_encaisser": request.GET.get("a_encaisser"),
+        "nb_a_encaisser": Bagage.objects.filter(paiement_au_comptoir=True, statut_paiement="en_attente").exclude(statut="annule").count(),
         "voyages_list": Voyage.objects.exclude(statut="annule").select_related("ville_depart", "ville_arrivee").order_by("-depart")[:50],
     })
 
@@ -319,6 +325,20 @@ def bagage_detail(request, numero):
                 if dform.is_valid():
                     deplacer_bagage(bagage, dform.cleaned_data["voyage"], request.user)
                     messages.success(request, "Bagage déplacé.")
+            elif action == "encaisser":
+                from ..services import encaisser_reservation
+
+                mode = request.POST.get("mode", "especes")
+                if mode not in ("especes", "terminal", "virement"):
+                    mode = "especes"
+                encaisser_reservation(bagage, request.user, mode, depose=bool(request.POST.get("depose")))
+                messages.success(request, f"{bagage.prix} {bagage.devise} encaissés. Le client reçoit sa confirmation et son code de remise.")
+                return redirect(f"{reverse('gestion_bagage', args=[numero])}?nouveau=1")
+            elif action == "annuler_reservation":
+                from ..services import annuler_reservation_comptoir
+
+                annuler_reservation_comptoir(bagage, request.user)
+                messages.success(request, "Réservation annulée, les kilos sont libérés.")
             elif action == "rembourser":
                 rembourser(bagage, request.user)
                 if bagage.statut == Bagage.Statut.ENREGISTRE or bagage.choix_requis:

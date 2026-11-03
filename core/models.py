@@ -254,9 +254,11 @@ class Voyage(models.Model):
     # -- capacité
     @property
     def kilos_reserves(self):
-        total = self.bagages.filter(statut_paiement=Bagage.Paiement.PAYE).exclude(
-            statut=Bagage.Statut.ANNULE
-        ).aggregate(t=Sum("poids"))["t"]
+        """Kilos payés + kilos réservés « à payer au comptoir » (bloqués jusqu'à la date limite de dépôt)."""
+        condition = models.Q(statut_paiement=Bagage.Paiement.PAYE)
+        if timezone.now() < self.date_limite_depot:
+            condition |= models.Q(statut_paiement=Bagage.Paiement.EN_ATTENTE, paiement_au_comptoir=True)
+        total = self.bagages.filter(condition).exclude(statut=Bagage.Statut.ANNULE).aggregate(t=Sum("poids"))["t"]
         return total or Decimal("0")
 
     @property
@@ -403,6 +405,7 @@ class Bagage(models.Model):
     statut = models.CharField(max_length=12, choices=Statut.choices, default=Statut.ENREGISTRE)
     statut_paiement = models.CharField(max_length=12, choices=Paiement.choices, default=Paiement.EN_ATTENTE)
     choix_requis = models.BooleanField(default=False, help_text="Voyage annulé : le client doit choisir")
+    paiement_au_comptoir = models.BooleanField(default=False, help_text="Réservé en ligne, à payer au point de dépôt")
     rappel_depot_envoye = models.BooleanField(default=False)
     cree_le = models.DateTimeField(auto_now_add=True)
 
@@ -428,6 +431,19 @@ class Bagage(models.Model):
         prenom = parties[0][0].upper() + "***"
         nom = (" " + parties[-1][0].upper() + ".") if len(parties) > 1 else ""
         return prenom + nom
+
+    @property
+    def a_encaisser(self):
+        """Réservation en ligne en attente de paiement au comptoir (encore valable)."""
+        return (
+            self.paiement_au_comptoir
+            and self.statut_paiement == self.Paiement.EN_ATTENTE
+            and self.statut != self.Statut.ANNULE
+        )
+
+    @property
+    def reservation_expiree(self):
+        return self.a_encaisser and timezone.now() >= self.voyage.date_limite_depot
 
     @property
     def annulable(self):

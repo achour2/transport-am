@@ -4,6 +4,20 @@
 <div class="container my-4 my-md-5">
   <nav aria-label="breadcrumb"><ol class="breadcrumb small"><li class="breadcrumb-item"><a href="{% url 'client_tableau' %}">{% translate "Mon espace" %}</a></li><li class="breadcrumb-item active">{{ bagage.numero_suivi }}</li></ol></nav>
 
+  {% if bagage.a_encaisser %}
+  <div class="carte p-4 mb-4 {% if bagage.reservation_expiree %}border-danger{% else %}border-warning{% endif %}">
+    {% if bagage.reservation_expiree %}
+    <h2 class="h5 fw-bold text-danger"><i class="bi bi-clock-history"></i> {% translate "Date limite de dépôt dépassée" %}</h2>
+    <p class="mb-0">{% translate "Cette réservation n’a pas été payée à temps. Contactez-nous au" %} {{ parametres.telephone }}.</p>
+    {% else %}
+    <h2 class="h5 fw-bold"><i class="bi bi-cash-coin text-warning"></i> {% translate "Réservation à payer au point de dépôt" %}</h2>
+    <p class="mb-2">{% translate "Vos kilos sont réservés. Apportez votre bagage et payez" %} <strong class="fs-5 text-primary">{{ bagage.prix|argent:bagage.devise }}</strong> {% translate "(espèces, carte au terminal ou virement)." %}</p>
+    <div class="small"><i class="bi bi-geo-alt"></i> {{ voyage.lieu_depot }}{% if voyage.heure_depot %} ({{ voyage.heure_depot }}){% endif %}<br>
+      <i class="bi bi-alarm"></i> <strong>{% translate "Avant le" %} {{ voyage.date_limite_depot|tz:voyage.pays_depart.fuseau|date:"l j F Y, H\hi" }}</strong> — {% translate "sinon la réservation est annulée." %}</div>
+    {% endif %}
+  </div>
+  {% endif %}
+
   {% if bagage.choix_requis %}
   <div class="carte border-danger p-4 mb-4">
     <h2 class="h5 fw-bold text-danger"><i class="bi bi-exclamation-triangle"></i> {% translate "Votre voyage a été annulé" %}</h2>
@@ -25,10 +39,10 @@
     <div><div class="text-muted small">{% translate "Numéro de suivi" %}</div><h1 class="h4 numero mb-0">{{ bagage.numero_suivi }}</h1></div>
     <div class="d-flex flex-wrap gap-2">
       {% if paiement %}<a href="{% url 'client_recu' bagage.numero_suivi %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-file-earmark-pdf"></i> {% translate "Reçu PDF" %}</a>{% endif %}
-      <a href="{% url 'suivi_detail' bagage.numero_suivi %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-link-45deg"></i> {% translate "Page de suivi publique" %}</a>
+      {% if not bagage.a_encaisser %}<a href="{% url 'suivi_detail' bagage.numero_suivi %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-link-45deg"></i> {% translate "Page de suivi publique" %}</a>{% endif %}
       <a href="{% url 'aide' %}#contact" class="btn btn-outline-secondary btn-sm"><i class="bi bi-headset"></i> {% translate "Contacter le service client" %}</a>
-      {% if bagage.annulable and not bagage.choix_requis %}
-      <form method="post" action="{% url 'client_annuler' bagage.numero_suivi %}" onsubmit="return confirm('{% translate "Annuler cet envoi ? Vous serez remboursé intégralement." %}')">{% csrf_token %}
+      {% if bagage.a_encaisser and not bagage.reservation_expiree or bagage.annulable and not bagage.choix_requis %}
+      <form method="post" action="{% url 'client_annuler' bagage.numero_suivi %}" onsubmit="return confirm('{% if bagage.a_encaisser %}{% translate "Annuler cette réservation ?" %}{% else %}{% translate "Annuler cet envoi ? Vous serez remboursé intégralement." %}{% endif %}')">{% csrf_token %}
         <button class="btn btn-outline-danger btn-sm"><i class="bi bi-x-circle"></i> {% translate "Annuler" %}</button></form>
       {% endif %}
     </div>
@@ -55,7 +69,7 @@
         <div class="small text-muted">{% translate "Le bagage est remis uniquement contre ce code." %}</div>
       </div>
       {% endif %}
-      {% if bagage.statut == "enregistre" and not bagage.choix_requis %}
+      {% if bagage.statut == "enregistre" and not bagage.choix_requis and not bagage.a_encaisser %}
       <div class="alert alert-info small">
         <i class="bi bi-geo-alt"></i> <strong>{% translate "Déposez votre bagage" %}</strong> {% translate "au" %} {{ voyage.lieu_depot }}{% if voyage.heure_depot %} ({{ voyage.heure_depot }}){% endif %}<br>
         {% translate "avant le" %} <strong>{{ voyage.date_limite_depot|tz:voyage.pays_depart.fuseau|date:"l j F, H\hi" }}</strong>
