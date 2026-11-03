@@ -1,100 +1,159 @@
 {% extends "base.html" %}{% load i18n outils %}
 {% block titre_complet %}{{ parametres.nom_entreprise }} — {% translate "Transport de bagages et colis Canada, Algérie, France, Maroc, Tunisie" %}{% endblock %}
 {% block contenu %}
-<section class="hero py-5">
-  <div class="container py-lg-4">
+<section class="hero pt-5 pb-5">
+  <div class="container py-lg-5">
     <div class="row align-items-center g-5">
       <div class="col-lg-7">
-        <span class="badge bg-warning text-dark mb-3"><i class="bi bi-shield-check"></i> {% translate "Suivi en temps réel · Paiement sécurisé" %}</span>
-        <h1 class="display-5 mb-3">{% translate "Vos bagages arrivent. Vous savez où ils sont." %}</h1>
-        <p class="lead opacity-75 mb-4">{% translate "Réservez en moins de 3 minutes, déposez votre bagage, et suivez-le sur la carte jusqu’à sa remise au destinataire." %}</p>
-        <div class="d-flex flex-wrap gap-2">
-          <a href="{% url 'client_envoi_nouveau' %}" class="btn btn-accent btn-lg"><i class="bi bi-send"></i> {% translate "Envoyer un bagage" %}</a>
+        <span class="pastille mb-4"><span class="point"></span> {% translate "Suivi en temps réel · Paiement sécurisé" %}</span>
+        <h1 class="display-4 mb-3">{% translate "Vos bagages arrivent." %}<br><span class="surligne">{% translate "Vous savez où ils sont." %}</span></h1>
+        <p class="lead mb-4 pe-lg-5">{% translate "Réservez en moins de 3 minutes, déposez votre bagage, et suivez-le sur la carte jusqu’à sa remise au destinataire." %}</p>
+        <div class="d-flex flex-wrap gap-2 mb-4">
+          <a href="{% url 'client_envoi_nouveau' %}" class="btn btn-accent btn-lg"><i class="bi bi-send-fill"></i> {% translate "Envoyer un bagage" %}</a>
           <a href="{% url 'simulateur' %}" class="btn btn-outline-light btn-lg"><i class="bi bi-calculator"></i> {% translate "Simuler un prix" %}</a>
+        </div>
+        <div class="confiance d-flex flex-wrap gap-3">
+          <span><i class="bi bi-check-circle-fill"></i> {% translate "Prix clair, figé au paiement" %}</span>
+          <span><i class="bi bi-check-circle-fill"></i> {% translate "Remise contre code à 6 chiffres" %}</span>
+          <span><i class="bi bi-check-circle-fill"></i> {% translate "Notifié à chaque étape" %}</span>
         </div>
       </div>
       <div class="col-lg-5">
-        <form class="suivi-box" action="{% url 'suivi' %}" method="get">
-          <label for="numero" class="h5 fw-bold d-block mb-2"><i class="bi bi-search text-primary"></i> {% translate "Suivre mon bagage" %}</label>
+        <form class="suivi-box mb-4" action="{% url 'suivi' %}" method="get">
+          <label for="numero" class="h5 fw-bold d-block mb-1">{% translate "Suivre mon bagage" %}</label>
+          <p class="small text-muted mb-3">{% translate "Le numéro de suivi figure dans votre courriel de confirmation." %}</p>
           <div class="input-group input-group-lg">
             <input id="numero" name="numero" class="form-control numero text-uppercase" placeholder="BG-7F3K9Q2A" required autocomplete="off">
-            <button class="btn btn-primary">{% translate "Suivre" %}</button>
+            <button class="btn btn-primary"><i class="bi bi-search"></i> {% translate "Suivre" %}</button>
           </div>
-          <div class="form-text">{% translate "Le numéro de suivi figure dans votre courriel de confirmation." %}</div>
         </form>
+        {% with d=destinations.0 %}
+        <svg class="trajet-anime d-none d-lg-block" viewBox="0 0 420 150" role="img" aria-label="{% translate 'Trajet Montréal vers' %} {{ d.villes.all.0.nom|default:'Alger' }}">
+          <path id="courbe" class="ligne" d="M30 120 C 140 10, 280 10, 390 110"/>
+          <circle class="halo" cx="30" cy="120" r="10"/><circle class="ville" cx="30" cy="120" r="5"/>
+          <circle class="halo" cx="390" cy="110" r="10" style="animation-delay:1.2s"/><circle class="ville" cx="390" cy="110" r="5"/>
+          <text x="30" y="145" text-anchor="middle">Montréal</text>
+          <text x="390" y="140" text-anchor="middle">{{ d.villes.all.0.nom|default:"Alger" }}</text>
+          <g>
+            <path d="M-11 -2 L4 -2 L10 -9 L13 -9 L9 -2 L14 -2 L17 -5 L19 -5 L17 0 L19 5 L17 5 L14 2 L9 2 L13 9 L10 9 L4 2 L-11 2 Z" fill="#f28c28"/>
+            <animateMotion dur="6s" repeatCount="indefinite" rotate="auto" keyPoints="0;1" keyTimes="0;1" calcMode="spline" keySplines=".45 0 .55 1"><mpath href="#courbe"/></animateMotion>
+          </g>
+        </svg>
+        {% endwith %}
       </div>
     </div>
   </div>
 </section>
 
-<section class="container my-5">
-  <div class="d-flex justify-content-between align-items-end mb-3">
-    <h2 class="section-titre h3 mb-0">{% translate "Prochains départs" %}</h2>
-    <a href="{% url 'destinations' %}">{% translate "Toutes les destinations" %} <i class="bi bi-arrow-right"></i></a>
+<section class="container" style="margin-top:-2.2rem; position:relative; z-index:2">
+  <div class="chiffres p-3 p-md-4 reveal">
+    <div class="row text-center g-3">
+      <div class="col-6 col-md-3"><div class="chiffre"><span data-compteur="{{ destinations|length }}">{{ destinations|length }}</span></div><div class="kpi-label">{% translate "Pays desservis" %}</div></div>
+      <div class="col-6 col-md-3"><div class="chiffre"><span data-compteur="{{ nb_villes }}">{{ nb_villes }}</span></div><div class="kpi-label">{% translate "Villes d’arrivée" %}</div></div>
+      <div class="col-6 col-md-3"><div class="chiffre">{% if delai_min %}{{ delai_min }} {% translate "jours" %}{% else %}—{% endif %}</div><div class="kpi-label">{% translate "Livraison dès" %}</div></div>
+      <div class="col-6 col-md-3"><div class="chiffre">24/7</div><div class="kpi-label">{% translate "Suivi en ligne" %}</div></div>
+    </div>
   </div>
-  <div class="row g-3">
+</section>
+
+<section class="container my-5 pt-lg-3">
+  <div class="d-flex justify-content-between align-items-end mb-4 reveal">
+    <div><span class="surtitre">{% translate "Réservez votre place" %}</span><h2 class="section-titre h2 mb-0">{% translate "Prochains départs" %}</h2></div>
+    <a href="{% url 'destinations' %}" class="fw-semibold text-decoration-none">{% translate "Toutes les destinations" %} <i class="bi bi-arrow-right"></i></a>
+  </div>
+  <div class="row g-4">
     {% for v in prochains %}
-    <div class="col-md-4">
-      <div class="carte carte-ombre p-4 h-100">
-        <div class="d-flex align-items-center gap-2 mb-2">
-          <span class="drapeau">{{ v.pays_depart.drapeau }}</span><i class="bi bi-arrow-right text-muted"></i><span class="drapeau">{{ v.pays_arrivee.drapeau }}</span>
+    <div class="col-md-4 reveal" style="--delai: {{ forloop.counter0 }}00ms">
+      <div class="carte carte-ombre carte-survol depart-carte p-4 h-100 d-flex flex-column">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <span class="badge bg-light text-dark border"><i class="bi bi-{% if v.moyen == 'avion' %}airplane{% elif v.moyen == 'camion' %}truck{% else %}water{% endif %}"></i> {{ v.get_moyen_display }}</span>
+          <span class="small text-muted">{{ v.pays_arrivee.delai_texte }}</span>
         </div>
-        <div class="fw-bold fs-5">{{ v.ville_depart.nom }} → {{ v.ville_arrivee.nom }}</div>
-        <div class="text-muted"><i class="bi bi-calendar-event"></i> {{ v.depart|tz:v.pays_depart.fuseau|date:"l j F, H\hi" }}</div>
+        <div class="itineraire mb-1">
+          <div><div class="drapeau">{{ v.pays_depart.drapeau }}</div><div class="fw-bold">{{ v.ville_depart.nom }}</div></div>
+          <div class="trait"><i class="bi bi-airplane-fill"></i></div>
+          <div class="text-end"><div class="drapeau">{{ v.pays_arrivee.drapeau }}</div><div class="fw-bold">{{ v.ville_arrivee.nom }}</div></div>
+        </div>
+        <div class="text-muted small mt-2"><i class="bi bi-calendar-event"></i> {{ v.depart|tz:v.pays_depart.fuseau|date:"l j F, H\hi" }}</div>
         <div class="my-3">
-          <div class="d-flex justify-content-between small"><span>{% translate "Kilos restants" %}</span><strong>{{ v.kilos_restants|floatformat:0 }} kg</strong></div>
+          <div class="d-flex justify-content-between small mb-1"><span class="text-muted">{% translate "Kilos restants" %}</span><strong>{{ v.kilos_restants|floatformat:0 }} kg</strong></div>
           <div class="progress" style="height:6px" role="progressbar" aria-valuenow="{{ v.taux_remplissage }}" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar bg-warning" style="width: {{ v.taux_remplissage }}%"></div></div>
         </div>
-        {% if v.est_complet %}<span class="badge bg-secondary">{% translate "Complet" %}</span>
-        {% else %}<a href="{% url 'client_envoi_nouveau' %}?voyage={{ v.pk }}" class="btn btn-outline-primary btn-sm">{% translate "Réserver" %}</a>{% endif %}
+        <div class="mt-auto d-flex justify-content-between align-items-center">
+          <span class="small">{% translate "à partir de" %} <strong class="text-primary">{{ v.pays_arrivee.frais_fixes|add:v.pays_arrivee.tarif_kg|argent:v.pays_arrivee.devise }}</strong></span>
+          {% if v.est_complet %}<span class="badge bg-secondary">{% translate "Complet" %}</span>
+          {% else %}<a href="{% url 'client_envoi_nouveau' %}?voyage={{ v.pk }}" class="btn btn-primary btn-sm">{% translate "Réserver" %} <i class="bi bi-arrow-right"></i></a>{% endif %}
+        </div>
       </div>
     </div>
     {% empty %}
-    <div class="col"><div class="carte p-4 text-muted">{% translate "Aucun départ planifié pour le moment. Revenez bientôt !" %}</div></div>
+    <div class="col reveal"><div class="carte p-5 text-center text-muted"><i class="bi bi-calendar2-week fs-1 d-block mb-2"></i>{% translate "Aucun départ planifié pour le moment. Revenez bientôt !" %}</div></div>
     {% endfor %}
   </div>
 </section>
 
-<section class="bg-white border-top border-bottom py-5">
+<section class="py-5 my-lg-4">
   <div class="container">
-    <h2 class="section-titre h3 text-center mb-5">{% translate "Comment ça marche" %}</h2>
-    <div class="row g-4 text-center">
-      <div class="col-6 col-lg-3"><div class="etape-num mb-3"><i class="bi bi-cart-check"></i></div><h3 class="h5 fw-bold">1. {% translate "Réserver" %}</h3><p class="text-muted small">{% translate "Choisissez le voyage, décrivez le bagage, payez par carte." %}</p></div>
-      <div class="col-6 col-lg-3"><div class="etape-num mb-3"><i class="bi bi-box-seam"></i></div><h3 class="h5 fw-bold">2. {% translate "Déposer" %}</h3><p class="text-muted small">{% translate "Apportez votre bagage au point de dépôt avant la date limite." %}</p></div>
-      <div class="col-6 col-lg-3"><div class="etape-num mb-3"><i class="bi bi-geo-alt"></i></div><h3 class="h5 fw-bold">3. {% translate "Suivre" %}</h3><p class="text-muted small">{% translate "Suivez le trajet sur la carte, notifié à chaque étape." %}</p></div>
-      <div class="col-6 col-lg-3"><div class="etape-num mb-3"><i class="bi bi-hand-thumbs-up"></i></div><h3 class="h5 fw-bold">4. {% translate "Recevoir" %}</h3><p class="text-muted small">{% translate "Le destinataire présente son code à 6 chiffres et récupère le bagage." %}</p></div>
+    <div class="text-center mb-5 reveal"><span class="surtitre">{% translate "Simple et rassurant" %}</span><h2 class="section-titre h2">{% translate "Comment ça marche" %}</h2></div>
+    <div class="row g-4 text-center etapes-ligne">
+      <div class="col-6 col-lg-3 etape reveal"><div class="etape-num mb-3"><i class="bi bi-cart-check"></i></div><h3 class="h5 fw-bold">1. {% translate "Réserver" %}</h3><p class="text-muted small px-lg-3">{% if paiement_en_ligne %}{% translate "Choisissez le voyage, décrivez le bagage, payez par carte." %}{% else %}{% translate "Choisissez le voyage et décrivez le bagage : vos kilos sont réservés." %}{% endif %}</p></div>
+      <div class="col-6 col-lg-3 etape reveal" style="--delai:120ms"><div class="etape-num mb-3"><i class="bi bi-box-seam"></i></div><h3 class="h5 fw-bold">2. {% translate "Déposer" %}</h3><p class="text-muted small px-lg-3">{% if paiement_en_ligne %}{% translate "Apportez votre bagage au point de dépôt avant la date limite." %}{% else %}{% translate "Apportez votre bagage au point de dépôt et payez sur place avant la date limite." %}{% endif %}</p></div>
+      <div class="col-6 col-lg-3 etape reveal" style="--delai:240ms"><div class="etape-num mb-3"><i class="bi bi-geo-alt"></i></div><h3 class="h5 fw-bold">3. {% translate "Suivre" %}</h3><p class="text-muted small px-lg-3">{% translate "Suivez le trajet sur la carte, notifié à chaque étape." %}</p></div>
+      <div class="col-6 col-lg-3 etape reveal" style="--delai:360ms"><div class="etape-num mb-3"><i class="bi bi-hand-thumbs-up"></i></div><h3 class="h5 fw-bold">4. {% translate "Recevoir" %}</h3><p class="text-muted small px-lg-3">{% translate "Le destinataire présente son code à 6 chiffres et récupère le bagage." %}</p></div>
     </div>
   </div>
 </section>
 
-<section class="container my-5">
-  <h2 class="section-titre h3 mb-4">{% translate "Pays desservis" %}</h2>
+<section class="container mb-5">
+  <div class="d-flex justify-content-between align-items-end mb-4 reveal">
+    <div><span class="surtitre">{% translate "Où allons-nous ?" %}</span><h2 class="section-titre h2 mb-0">{% translate "Pays desservis" %}</h2></div>
+    <a href="{% url 'simulateur' %}" class="fw-semibold text-decoration-none">{% translate "Simuler un prix" %} <i class="bi bi-arrow-right"></i></a>
+  </div>
   <div class="row g-3">
-    {% for p in pays_list %}{% if p.code != "CA" %}
-    <div class="col-6 col-md-3">
-      <a href="{% url 'destinations' %}?pays={{ p.code }}" class="carte carte-ombre p-3 d-block text-decoration-none text-body h-100">
-        <div class="drapeau mb-1">{{ p.drapeau }}</div>
-        <div class="fw-bold">{{ p.nom }}</div>
-        <div class="small text-muted">{% translate "à partir de" %} <strong class="text-primary">{{ p.frais_fixes|add:p.tarif_kg|argent:p.devise }}</strong></div>
-        <div class="small text-muted">{{ p.delai_texte }}</div>
+    {% for p in destinations %}
+    <div class="col-6 col-md-3 reveal" style="--delai: {{ forloop.counter0 }}00ms">
+      <a href="{% url 'destinations' %}?pays={{ p.code }}" class="carte carte-ombre p-4 d-block text-decoration-none text-body h-100">
+        <div class="d-flex justify-content-between align-items-start mb-2"><span class="drapeau" style="font-size:2.4rem">{{ p.drapeau }}</span><i class="bi bi-arrow-up-right text-muted"></i></div>
+        <div class="fw-bold fs-5">{{ p.nom }}</div>
+        <div class="small text-muted mb-2">{% for v in p.villes.all|slice:":3" %}{{ v.nom }}{% if not forloop.last %} · {% endif %}{% endfor %}</div>
+        <div class="small">{% translate "à partir de" %} <strong class="text-primary">{{ p.frais_fixes|add:p.tarif_kg|argent:p.devise }}</strong></div>
+        <div class="small text-muted"><i class="bi bi-clock"></i> {{ p.delai_texte }}</div>
       </a>
     </div>
-    {% endif %}{% endfor %}
+    {% endfor %}
   </div>
 </section>
 
 {% if avis %}
 <section class="container my-5">
-  <h2 class="section-titre h3 mb-4">{% translate "Ils nous font confiance" %}</h2>
-  <div class="row g-3">
+  <div class="mb-4 reveal"><span class="surtitre">{% translate "Avis clients" %}</span><h2 class="section-titre h2">{% translate "Ils nous font confiance" %}</h2></div>
+  <div class="row g-4">
     {% for a in avis %}
-    <div class="col-md-4"><div class="carte p-4 h-100">
-      <div class="etoiles mb-2">{% for i in "12345" %}{% if forloop.counter <= a.note %}<i class="bi bi-star-fill"></i>{% else %}<i class="bi bi-star"></i>{% endif %}{% endfor %}</div>
-      <p class="avis">« {{ a.texte }} »</p>
-      <div class="small fw-semibold">{{ a.nom }}{% if a.ville %} · {{ a.ville }}{% endif %}</div>
+    <div class="col-md-4 reveal" style="--delai: {{ forloop.counter0 }}00ms"><div class="carte carte-ombre p-4 h-100">
+      <div class="etoiles mb-3">{% for i in "12345" %}{% if forloop.counter <= a.note %}<i class="bi bi-star-fill"></i>{% else %}<i class="bi bi-star"></i>{% endif %}{% endfor %}</div>
+      <p class="avis mb-4">« {{ a.texte }} »</p>
+      <div class="d-flex align-items-center gap-2 mt-auto">
+        <span class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center fw-bold" style="width:38px;height:38px">{{ a.nom|first }}</span>
+        <div class="small"><div class="fw-semibold">{{ a.nom }}</div>{% if a.ville %}<div class="text-muted">{{ a.ville }}</div>{% endif %}</div>
+      </div>
     </div></div>
     {% endfor %}
   </div>
 </section>
 {% endif %}
+
+<section class="container my-5">
+  <div class="bande-cta p-4 p-md-5 reveal">
+    <div class="row align-items-center g-4 position-relative" style="z-index:1">
+      <div class="col-lg-8">
+        <h2 class="h2 fw-bold mb-2">{% translate "Prêt à envoyer votre bagage ?" %}</h2>
+        <p class="mb-0 opacity-75">{% translate "Réservez en ligne en quelques minutes et suivez-le jusqu’à la remise." %}</p>
+      </div>
+      <div class="col-lg-4 text-lg-end d-flex flex-wrap gap-2 justify-content-lg-end">
+        <a href="{% url 'client_envoi_nouveau' %}" class="btn btn-accent btn-lg">{% translate "Envoyer un bagage" %}</a>
+        <a href="{% url 'aide' %}#contact" class="btn btn-outline-light btn-lg">{% translate "Nous contacter" %}</a>
+      </div>
+    </div>
+  </div>
+</section>
 {% endblock %}

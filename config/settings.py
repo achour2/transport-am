@@ -142,6 +142,11 @@ STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
 }
+# Tests : pas besoin de collectstatic
+import sys as _sys
+
+if "test" in _sys.argv:
+    STORAGES["staticfiles"] = {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"}
 # Photos servies par Django quand il n'y a ni Nginx ni S3 (ex. Render)
 SERVE_MEDIA = env_bool("SERVE_MEDIA", False)
 

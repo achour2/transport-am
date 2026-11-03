@@ -16,9 +16,13 @@ from ..services import ErreurMetier, calculer_prix, envoyer_courriel, notifier_a
 
 def accueil(request):
     pays = Pays.objects.filter(actif=True).prefetch_related("villes")
+    destinations = [p for p in pays if p.code != "CA"]
     return render(request, "public/accueil.html", {
         "prochains": Voyage.reservables().order_by("depart")[:3],
         "pays_list": pays,
+        "destinations": destinations,
+        "nb_villes": sum(len(p.villes.all()) for p in destinations),
+        "delai_min": min((p.delai_min for p in destinations), default=0),
         "avis": AvisClient.objects.filter(publie=True)[:3],
     })
 
