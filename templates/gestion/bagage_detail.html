@@ -5,6 +5,7 @@
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-2 mb-3">
   <h1 class="h3 numero mb-0">{{ bagage.numero_suivi }} <span class="badge bg-{{ bagage.statut|couleur }} fs-6 align-middle">{{ bagage.get_statut_display }}</span> {% if bagage.a_encaisser %}<span class="badge bg-warning text-dark fs-6 align-middle">À encaisser</span>{% else %}<span class="badge bg-{{ bagage.statut_paiement|couleur }} fs-6 align-middle">{{ bagage.get_statut_paiement_display }}</span>{% endif %}</h1>
   <div class="d-flex gap-2">
+    <a href="{% url 'gestion_etiquette' bagage.numero_suivi %}" class="btn btn-sm btn-outline-primary" target="_blank"><i class="bi bi-qr-code"></i> Étiquette</a>
     {% if bagage.statut_paiement != "en_attente" %}<a href="{% url 'gestion_recu' bagage.numero_suivi %}" class="btn btn-sm {% if request.GET.nouveau %}btn-accent{% else %}btn-outline-primary{% endif %}" target="_blank"><i class="bi bi-printer"></i> Imprimer le reçu</a>{% endif %}
     <a href="{% url 'suivi_detail' bagage.numero_suivi %}" class="btn btn-sm btn-outline-primary" target="_blank"><i class="bi bi-box-arrow-up-right"></i> Page de suivi</a>
   </div>

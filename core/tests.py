@@ -725,3 +725,51 @@ class VillesEtLangues(Base):
         r = self.client.get("/")
         self.assertNotContains(r, "العربية")
         self.assertNotContains(r, "fonts.googleapis.com")
+
+
+class ApresLancement(Base):
+    def livrer(self):
+        voyage = self.creer_voyage()
+        b = self.reserver(voyage, 5)
+        services.marquer_charge(voyage, b.numero_suivi, self.karim)
+        services.demarrer_voyage(voyage, self.karim)
+        services.terminer_voyage(voyage, self.karim)
+        b.refresh_from_db()
+        services.valider_livraison(b, b.code_remise, None, self.karim)
+        b.refresh_from_db()
+        return b
+
+    def test_etiquette_qr_et_whatsapp(self):
+        voyage = self.creer_voyage()
+        b = self.reserver(voyage, 5)
+        self.client.force_login(self.admin)
+        r = self.client.get(reverse("gestion_etiquette", args=[b.numero_suivi]))
+        self.assertEqual(r["Content-Type"], "application/pdf")
+        self.assertTrue(r.content.startswith(b"%PDF"))
+        self.client.force_login(self.sara)
+        self.assertContains(self.client.get(reverse("client_envoi", args=[b.numero_suivi])), "wa.me/213555")
+
+    def test_avis_demande_24h_apres_livraison_puis_moderation(self):
+        from core.models import AvisClient
+
+        b = self.livrer()
+        self.assertEqual(services.verifications_periodiques().get("avis_demandes"), None)  # trop tôt
+        r = services.verifications_periodiques(timezone.now() + timedelta(hours=25))
+        self.assertEqual(r["avis_demandes"], 1)
+        lien = Notification.objects.filter(destinataire=self.sara, message__contains="avis").latest("cree_le").lien
+        self.client.post(lien, {"note": "4", "texte": "Rapide et bien suivi, merci !"})
+        a = AvisClient.objects.get(bagage=b)
+        self.assertFalse(a.publie)
+        self.assertNotContains(self.client.get("/"), "Rapide et bien suivi")
+        self.client.force_login(self.admin)
+        self.client.post(reverse("gestion_avis"), {"pk": a.pk, "action": "publier"})
+        self.assertContains(self.client.get("/"), "Rapide et bien suivi")
+        self.assertEqual(services.verifications_periodiques(timezone.now() + timedelta(hours=50)).get("avis_demandes"), None)
+
+    def test_admin_cree_un_autre_admin(self):
+        self.client.force_login(self.admin)
+        self.client.post(reverse("gestion_utilisateurs"), {
+            "action": "creer", "type_compte": "admin", "first_name": "Nadia", "last_name": "B",
+            "email": "nadia@t.ca", "telephone": "514", "password": "Un-Mot-De-Passe-Solide-42"})
+        u = Utilisateur.objects.get(email="nadia@t.ca")
+        self.assertEqual((u.role, u.is_staff), ("admin", True))

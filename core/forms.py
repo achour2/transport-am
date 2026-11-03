@@ -118,16 +118,28 @@ class DestinataireForm(BootstrapMixin, forms.ModelForm):
 
 
 class TransporteurForm(BootstrapMixin, forms.ModelForm):
-    password = forms.CharField(label="Mot de passe provisoire", widget=forms.PasswordInput, min_length=8)
+    """Création d'un compte équipe : transporteur ou administrateur (double authentification à la 1re connexion)."""
+
+    type_compte = forms.ChoiceField(label="Type de compte", choices=[
+        ("transporteur", "Transporteur"), ("admin", "Administrateur (accès complet, double authentification)")])
+    password = forms.CharField(label="Mot de passe provisoire", widget=forms.PasswordInput, min_length=10)
 
     class Meta:
         model = Utilisateur
         fields = ["first_name", "last_name", "email", "telephone"]
         labels = {"first_name": "Prénom", "last_name": "Nom"}
 
+    def clean_password(self):
+        from django.contrib.auth.password_validation import validate_password
+
+        mdp = self.cleaned_data["password"]
+        validate_password(mdp)
+        return mdp
+
     def save(self, commit=True):
         user = super().save(commit=False)
-        user.role = Utilisateur.Role.TRANSPORTEUR
+        user.role = self.cleaned_data.get("type_compte") or Utilisateur.Role.TRANSPORTEUR
+        user.is_staff = user.role == Utilisateur.Role.ADMIN
         user.email_confirme = True
         user.set_password(self.cleaned_data["password"])
         if commit:

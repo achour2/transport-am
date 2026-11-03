@@ -556,6 +556,14 @@ def verifications_periodiques(maintenant=None):
         annuler_reservation_comptoir(b, None, f"Réservation {b.numero_suivi} annulée : non payée avant la date limite de dépôt.")
         resultat["expirees"] = resultat.get("expirees", 0) + 1
 
+    # Demande d'avis 24 h après la livraison
+    for b in Bagage.objects.filter(
+        statut=Bagage.Statut.LIVRE, avis_demande_le__isnull=True, client__isnull=False,
+        evenements__statut=Bagage.Statut.LIVRE, evenements__cree_le__lte=maintenant - timezone.timedelta(hours=24),
+    ).distinct().select_related("client"):
+        demander_avis(b)
+        resultat["avis_demandes"] = resultat.get("avis_demandes", 0) + 1
+
     limite = maintenant + timezone.timedelta(hours=24)
     a_rappeler = Bagage.objects.filter(
         statut=Bagage.Statut.ENREGISTRE, statut_paiement=Bagage.Paiement.PAYE, rappel_depot_envoye=False,
@@ -728,3 +736,18 @@ def annuler_reservation_comptoir(bagage, auteur, message=None):
         raise ErreurMetier("Cette réservation est déjà payée ou annulée.")
     return changer_statut(bagage, Bagage.Statut.ANNULE, auteur,
                           message or f"Réservation {bagage.numero_suivi} annulée (non payée).")
+
+
+def lien_avis(bagage):
+    from django.core import signing
+
+    return reverse("donner_avis", args=[signing.dumps({"b": bagage.pk}, salt="avis-client")])
+
+
+def demander_avis(bagage):
+    lien = lien_avis(bagage)
+    if bagage.client:
+        notifier(bagage.client, f"Votre bagage {bagage.numero_suivi} a été livré : donnez-nous votre avis !", lien,
+                 sujet="Comment s'est passé votre envoi ?")
+    bagage.avis_demande_le = timezone.now()
+    bagage.save(update_fields=["avis_demande_le"])

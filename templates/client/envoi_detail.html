@@ -66,7 +66,9 @@
       <div class="carte carte-ombre p-4 mb-4 text-center">
         <div class="small text-muted">{% translate "Code de remise à transmettre au destinataire" %}</div>
         <div class="code-remise my-2">{{ bagage.code_remise }}</div>
-        <div class="small text-muted">{% translate "Le bagage est remis uniquement contre ce code." %}</div>
+        <div class="small text-muted mb-3">{% translate "Le bagage est remis uniquement contre ce code." %}</div>
+        <a class="btn btn-success w-100" target="_blank" rel="noopener"
+           href="https://wa.me/{{ bagage.dest_telephone|cut:' '|cut:'+'|cut:'-'|cut:'('|cut:')'|cut:'.' }}?text={% filter urlencode %}{% blocktranslate with nom=parametres.nom_entreprise numero=bagage.numero_suivi code=bagage.code_remise %}Bonjour, je vous envoie un bagage avec {{ nom }} (n° {{ numero }}). Votre code de remise : {{ code }}. Suivi :{% endblocktranslate %} {{ site_url }}{% url 'suivi_detail' bagage.numero_suivi %}{% endfilter %}"><i class="bi bi-whatsapp"></i> {% translate "Envoyer au destinataire sur WhatsApp" %}</a>
       </div>
       {% endif %}
       {% if bagage.statut == "enregistre" and not bagage.choix_requis and not bagage.a_encaisser %}

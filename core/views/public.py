@@ -286,3 +286,42 @@ def taches_verifications(request):
     if not attendu or not hmac.compare_digest(attendu, recu):
         return HttpResponseForbidden("Jeton invalide")
     return JsonResponse({"ok": True, **verifications_periodiques()})
+
+
+# --------------------------------------------------------------------------
+# Avis client (lien reçu par courriel 24 h après la livraison)
+# --------------------------------------------------------------------------
+
+
+def donner_avis(request, jeton):
+    from django.core import signing
+
+    from ..models import AvisClient
+
+    try:
+        donnees = signing.loads(jeton, salt="avis-client", max_age=60 * 60 * 24 * 60)
+    except signing.BadSignature:
+        messages.error(request, "Ce lien d'avis n'est plus valide.")
+        return redirect("accueil")
+    bagage = get_object_or_404(Bagage, pk=donnees["b"], statut=Bagage.Statut.LIVRE)
+    if hasattr(bagage, "avis") and bagage.avis is not None:
+        messages.info(request, "Merci, vous avez déjà donné votre avis pour cet envoi.")
+        return redirect("accueil")
+    if request.method == "POST":
+        texte = (request.POST.get("texte") or "").strip()
+        try:
+            note = min(max(int(request.POST.get("note", 5)), 1), 5)
+        except ValueError:
+            note = 5
+        if len(texte) < 5:
+            messages.error(request, "Écrivez quelques mots sur votre expérience.")
+        else:
+            client = bagage.client
+            nom = (request.POST.get("nom") or "").strip()[:80] or (
+                f"{client.first_name} {client.last_name[:1]}." if client else "Client")
+            AvisClient.objects.create(bagage=bagage, nom=nom, ville=bagage.ville_livraison.nom, note=note,
+                                      texte=texte[:1000], publie=False)
+            notifier_admins(f"Nouvel avis client ({note}/5) à modérer", reverse("gestion_avis"), courriel=False)
+            messages.success(request, "Merci pour votre avis ! Il sera publié après vérification.")
+            return redirect("accueil")
+    return render(request, "public/avis.html", {"bagage": bagage})

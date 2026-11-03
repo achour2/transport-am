@@ -12,6 +12,7 @@
         <a class="nav-link text-nowrap {% if u == 'gestion_incidents' %}active{% endif %}" href="{% url 'gestion_incidents' %}"><i class="bi bi-exclamation-octagon"></i> Incidents</a>
         <a class="nav-link text-nowrap {% if u == 'gestion_utilisateurs' %}active{% endif %}" href="{% url 'gestion_utilisateurs' %}"><i class="bi bi-people"></i> Utilisateurs</a>
         <a class="nav-link text-nowrap {% if u == 'gestion_messages' %}active{% endif %}" href="{% url 'gestion_messages' %}"><i class="bi bi-chat-left-text"></i> Messages</a>
+        <a class="nav-link text-nowrap {% if u == 'gestion_avis' %}active{% endif %}" href="{% url 'gestion_avis' %}"><i class="bi bi-star"></i> Avis clients</a>
         <a class="nav-link text-nowrap {% if u == 'gestion_parametres' %}active{% endif %}" href="{% url 'gestion_parametres' %}"><i class="bi bi-gear"></i> Paramètres</a>
       </nav>
       {% endwith %}

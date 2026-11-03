@@ -1,0 +1,23 @@
+{% extends "base.html" %}{% load i18n %}
+{% block titre %}{% translate "Votre avis" %}{% endblock %}
+{% block head %}<meta name="robots" content="noindex">{% endblock %}
+{% block contenu %}
+<div class="container my-5" style="max-width:560px">
+  <form method="post" class="carte carte-ombre p-4 p-md-5">{% csrf_token %}
+    <h1 class="h4 fw-bold">{% translate "Comment s’est passé votre envoi ?" %}</h1>
+    <p class="text-muted small">{{ bagage.numero_suivi }} · {{ bagage.voyage.ville_depart.nom }} → {{ bagage.ville_livraison.nom }}</p>
+    <fieldset class="mb-3">
+      <legend class="form-label fw-semibold fs-6">{% translate "Votre note" %}</legend>
+      <div class="puces">
+        {% for n in "54321" %}<label class="puce"><input type="radio" name="note" value="{{ n }}" {% if n == "5" %}checked{% endif %}> {{ n }} <i class="bi bi-star-fill etoiles"></i></label>{% endfor %}
+      </div>
+    </fieldset>
+    <div class="mb-3"><label class="form-label fw-semibold" for="texte">{% translate "Votre avis" %}</label>
+      <textarea id="texte" name="texte" class="form-control" rows="4" maxlength="1000" required placeholder="{% translate 'Ponctualité, suivi, accueil au dépôt…' %}"></textarea></div>
+    <div class="mb-4"><label class="form-label small" for="nom">{% translate "Nom affiché (optionnel)" %}</label>
+      <input id="nom" name="nom" class="form-control" maxlength="80" placeholder="{{ bagage.client.first_name|default:'' }} {{ bagage.client.last_name|first|default:'' }}."></div>
+    <button class="btn btn-accent btn-lg w-100">{% translate "Envoyer mon avis" %}</button>
+    <p class="small text-muted mt-3 mb-0">{% translate "Votre avis sera publié sur notre site après vérification." %}</p>
+  </form>
+</div>
+{% endblock %}

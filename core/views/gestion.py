@@ -310,6 +310,37 @@ def recu_admin(request, numero):
 
 
 @admin_requis
+def etiquette(request, numero):
+    from ..pdf import etiquette_pdf
+
+    bagage = get_object_or_404(Bagage, numero_suivi=numero)
+    r = HttpResponse(etiquette_pdf(bagage), content_type="application/pdf")
+    r["Content-Disposition"] = f'inline; filename="etiquette-{numero}.pdf"'
+    return r
+
+
+@admin_requis
+def avis(request):
+    from ..models import AvisClient
+
+    if request.method == "POST":
+        a = get_object_or_404(AvisClient, pk=request.POST.get("pk"))
+        action = request.POST.get("action")
+        if action == "supprimer":
+            a.delete()
+            messages.success(request, "Avis supprimé.")
+        else:
+            a.publie = action == "publier"
+            a.save(update_fields=["publie"])
+            messages.success(request, "Avis publié sur l'accueil." if a.publie else "Avis masqué.")
+        return redirect("gestion_avis")
+    return render(request, "gestion/avis.html", {
+        "en_attente": AvisClient.objects.filter(publie=False).order_by("-cree_le"),
+        "publies": AvisClient.objects.filter(publie=True).order_by("-cree_le"),
+    })
+
+
+@admin_requis
 def bagage_detail(request, numero):
     bagage = get_object_or_404(Bagage, numero_suivi=numero)
     sform = StatutBagageForm(initial={"statut": bagage.statut})
@@ -403,7 +434,8 @@ def utilisateurs(request):
             form = TransporteurForm(request.POST)
             if form.is_valid():
                 t = form.save()
-                messages.success(request, f"Compte transporteur créé pour {t}.")
+                messages.success(request, f"Compte {t.get_role_display().lower()} créé pour {t}."
+                                 + (" Il configurera sa double authentification à la première connexion." if t.est_admin else ""))
                 return redirect("gestion_utilisateurs")
         else:
             u = get_object_or_404(Utilisateur, pk=request.POST.get("pk"))
@@ -430,6 +462,7 @@ def utilisateurs(request):
         "form": form, "q": q,
         "clients": Paginator(clients.order_by("-date_joined"), 30).get_page(request.GET.get("page")),
         "transporteurs": Utilisateur.objects.filter(role="transporteur").annotate(nb=Count("voyages")),
+        "admins": Utilisateur.objects.filter(role="admin").order_by("email"),
     })
 
 

@@ -5,6 +5,16 @@
 <div class="row g-4">
   <div class="col-xl-8">
     <div class="carte carte-ombre mb-4">
+      <div class="p-3 border-bottom fw-bold">Administrateurs</div>
+      <div class="table-responsive"><table class="table align-middle mb-0">
+        <thead><tr><th>Nom</th><th>Courriel</th><th>Dernière connexion</th><th></th></tr></thead>
+        {% for u in admins %}
+        <tr class="{% if not u.is_active %}text-muted{% endif %}"><td>{{ u }}{% if u == request.user %} <span class="badge bg-light text-dark border">vous</span>{% endif %}{% if not u.is_active %} <span class="badge bg-secondary">bloqué</span>{% endif %}</td><td class="small">{{ u.email }}</td><td class="small">{{ u.last_login|date:"d/m/Y H:i"|default:"—" }}</td>
+          <td class="text-end text-nowrap">{% if u != request.user %}{% include "gestion/_actions_user.html" %}{% endif %}</td></tr>
+        {% endfor %}
+      </table></div>
+    </div>
+    <div class="carte carte-ombre mb-4">
       <div class="p-3 border-bottom fw-bold">Transporteurs</div>
       <div class="table-responsive"><table class="table align-middle mb-0">
         <thead><tr><th>Nom</th><th>Courriel</th><th>Téléphone</th><th class="text-center">Voyages</th><th></th></tr></thead>
@@ -32,7 +42,8 @@
   </div>
   <div class="col-xl-4">
     <form method="post" class="carte carte-ombre p-4" novalidate>{% csrf_token %}<input type="hidden" name="action" value="creer">
-      <h2 class="h6 fw-bold">Créer un compte transporteur</h2>
+      <h2 class="h6 fw-bold">Créer un compte de l'équipe</h2>
+      <p class="small text-muted">Transporteur ou administrateur. Communiquez le mot de passe provisoire de vive voix ; la personne pourra le changer.</p>
       {% include "partials/_form.html" %}
       <button class="btn btn-primary w-100">Créer le compte</button>
     </form>

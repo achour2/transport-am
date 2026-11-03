@@ -1,0 +1,10 @@
+{% extends "gestion/_base.html" %}
+{% block titre %}Avis clients{% endblock %}
+{% block gestion %}
+<h1 class="section-titre h3 mb-1">Avis clients</h1>
+<p class="text-muted small mb-3">Les clients reçoivent une demande d'avis 24 h après la livraison. Un avis n'apparaît sur l'accueil qu'après votre validation.</p>
+<h2 class="h6 fw-bold">À modérer ({{ en_attente|length }})</h2>
+{% for a in en_attente %}{% include "gestion/_avis.html" %}{% empty %}<p class="text-muted small">Aucun avis en attente.</p>{% endfor %}
+<h2 class="h6 fw-bold mt-4">Publiés ({{ publies|length }})</h2>
+{% for a in publies %}{% include "gestion/_avis.html" %}{% empty %}<p class="text-muted small">Aucun avis publié.</p>{% endfor %}
+{% endblock %}

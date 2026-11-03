@@ -1,0 +1,12 @@
+<div class="carte carte-ombre p-3 mb-2 d-flex flex-wrap justify-content-between gap-3">
+  <div>
+    <div class="etoiles">{% for i in "12345" %}{% if forloop.counter <= a.note %}<i class="bi bi-star-fill"></i>{% else %}<i class="bi bi-star"></i>{% endif %}{% endfor %}</div>
+    <p class="mb-1">« {{ a.texte }} »</p>
+    <div class="small text-muted">{{ a.nom }}{% if a.ville %} · {{ a.ville }}{% endif %} · {{ a.cree_le|date:"d/m/Y" }}{% if a.bagage %} · <a href="{% url 'gestion_bagage' a.bagage.numero_suivi %}" class="numero">{{ a.bagage.numero_suivi }}</a>{% endif %}</div>
+  </div>
+  <form method="post" class="d-flex gap-2 align-items-start">{% csrf_token %}<input type="hidden" name="pk" value="{{ a.pk }}">
+    {% if a.publie %}<button name="action" value="masquer" class="btn btn-sm btn-outline-secondary">Masquer</button>
+    {% else %}<button name="action" value="publier" class="btn btn-sm btn-success">Publier</button>{% endif %}
+    <button name="action" value="supprimer" class="btn btn-sm btn-outline-danger" onclick="return confirm('Supprimer cet avis ?')"><i class="bi bi-trash"></i></button>
+  </form>
+</div>

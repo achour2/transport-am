@@ -70,3 +70,58 @@ def recu_pdf(paiement):
                  Paragraph(f"Conditions générales : {url_absolue(reverse('conditions'))}", s["Normal"])]
     doc.build(elements)
     return tampon.getvalue()
+
+
+def etiquette_pdf(bagage):
+    """Étiquette 100 × 150 mm à coller sur le bagage : numéro, code QR (scanné au chargement), destination."""
+    from reportlab.graphics import renderPDF
+    from reportlab.graphics.barcode.qr import QrCodeWidget
+    from reportlab.graphics.shapes import Drawing
+    from reportlab.pdfgen import canvas
+
+    from .templatetags.outils import tz
+
+    L, H = 100 * mm, 150 * mm
+    p = Parametres.charger()
+    b, v = bagage, bagage.voyage
+    tampon = BytesIO()
+    c = canvas.Canvas(tampon, pagesize=(L, H))
+    c.setTitle(f"Étiquette {b.numero_suivi}")
+    c.setFillColor(BLEU)
+    c.rect(0, H - 22 * mm, L, 22 * mm, fill=1, stroke=0)
+    c.setFillColor(colors.white)
+    c.setFont("Helvetica-Bold", 16)
+    c.drawString(8 * mm, H - 12 * mm, p.nom_entreprise)
+    c.setFont("Helvetica", 8.5)
+    c.drawString(8 * mm, H - 18 * mm, f"{p.telephone} · {p.courriel}")
+    # Code QR = numéro de suivi (le transporteur le scanne au chargement)
+    taille = 58 * mm
+    qr = QrCodeWidget(b.numero_suivi, barLevel="M")
+    x1, y1, x2, y2 = qr.getBounds()
+    dessin = Drawing(taille, taille, transform=[taille / (x2 - x1), 0, 0, taille / (y2 - y1), 0, 0])
+    dessin.add(qr)
+    renderPDF.draw(dessin, c, (L - taille) / 2, H - 24 * mm - taille)
+    c.setFillColor(colors.black)
+    c.setFont("Courier-Bold", 19)
+    c.drawCentredString(L / 2, H - 90 * mm, b.numero_suivi)
+    c.setStrokeColor(colors.HexColor("#c8d3e0"))
+    c.line(8 * mm, H - 95 * mm, L - 8 * mm, H - 95 * mm)
+    ville = b.ville_livraison
+    lignes = [
+        ("DESTINATION", f"{ville.nom.upper()} ({ville.pays.code})", 15),
+        ("DESTINATAIRE", b.dest_nom, 11),
+        ("DÉPART", f"{v.ville_depart.nom} · {tz(v.depart, v.pays_depart.fuseau):%d/%m/%Y}", 11),
+        ("POIDS", f"{b.poids} kg", 11),
+    ]
+    y = H - 103 * mm
+    for libelle, valeur, taille_police in lignes:
+        c.setFont("Helvetica", 7)
+        c.setFillColor(colors.HexColor("#66778a"))
+        c.drawString(8 * mm, y, libelle)
+        c.setFont("Helvetica-Bold", taille_police)
+        c.setFillColor(colors.black)
+        c.drawString(8 * mm, y - 5.5 * mm, valeur[:34])
+        y -= 12 * mm
+    c.showPage()
+    c.save()
+    return tampon.getvalue()
