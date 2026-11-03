@@ -2,6 +2,7 @@
 databases:
   - name: talaouglid-db
     plan: free
+    region: oregon   # même région que le site (obligatoire pour l'adresse interne)
     databaseName: talaouglid
     user: talaouglid
 
@@ -10,7 +11,7 @@ services:
     name: talaouglid
     runtime: python
     plan: free
-    region: virginia
+    region: oregon
     buildCommand: ./build.sh
     startCommand: ./start.sh
     envVars:
