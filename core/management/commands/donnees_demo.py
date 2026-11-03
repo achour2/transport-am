@@ -65,7 +65,7 @@ class Command(BaseCommand):
 
         now = timezone.now()
         h = lambda d, heure=18: (now + timedelta(days=d)).replace(hour=heure, minute=0, second=0, microsecond=0)
-        lieu = "Entrepôt TransBagages, 1234 rue Exemple, Montréal"
+        lieu = "Entrepôt Talaouglid, 1234 rue Exemple, Montréal"
 
         def voyage(dep, arr, jours, cap, transporteur, moyen="avion", duree=16):
             d = h(jours)

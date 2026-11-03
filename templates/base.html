@@ -4,8 +4,18 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block titre %}{% translate "Transport de bagages entre pays" %}{% endblock %} · {{ parametres.nom_entreprise }}</title>
-  <meta name="description" content="{% translate 'Envoyez vos bagages et colis entre le Canada, l’Algérie, la France, le Maroc et la Tunisie. Réservation en ligne, suivi en temps réel.' %}">
+  <title>{% block titre_complet %}{% block titre %}{% translate "Transport de bagages entre pays" %}{% endblock %} · {{ parametres.nom_entreprise }}{% endblock %}</title>
+  <meta name="description" content="{% block description %}{{ parametres.nom_entreprise }} : {% translate 'Envoyez vos bagages et colis entre le Canada, l’Algérie, la France, le Maroc et la Tunisie. Réservation en ligne, suivi en temps réel.' %}{% endblock %}">
+  <meta name="application-name" content="{{ parametres.nom_entreprise }}">
+  <link rel="canonical" href="{{ site_url }}{{ request.path }}">
+  <meta property="og:site_name" content="{{ parametres.nom_entreprise }}">
+  <meta property="og:title" content="{{ parametres.nom_entreprise }} — {% translate 'Transport de bagages entre pays' %}">
+  <meta property="og:description" content="{% translate 'Envoyez vos bagages et colis entre le Canada, l’Algérie, la France, le Maroc et la Tunisie. Réservation en ligne, suivi en temps réel.' %}">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="{{ site_url }}{{ request.path }}">
+  {% if request.path == "/" %}
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"{{ parametres.nom_entreprise|escapejs }}","alternateName":["Talaouglid","Talaougild","Talaouglid transport"],"url":"{{ site_url }}/","email":"{{ parametres.courriel|escapejs }}","telephone":"{{ parametres.telephone|escapejs }}","description":"Transport de bagages et colis entre le Canada, l'Algérie, la France, le Maroc et la Tunisie."}</script>
+  {% endif %}
   {% if RTL %}
   <link rel="stylesheet" href="{% static 'vendor/bootstrap/bootstrap.rtl.min.css' %}">
   {% else %}

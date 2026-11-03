@@ -174,7 +174,7 @@ if env("EMAIL_HOST"):
     EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", True)
 else:
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", "TransBagages <no-reply@transbagages.example>")
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", "Talaouglid <no-reply@talaouglid.com>")
 
 # Adresse publique du site (pour les liens dans les courriels)
 SITE_URL = env("SITE_URL", f"https://{RENDER_HOST}" if RENDER_HOST else "http://localhost:8000")

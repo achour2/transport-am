@@ -218,3 +218,31 @@ def notification_ouvrir(request, pk):
 @login_required
 def notifications(request):
     return render(request, "public/notifications.html", {"notifications": request.user.notifications.all()[:100]})
+
+
+# --------------------------------------------------------------------------
+# Référencement (Google) : robots.txt et sitemap.xml
+# --------------------------------------------------------------------------
+
+PAGES_PUBLIQUES = ["accueil", "destinations", "simulateur", "suivi", "aide", "conditions", "inscription", "connexion"]
+
+
+def robots_txt(request):
+    from django.conf import settings
+    from django.http import HttpResponse
+
+    base = settings.SITE_URL.rstrip("/")
+    lignes = ["User-agent: *", "Disallow: /client/", "Disallow: /transporteur/", "Disallow: /gestion/",
+              "Disallow: /django-admin/", "Disallow: /suivi/BG-", "Disallow: /api/", "", f"Sitemap: {base}/sitemap.xml"]
+    return HttpResponse("\n".join(lignes) + "\n", content_type="text/plain")
+
+
+def sitemap_xml(request):
+    from django.conf import settings
+    from django.http import HttpResponse
+
+    base = settings.SITE_URL.rstrip("/")
+    urls = "".join(f"<url><loc>{base}{reverse(n)}</loc></url>" for n in PAGES_PUBLIQUES)
+    return HttpResponse('<?xml version="1.0" encoding="UTF-8"?>'
+                        f'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}</urlset>',
+                        content_type="application/xml")

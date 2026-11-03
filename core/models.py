@@ -575,9 +575,9 @@ class AvisClient(models.Model):
 class Parametres(models.Model):
     """Paramètres du site (une seule ligne)."""
 
-    nom_entreprise = models.CharField(max_length=100, default="TransBagages")
+    nom_entreprise = models.CharField(max_length=100, default="Talaouglid")
     telephone = models.CharField(max_length=30, default="+1 514 000-0000")
-    courriel = models.EmailField(default="contact@transbagages.example")
+    courriel = models.EmailField(default="contact@talaouglid.com")
     adresse_depot = models.CharField(max_length=255, default="1234 rue Exemple, Montréal (QC)")
     horaires = models.CharField(max_length=255, default="Lundi au samedi, 10 h à 18 h")
     rappel_position_heures = models.PositiveIntegerField(_("fréquence du rappel de position (h)"), default=2)

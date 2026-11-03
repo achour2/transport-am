@@ -1,4 +1,4 @@
-# TransBagages — Plateforme de transport de bagages entre pays
+# Talaouglid — Plateforme de transport de bagages entre pays
 
 Site web Django réalisé d’après le *Cahier des charges v1.0 (2 novembre 2026)*.
 L’administrateur gère les pays, les tarifs et les voyages ; le transporteur met à jour sa position pendant le trajet ; le client réserve, paie et suit son bagage avec un numéro de suivi.
