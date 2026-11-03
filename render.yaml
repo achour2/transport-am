@@ -28,7 +28,7 @@ services:
       - key: SERVE_MEDIA
         value: "true"
       - key: CHARGER_DEMO
-        value: "true"
+        value: "false"
       - key: DJANGO_ADMIN_EMAIL
         sync: false
       - key: DJANGO_ADMIN_PASSWORD
