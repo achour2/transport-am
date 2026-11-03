@@ -47,6 +47,16 @@ Comptes de démo (mot de passe `demo12345`) :
 
 25 tests : un ou plusieurs par scénario de la section 7 (ajout d’un pays, planification, réservation de Sara à 164 $, voyage avec rappels 2 h / alerte 4 h, suivi public, livraison avec code, incident retrouvé / perdu, annulations), plus les règles de gestion et les comptes.
 
+## Mise en ligne rapide sur Render (gratuit)
+
+1. Sur https://render.com, créez un compte avec **« Sign in with GitHub »**.
+2. **New + → Blueprint**, choisissez le dépôt `transport-am` : Render lit `render.yaml` et prépare le site + la base PostgreSQL.
+3. Remplissez `DJANGO_ADMIN_EMAIL` et `DJANGO_ADMIN_PASSWORD` (votre compte administrateur) ; les autres champs peuvent rester vides.
+4. **Apply**. Après 3 à 5 minutes, le site est en ligne sur `https://transbagages.onrender.com` (ou un nom proche).
+
+`CHARGER_DEMO=true` ajoute les données de démonstration : passez-le à `false` dans **Environment** pour un vrai lancement.
+Limites du plan gratuit : le site s’endort après 15 min sans visite (premier chargement ≈ 50 s), la base gratuite expire après 30 jours, les photos envoyées sont effacées à chaque redéploiement (configurer S3 pour les garder), et il n’y a pas de tâches planifiées (rappels 2 h).
+
 ## Mise en production (VPS OVHcloud)
 
 1. Installer PostgreSQL 16, Redis et Nginx ; copier le projet dans `/srv/transbagages`.

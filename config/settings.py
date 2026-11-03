@@ -35,6 +35,12 @@ DEBUG = env_bool("DJANGO_DEBUG", True)
 ALLOWED_HOSTS = [h for h in env("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,testserver").split(",") if h]
 CSRF_TRUSTED_ORIGINS = [o for o in env("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",") if o]
 
+# Hébergement Render : l'adresse publique est fournie automatiquement
+RENDER_HOST = env("RENDER_EXTERNAL_HOSTNAME")
+if RENDER_HOST:
+    ALLOWED_HOSTS.append(RENDER_HOST)
+    CSRF_TRUSTED_ORIGINS.append(f"https://{RENDER_HOST}")
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -49,6 +55,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -80,7 +87,11 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 # Base de données : PostgreSQL si DATABASE_URL / POSTGRES_DB est défini, sinon SQLite
-if env("POSTGRES_DB"):
+if env("DATABASE_URL"):
+    import dj_database_url
+
+    DATABASES = {"default": dj_database_url.parse(env("DATABASE_URL"), conn_max_age=600)}
+elif env("POSTGRES_DB"):
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
@@ -126,6 +137,14 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
+# Fichiers statiques servis par WhiteNoise (compressés, mis en cache)
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+}
+# Photos servies par Django quand il n'y a ni Nginx ni S3 (ex. Render)
+SERVE_MEDIA = env_bool("SERVE_MEDIA", False)
+
 # Stockage S3 (OVHcloud Object Storage ou AWS S3) si configuré
 if env("S3_BUCKET"):
     STORAGES = {
@@ -140,7 +159,7 @@ if env("S3_BUCKET"):
                 "querystring_auth": True,
             },
         },
-        "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+        "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
     }
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
@@ -158,7 +177,7 @@ else:
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", "TransBagages <no-reply@transbagages.example>")
 
 # Adresse publique du site (pour les liens dans les courriels)
-SITE_URL = env("SITE_URL", "http://localhost:8000")
+SITE_URL = env("SITE_URL", f"https://{RENDER_HOST}" if RENDER_HOST else "http://localhost:8000")
 
 # Stripe : laissez vide pour le mode « paiement simulé » (démo / développement)
 STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY", "")
