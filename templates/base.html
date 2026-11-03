@@ -7,6 +7,11 @@
   <title>{% block titre_complet %}{% block titre %}{% translate "Transport de bagages entre pays" %}{% endblock %} · {{ parametres.nom_entreprise }}{% endblock %}</title>
   <meta name="description" content="{% block description %}{{ parametres.nom_entreprise }} : {% translate 'Envoyez vos bagages et colis entre le Canada, l’Algérie, la France, le Maroc et la Tunisie. Réservation en ligne, suivi en temps réel.' %}{% endblock %}">
   <meta name="application-name" content="{{ parametres.nom_entreprise }}">
+  <link rel="icon" href="{% static 'img/logo.svg' %}" type="image/svg+xml">
+  <link rel="icon" href="{% static 'img/favicon-32.png' %}" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="{% static 'img/apple-touch-icon.png' %}">
+  <meta name="theme-color" content="#1f4e79">
+  <meta property="og:image" content="{{ site_url }}{% static 'img/icon-192.png' %}">
   <link rel="canonical" href="{{ site_url }}{{ request.path }}">
   <meta property="og:site_name" content="{{ parametres.nom_entreprise }}">
   <meta property="og:title" content="{{ parametres.nom_entreprise }} — {% translate 'Transport de bagages entre pays' %}">
@@ -31,7 +36,7 @@
 <a class="visually-hidden-focusable btn btn-light position-absolute m-2" href="#contenu">{% translate "Aller au contenu" %}</a>
 <nav class="navbar navbar-expand-lg navbar-dark navbar-tb sticky-top">
   <div class="container">
-    <a class="navbar-brand" href="{% url 'accueil' %}"><i class="bi bi-luggage-fill text-warning"></i> {{ parametres.nom_entreprise }}</a>
+    <a class="navbar-brand" href="{% url 'accueil' %}"><img src="{% static 'img/logo.svg' %}" alt="" width="28" height="28" class="me-1 align-text-bottom" style="border-radius:7px;box-shadow:0 0 0 2px rgba(255,255,255,.35)"> {{ parametres.nom_entreprise }}</a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-controls="nav" aria-expanded="false" aria-label="{% translate 'Menu' %}">
       <span class="navbar-toggler-icon"></span>
     </button>
@@ -119,7 +124,7 @@
   <div class="container">
     <div class="row g-4">
       <div class="col-md-4">
-        <div class="h5 text-white fw-bold"><i class="bi bi-luggage-fill text-warning"></i> {{ parametres.nom_entreprise }}</div>
+        <div class="h5 text-white fw-bold"><img src="{% static 'img/logo.svg' %}" alt="" width="28" height="28" class="me-1 align-text-bottom" style="border-radius:7px;box-shadow:0 0 0 2px rgba(255,255,255,.35)"> {{ parametres.nom_entreprise }}</div>
         <p class="small">{% translate "Vos bagages et colis entre le Canada et le Maghreb / l’Europe, suivis en temps réel." %}</p>
       </div>
       <div class="col-6 col-md-2">
