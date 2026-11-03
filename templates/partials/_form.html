@@ -1,7 +1,8 @@
 {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
 {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors|join:"<br>" }}</div>{% endif %}
 {% for f in form.visible_fields %}
-  {% if f.widget_type == 'checkbox' %}
+  {% if f.name == "site_web" %}<div class="champ-piege" aria-hidden="true">{{ f }}</div>
+  {% elif f.widget_type == 'checkbox' %}
   <div class="form-check mb-3">
     {{ f }} <label class="form-check-label" for="{{ f.id_for_label }}">{{ f.label }}</label>
     {% for e in f.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}

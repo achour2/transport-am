@@ -25,7 +25,7 @@ def image_test():
     return SimpleUploadedFile("remise.png", tampon.getvalue(), content_type="image/png")
 
 
-@override_settings(STRIPE_SECRET_KEY="", PAIEMENT_EN_LIGNE=True, EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+@override_settings(STRIPE_SECRET_KEY="", PAIEMENT_EN_LIGNE=True, ADMIN_2FA=False, EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
 class Base(TestCase):
     def setUp(self):
         self.admin = Utilisateur.objects.create_user("admin@t.ca", "x-Pass-1234", role="admin", first_name="Admin")
@@ -248,7 +248,7 @@ class Scenario5Suivi(Base):
         self.assertNotContains(r, b.code_remise)
         api = self.client.get(reverse("api_suivi", args=[b.numero_suivi])).json()
         self.assertEqual(api["etape"], 2)
-        self.assertEqual(len(api["positions"]), 1)
+        self.assertEqual(api["derniere_position"]["lieu"], "Aéroport de Montréal")
 
     def test_numero_inconnu(self):
         r = self.client.get(reverse("suivi"), {"numero": "BG-AAAAAAAA"})
@@ -634,3 +634,54 @@ class ComptoirPeseeEtSecurite(Base):
         services.valider_livraison(b, b.code_remise, None, self.karim)
         b.refresh_from_db()
         self.assertEqual(b.statut, "livre")
+
+
+
+class Securite(Base):
+    def test_double_authentification_admin(self):
+        from django_otp.oath import totp
+        from django_otp.plugins.otp_totp.models import TOTPDevice
+
+        with self.settings(ADMIN_2FA=True):
+            self.client.force_login(self.admin)
+            r = self.client.get(reverse("gestion_tableau"))
+            self.assertRedirects(r, "/2fa/?next=/gestion/", fetch_redirect_response=False)
+            r = self.client.get("/2fa/")
+            self.assertContains(r, "<svg")  # QR code de configuration
+            appareil = TOTPDevice.objects.get(user=self.admin)
+            code = f"{totp(appareil.bin_key, appareil.step, appareil.t0, appareil.digits):06d}"
+            self.client.post("/2fa/", {"code": code, "next": "/gestion/"})
+            self.assertEqual(self.client.get(reverse("gestion_tableau")).status_code, 200)
+            # Un client n'est pas concerné
+            self.client.force_login(self.sara)
+            self.assertEqual(self.client.get(reverse("client_tableau")).status_code, 200)
+
+    def test_blocage_apres_5_mots_de_passe_faux(self):
+        for _ in range(5):
+            self.client.post(reverse("connexion"), {"username": "sara@t.ca", "password": "faux"})
+        r = self.client.post(reverse("connexion"), {"username": "sara@t.ca", "password": "x-Pass-1234"})
+        self.assertContains(r, "Trop de tentatives", status_code=429)
+
+    def test_piege_a_robots_contact(self):
+        from core.models import MessageContact
+
+        donnees = {"nom": "Bot", "courriel": "b@b.ca", "sujet": "x", "message": "y"}
+        self.client.post(reverse("aide"), {**donnees, "site_web": "http://spam"})
+        self.assertFalse(MessageContact.objects.exists())
+        self.client.post(reverse("aide"), donnees)
+        self.assertTrue(MessageContact.objects.exists())
+
+    def test_position_publique_floutee(self):
+        voyage = self.creer_voyage()
+        b = self.reserver(voyage, 5)
+        services.marquer_charge(voyage, b.numero_suivi, self.karim)
+        services.demarrer_voyage(voyage, self.karim)
+        services.enregistrer_position(voyage, self.karim, 45.4711, -73.7392, "Aéroport de Montréal")
+        r = self.client.get(reverse("suivi_detail", args=[b.numero_suivi]))
+        self.assertContains(r, "Aéroport de Montréal")
+        self.assertNotContains(r, "45.4711")
+        api = self.client.get(reverse("api_suivi", args=[b.numero_suivi])).json()
+        self.assertNotIn("45.4711", str(api))
+        self.assertNotIn("latitude", api["derniere_position"])
+        self.client.force_login(self.sara)  # l'expéditeur connecté voit la carte détaillée
+        self.assertContains(self.client.get(reverse("client_envoi", args=[b.numero_suivi])), "45.4711")

@@ -8,7 +8,8 @@
   {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors|join:"<br>" }}</div>{% endif %}
   <div class="row">
     {% for f in form.visible_fields %}
-    {% if f.name == "accepte_conditions" %}
+    {% if f.name == "site_web" %}<div class="champ-piege" aria-hidden="true">{{ f }}</div>
+    {% elif f.name == "accepte_conditions" %}
     <div class="col-12">
       <div class="form-check mb-3">{{ f }} <label class="form-check-label" for="{{ f.id_for_label }}">{% translate "J’accepte les" %} <a href="{% url 'conditions' %}" target="_blank">{% translate "conditions générales" %}</a> {% translate "et la" %} <a href="{% url 'conditions' %}#confidentialite" target="_blank">{% translate "politique de confidentialité" %}</a></label>
       {% for e in f.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}</div>

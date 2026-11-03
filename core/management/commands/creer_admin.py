@@ -32,5 +32,9 @@ class Command(BaseCommand):
         user.is_staff = user.is_superuser = user.email_confirme = user.is_active = True
         user.set_password(mdp)
         user.save()
+        if not cree:  # réinitialisation : on retire aussi la double authentification (téléphone perdu)
+            from django_otp.plugins.otp_totp.models import TOTPDevice
+
+            TOTPDevice.objects.filter(user=user).delete()
         self.stdout.write(self.style.SUCCESS(
             f"Administrateur {'créé' if cree else 'réinitialisé (DJANGO_ADMIN_RESET)'} : {email}"))

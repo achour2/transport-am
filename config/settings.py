@@ -50,6 +50,9 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.humanize",
     "rest_framework",
+    "django_otp",
+    "django_otp.plugins.otp_totp",
+    "axes",
     "core",
 ]
 
@@ -61,8 +64,11 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django_otp.middleware.OTPMiddleware",
+    "core.securite.ExigerDoubleAuthAdmin",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "axes.middleware.AxesMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -111,6 +117,20 @@ else:
     }
 
 AUTH_USER_MODEL = "core.Utilisateur"
+AUTHENTICATION_BACKENDS = ["axes.backends.AxesStandaloneBackend", "django.contrib.auth.backends.ModelBackend"]
+
+# Connexion : blocage 1 h après 5 échecs pour le même compte depuis la même adresse IP (django-axes)
+AXES_FAILURE_LIMIT = 5
+AXES_COOLOFF_TIME = 1
+AXES_LOCKOUT_PARAMETERS = [["username", "ip_address"]]
+AXES_RESET_ON_SUCCESS = True
+AXES_LOCKOUT_TEMPLATE = "comptes/bloque.html"
+AXES_CLIENT_IP_CALLABLE = "core.securite.ip_client_axes"
+AXES_USERNAME_FORM_FIELD = "username"
+
+# Double authentification obligatoire pour les administrateurs (DJANGO_ADMIN_2FA=false en cas d'urgence)
+ADMIN_2FA = env_bool("DJANGO_ADMIN_2FA", True)
+OTP_TOTP_ISSUER = "Talaouglid"
 LOGIN_URL = "connexion"
 LOGIN_REDIRECT_URL = "redirection_role"
 LOGOUT_REDIRECT_URL = "accueil"
@@ -147,6 +167,7 @@ import sys as _sys
 
 if "test" in _sys.argv:
     STORAGES["staticfiles"] = {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"}
+    LIMITE_REQUETES_ACTIVE = False
 # Photos servies par Django quand il n'y a ni Nginx ni S3 (ex. Render)
 SERVE_MEDIA = env_bool("SERVE_MEDIA", False)
 

@@ -1,7 +1,7 @@
 from django.contrib.auth import views as auth_views
 from django.urls import path, reverse_lazy
 
-from .views import client, gestion, public, transporteur
+from .views import client, deux_facteurs, gestion, public, transporteur
 
 urlpatterns = [
     # 6.1 Espace public
@@ -17,6 +17,7 @@ urlpatterns = [
     path("aide/", public.aide, name="aide"),
     path("conditions/", public.conditions, name="conditions"),
     path("connexion/", public.Connexion.as_view(), name="connexion"),
+    path("2fa/", deux_facteurs.deux_facteurs, name="deux_facteurs"),
     path("deconnexion/", auth_views.LogoutView.as_view(), name="deconnexion"),
     path("inscription/", public.inscription, name="inscription"),
     path("confirmer/<str:jeton>/", public.confirmer_courriel, name="confirmer_courriel"),

@@ -28,9 +28,10 @@
       <div class="carte carte-ombre p-3">
         {% include "partials/_carte.html" with classe_carte="map-lg" %}
         <div class="small text-muted mt-2 px-1">
-          {% with p=voyage.derniere_position %}
-          {% if positions and p %}<i class="bi bi-geo-alt-fill text-warning"></i> {% translate "Dernière position" %} : <strong>{{ p.lieu|default:"—" }}</strong> · {% translate "mise à jour" %} {{ p.envoyee_le|depuis }} ({{ p.envoyee_le|date:"d/m H:i" }})
+          {% with p=derniere_position %}
+          {% if p %}<i class="bi bi-geo-alt-fill text-warning"></i> {% translate "Dernière position" %} : <strong>{{ p.lieu|default:_("en route") }}</strong> · {% translate "mise à jour" %} {{ p.envoyee_le|depuis }} ({{ p.envoyee_le|date:"d/m H:i" }})
           {% else %}{% translate "La position du voyage s’affichera dès que le bagage sera en transit." %}{% endif %}
+          <div class="mt-1"><i class="bi bi-shield-lock"></i> {% translate "Par sécurité, la position exacte n’est visible que par l’expéditeur connecté." %}</div>
           {% endwith %}
         </div>
       </div>

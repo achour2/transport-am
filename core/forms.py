@@ -20,6 +20,20 @@ from .models import (
 DT_WIDGET = forms.DateTimeInput(attrs={"type": "datetime-local"}, format="%Y-%m-%dT%H:%M")
 
 
+class PiegeRobotsMixin:
+    """Champ invisible pour les humains : s'il est rempli, c'est un robot."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["site_web"] = forms.CharField(required=False, label="Ne pas remplir", widget=forms.TextInput(
+            attrs={"tabindex": "-1", "autocomplete": "off", "class": "champ-piege"}))
+
+    def clean_site_web(self):
+        if self.cleaned_data.get("site_web"):
+            raise ValidationError("Envoi refusé.")
+        return ""
+
+
 class BootstrapMixin:
     """Ajoute les classes Bootstrap à tous les champs."""
 
@@ -44,7 +58,7 @@ class ConnexionForm(BootstrapMixin, AuthenticationForm):
     username = forms.EmailField(label="Courriel", widget=forms.EmailInput(attrs={"autofocus": True, "autocomplete": "email"}))
 
 
-class InscriptionForm(BootstrapMixin, forms.ModelForm):
+class InscriptionForm(PiegeRobotsMixin, BootstrapMixin, forms.ModelForm):
     password1 = forms.CharField(label="Mot de passe", widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}))
     password2 = forms.CharField(label="Confirmer le mot de passe", widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}))
     accepte_conditions = forms.BooleanField(
@@ -140,7 +154,7 @@ class SimulateurForm(BootstrapMixin, forms.Form):
         self.fields["ville"].queryset = Ville.objects.filter(pays__actif=True)
 
 
-class ContactForm(BootstrapMixin, forms.ModelForm):
+class ContactForm(PiegeRobotsMixin, BootstrapMixin, forms.ModelForm):
     class Meta:
         model = MessageContact
         fields = ["nom", "courriel", "sujet", "message"]

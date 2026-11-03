@@ -1,0 +1,23 @@
+{% extends "comptes/_cadre.html" %}
+{% block titre %}Double authentification{% endblock %}
+{% block largeur %}520px{% endblock %}
+{% block cadre %}
+<div class="text-center mb-3"><div class="etat-vide p-0"><div class="icone"><i class="bi bi-shield-lock"></i></div></div></div>
+<h1 class="h4 fw-bold text-center">Double authentification</h1>
+{% if configuration %}
+<p class="text-muted small">Première connexion administrateur : protégez le compte avec une application d'authentification (Google Authenticator, Microsoft Authenticator, Authy…).</p>
+<ol class="small">
+  <li>Dans l'application, choisissez « Ajouter un compte » puis <b>scannez ce code</b> :</li>
+</ol>
+<div class="text-center my-3" style="max-width:220px;margin:auto">{{ qr|safe }}</div>
+<p class="small text-muted text-center">Impossible de scanner ? Clé à saisir : <code class="numero">{{ cle }}</code></p>
+<ol class="small" start="2"><li>Saisissez le code à 6 chiffres affiché par l'application.</li></ol>
+{% else %}
+<p class="text-muted text-center">Saisissez le code à 6 chiffres affiché dans votre application d'authentification.</p>
+{% endif %}
+<form method="post">{% csrf_token %}<input type="hidden" name="next" value="{{ next }}">
+  <input name="code" class="form-control form-control-lg code-remise text-center mb-3" inputmode="numeric" maxlength="6" autocomplete="one-time-code" autofocus required>
+  <button class="btn btn-primary w-100 btn-lg">Valider</button>
+</form>
+<form method="post" action="{% url 'deconnexion' %}" class="text-center mt-3">{% csrf_token %}<button class="btn btn-link btn-sm">Se déconnecter</button></form>
+{% endblock %}

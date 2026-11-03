@@ -13,6 +13,7 @@ from django.views.decorators.http import require_POST
 
 from ..forms import AbonnementForm, ConnexionForm, ContactForm, InscriptionForm, SimulateurForm
 from ..models import AbonnementSuivi, AvisClient, Bagage, Pays, Ville, Voyage
+from ..securite import limite_requetes
 from ..services import ErreurMetier, calculer_prix, envoyer_courriel, notifier_admins
 
 
@@ -80,6 +81,7 @@ def villes_pays(request):
     return render(request, "public/_options_villes.html", {"villes": villes, "vide": request.GET.get("vide", "Toutes les villes")})
 
 
+@limite_requetes("suivi", nombre=30, secondes=60)
 def suivi(request):
     numero = request.GET.get("numero", "").strip().upper()
     if numero:
@@ -91,6 +93,7 @@ def suivi(request):
     return render(request, "public/suivi_recherche.html", {"numero": numero})
 
 
+@limite_requetes("suivi", nombre=30, secondes=60)
 def suivi_detail(request, numero):
     bagage = get_object_or_404(
         Bagage.objects.select_related("voyage__ville_depart__pays", "voyage__ville_arrivee__pays"),
@@ -104,7 +107,10 @@ def suivi_detail(request, numero):
     return render(request, "public/suivi_detail.html", {
         "bagage": bagage, "voyage": bagage.voyage, "form": form,
         "evenements": bagage.evenements.all(),
-        "positions": bagage.voyage.positions.all() if bagage.statut not in ("enregistre", "depose", "charge") else [],
+        # Sécurité du transporteur : la page publique ne montre que le dernier lieu nommé et l'heure,
+        # jamais les coordonnées. La carte détaillée est réservée au client connecté et à l'admin.
+        "positions": [],
+        "derniere_position": bagage.voyage.derniere_position if bagage.rang >= 2 else None,
     })
 
 
@@ -199,6 +205,7 @@ FAQ = [
 ]
 
 
+@limite_requetes("contact", nombre=20, secondes=600)
 def aide(request):
     form = ContactForm(request.POST or None)
     if request.method == "POST" and form.is_valid():

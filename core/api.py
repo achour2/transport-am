@@ -7,12 +7,21 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from .models import Bagage, Pays, Position, Voyage
+from .securite import limite_requetes
 
 
 class PositionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Position
         fields = ["latitude", "longitude", "lieu", "envoyee_le"]
+
+
+class PositionPubliqueSerializer(serializers.ModelSerializer):
+    """Sans coordonnées : sécurité du transporteur."""
+
+    class Meta:
+        model = Position
+        fields = ["lieu", "envoyee_le"]
 
 
 class PaysSerializer(serializers.ModelSerializer):
@@ -29,10 +38,11 @@ def _point(ville):
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
+@limite_requetes("api_suivi", nombre=30, secondes=60)
 def suivi(request, numero):
     b = get_object_or_404(Bagage, numero_suivi=numero.upper(), statut_paiement__in=["paye", "rembourse"])
     v = b.voyage
-    positions = v.positions.all() if b.rang >= 2 else Position.objects.none()
+    derniere = v.derniere_position if b.rang >= 2 else None
     return Response({
         "numero_suivi": b.numero_suivi,
         "statut": b.statut,
@@ -42,7 +52,7 @@ def suivi(request, numero):
         "depart": _point(v.ville_depart),
         "arrivee": _point(v.ville_arrivee),
         "arrivee_prevue": v.arrivee_prevue,
-        "positions": PositionSerializer(positions, many=True).data,
+        "derniere_position": PositionPubliqueSerializer(derniere).data if derniere else None,
         "historique": [{"date": e.cree_le, "statut": e.get_statut_display(), "message": e.message} for e in b.evenements.all()],
         "maintenant": timezone.now(),
     })
