@@ -141,6 +141,11 @@ def verifier_reservation(voyage, poids, bagage_exclu=None):
 def creer_bagage(client, voyage, donnees):
     """Crée un envoi en attente de paiement avec un prix figé."""
     verifier_reservation(voyage, donnees["poids"])
+    donnees = dict(donnees)
+    ville = donnees.get("ville_destination") or voyage.ville_arrivee
+    if not voyage.dessert(ville):
+        raise ErreurMetier(f"Ce voyage ne dessert pas {ville.nom}.")
+    donnees["ville_destination"] = ville
     pays = voyage.pays_arrivee
     bagage = Bagage.objects.create(
         client=client,
@@ -282,7 +287,9 @@ def deplacer_bagage(bagage, nouveau_voyage, auteur):
         raise ErreurMetier(f"Capacité insuffisante sur ce voyage ({nouveau.kilos_restants} kg restants).")
     bagage.voyage = nouveau
     bagage.choix_requis = False
-    bagage.save(update_fields=["voyage", "choix_requis"])
+    if not nouveau.dessert(bagage.ville_livraison):
+        bagage.ville_destination = nouveau.ville_arrivee
+    bagage.save(update_fields=["voyage", "choix_requis", "ville_destination"])
     changer_statut(bagage, bagage.statut if bagage.statut != Bagage.Statut.ANNULE else Bagage.Statut.ENREGISTRE,
                    auteur, f"Envoi {bagage.numero_suivi} déplacé sur le voyage du {timezone.localtime(nouveau.depart):%d/%m/%Y}.")
 
@@ -299,7 +306,7 @@ def notifier_voyage_assigne(voyage):
 
 def notifier_dates_modifiees(voyage):
     message = (
-        f"Les dates du voyage {voyage.ville_depart.nom} → {voyage.ville_arrivee.nom} ont changé : "
+        f"Les dates du voyage {voyage.ville_depart.nom} → {voyage.destinations_texte} ont changé : "
         f"départ le {timezone.localtime(voyage.depart):%d/%m/%Y %H:%M}, "
         f"dépôt avant le {timezone.localtime(voyage.date_limite_depot):%d/%m/%Y %H:%M}."
     )
@@ -605,7 +612,7 @@ def reserver_paiement_comptoir(client, voyage, donnees):
         envoyer_courriel(
             client.email, f"Réservation {bagage.numero_suivi} — paiement au point de dépôt",
             f"Votre réservation est enregistrée et vos {bagage.poids} kg sont réservés sur le voyage "
-            f"{voyage.ville_depart.nom} → {voyage.ville_arrivee.nom}.\n\n"
+            f"{voyage.ville_depart.nom} → {bagage.ville_livraison.nom}.\n\n"
             f"Numéro de réservation : {bagage.numero_suivi}\n"
             f"Montant à payer au dépôt : {bagage.prix} {bagage.devise} (espèces, carte au terminal ou virement)\n"
             f"Lieu de dépôt : {voyage.lieu_depot}\n"

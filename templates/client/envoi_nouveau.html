@@ -35,7 +35,7 @@
         <label class="carte voyage-choix p-3 mb-2 d-flex align-items-center gap-3">
           <input type="radio" name="voyage" value="{{ v.pk }}" class="form-check-input mt-0" {% if form.voyage.value|stringformat:"s" == v.pk|stringformat:"s" %}checked{% endif %} required>
           <div class="flex-grow-1">
-            <div class="fw-semibold">{{ v.ville_depart.nom }} → {{ v.ville_arrivee.nom }} <span class="badge bg-light text-dark border">{{ v.get_moyen_display }}</span></div>
+            <div class="fw-semibold">{{ v.ville_depart.nom }} → {{ v.destinations_texte }} <span class="badge bg-light text-dark border">{{ v.get_moyen_display }}</span></div>
             <div class="small text-muted">{% translate "Départ" %} {{ v.depart|tz:v.pays_depart.fuseau|date:"l j F, H\hi" }} · {% translate "dépôt avant le" %} {{ v.date_limite_depot|tz:v.pays_depart.fuseau|date:"j F H\hi" }}</div>
           </div>
           <div class="text-end"><div class="fw-bold">{{ v.kilos_restants|floatformat:0 }} kg</div><div class="small text-muted">{% translate "restants" %}</div></div>
@@ -75,7 +75,7 @@
     <div class="row g-4">
       <div class="col-md-6">
         <dl class="small mb-0">
-          <dt>{% translate "Voyage" %}</dt><dd>{{ voyage.ville_depart }} → {{ voyage.ville_arrivee }}<br>{% translate "Départ" %} {{ voyage.depart|tz:voyage.pays_depart.fuseau|date:"l j F Y, H\hi" }}</dd>
+          <dt>{% translate "Voyage" %}</dt><dd>{{ voyage.ville_depart }} → {{ ville_livraison }}<br>{% translate "Départ" %} {{ voyage.depart|tz:voyage.pays_depart.fuseau|date:"l j F Y, H\hi" }}</dd>
           <dt>{% translate "Bagage" %}</dt><dd>{{ bagage.description }} · {{ poids|floatformat:"-2" }} kg{% if bagage.longueur_cm %} · {{ bagage.longueur_cm }}×{{ bagage.largeur_cm }}×{{ bagage.hauteur_cm }} cm{% endif %}</dd>
           <dt>{% translate "Destinataire" %}</dt><dd>{{ dest.dest_nom }} · {{ dest.dest_telephone }}<br>{{ dest.dest_adresse }}</dd>
         </dl>

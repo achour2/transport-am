@@ -9,7 +9,7 @@
     <div class="bg-light rounded p-3 mb-4">
       <div class="fw-bold fs-5">{{ bagage.dest_nom }}</div>
       <div><i class="bi bi-telephone"></i> <a href="tel:{{ bagage.dest_telephone }}">{{ bagage.dest_telephone }}</a></div>
-      <div class="small text-muted">{{ bagage.dest_adresse }}</div>
+      <div class="small text-muted"><i class="bi bi-geo-alt"></i> {{ bagage.dest_adresse }} — <strong>{{ bagage.ville_livraison.nom }}</strong></div>
     </div>
     {% if bagage.statut == "livre" %}
       <div class="alert alert-success mb-0">{% translate "Ce bagage a déjà été livré." %}</div>

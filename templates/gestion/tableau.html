@@ -48,7 +48,7 @@
     <div class="carte carte-ombre p-3 mb-4">
       <h2 class="h6 fw-bold">Dernières réservations</h2>
       <div class="table-responsive"><table class="table table-sm align-middle mb-0">
-        {% for b in reservations %}<tr><td><a class="numero small" href="{% url 'gestion_bagage' b.numero_suivi %}">{{ b.numero_suivi }}</a></td><td class="small">{{ b.client|default:"—" }}</td><td class="small">{{ b.voyage.ville_arrivee.nom }}</td><td class="small text-end">{{ b.poids|floatformat:"-1" }} kg</td></tr>
+        {% for b in reservations %}<tr><td><a class="numero small" href="{% url 'gestion_bagage' b.numero_suivi %}">{{ b.numero_suivi }}</a></td><td class="small">{{ b.client|default:"—" }}</td><td class="small">{{ b.ville_livraison.nom }}</td><td class="small text-end">{{ b.poids|floatformat:"-1" }} kg</td></tr>
         {% empty %}<tr><td class="text-muted small">Aucune réservation.</td></tr>{% endfor %}
       </table></div>
     </div>

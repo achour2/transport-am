@@ -52,7 +52,7 @@ def _calcul_simulation(form):
         return resultat
     voyages = Voyage.reservables().filter(ville_arrivee__pays=pays)
     if d.get("ville"):
-        voyages = voyages.filter(ville_arrivee=d["ville"])
+        voyages = Voyage.filtre_ville(voyages, d["ville"])
     resultat["voyages"] = [v for v in voyages.order_by("depart")[:10] if v.kilos_restants >= d["poids"]][:5]
     if d.get("longueur") and d.get("largeur") and d.get("hauteur"):
         resultat["volume_l"] = round(d["longueur"] * d["largeur"] * d["hauteur"] / 1000, 1)

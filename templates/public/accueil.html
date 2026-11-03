@@ -72,7 +72,7 @@
         <div class="itineraire mb-1">
           <div><div class="drapeau">{{ v.pays_depart.drapeau }}</div><div class="fw-bold">{{ v.ville_depart.nom }}</div></div>
           <div class="trait"><i class="bi bi-airplane-fill"></i></div>
-          <div class="text-end"><div class="drapeau">{{ v.pays_arrivee.drapeau }}</div><div class="fw-bold">{{ v.ville_arrivee.nom }}</div></div>
+          <div class="text-end"><div class="drapeau">{{ v.pays_arrivee.drapeau }}</div><div class="fw-bold">{{ v.destinations_texte }}</div></div>
         </div>
         <div class="text-muted small mt-2"><i class="bi bi-calendar-event"></i> {{ v.depart|tz:v.pays_depart.fuseau|date:"l j F, H\hi" }}</div>
         <div class="my-3">

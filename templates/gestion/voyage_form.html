@@ -3,7 +3,7 @@
 {% block gestion %}
 <a href="{% url 'gestion_voyages' %}" class="small"><i class="bi bi-arrow-left"></i> Voyages</a>
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-2 mb-3">
-  <h1 class="section-titre h3 mb-0">{% if voyage %}{{ voyage.ville_depart.nom }} → {{ voyage.ville_arrivee.nom }} <span class="badge bg-{{ voyage.statut|couleur }} fs-6 align-middle">{{ voyage.etat_affiche }}</span>{% elif duplique %}Dupliquer un voyage{% else %}Créer un voyage{% endif %}</h1>
+  <h1 class="section-titre h3 mb-0">{% if voyage %}{{ voyage.ville_depart.nom }} → {{ voyage.destinations_texte }} <span class="badge bg-{{ voyage.statut|couleur }} fs-6 align-middle">{{ voyage.etat_affiche }}</span>{% elif duplique %}Dupliquer un voyage{% else %}Créer un voyage{% endif %}</h1>
   {% if voyage %}
   <div class="d-flex gap-2">
     <a href="{% url 'gestion_voyage_dupliquer' voyage.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-copy"></i> Dupliquer</a>
@@ -20,7 +20,7 @@
       {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors|join:"<br>" }}</div>{% endif %}
       <div class="row">
         {% for f in form.visible_fields %}
-        <div class="{% if f.name == 'lieu_depot' %}col-md-8{% elif f.name == 'heure_depot' %}col-md-4{% else %}col-md-6{% endif %} mb-3">
+        <div class="{% if f.name == 'lieu_depot' %}col-md-8{% elif f.name == 'heure_depot' %}col-md-4{% elif f.name == 'autres_villes' %}col-12{% else %}col-md-6{% endif %} mb-3">
           <label class="form-label fw-semibold small" for="{{ f.id_for_label }}">{{ f.label|capfirst }}</label>{{ f }}
           {% if f.help_text %}<div class="form-text">{{ f.help_text }}</div>{% endif %}
           {% for e in f.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
@@ -52,4 +52,26 @@
   </div>
   {% endif %}
 </div>
+{% endblock %}
+{% block scripts %}
+<script>
+  // N'afficher que les villes du même pays que la ville d'arrivée principale
+  (function () {
+    var principale = document.getElementById("id_ville_arrivee"), cases = document.getElementById("id_autres_villes");
+    if (!principale || !cases) return;
+    function code(txt) { var m = (txt || "").match(/\(([A-Z]{2})\)\s*$/); return m ? m[1] : null; }
+    function maj() {
+      var opt = principale.options[principale.selectedIndex], c = opt ? code(opt.text) : null, nb = 0;
+      cases.querySelectorAll("label").forEach(function (lab) {
+        var input = lab.querySelector("input"), ok = c && code(lab.textContent) === c && input.value !== principale.value;
+        lab.parentElement.style.display = ok ? "" : "none";
+        if (!ok) input.checked = false; else nb++;
+      });
+      var aide = document.getElementById("aide-villes");
+      if (aide) aide.textContent = !c ? "Choisissez d'abord la ville d'arrivée principale." : (nb ? "" : "Aucune autre ville enregistrée pour ce pays (ajoutez-en dans Pays et tarifs).");
+    }
+    cases.insertAdjacentHTML("afterend", '<div class="form-text" id="aide-villes"></div>');
+    principale.addEventListener("change", maj); maj();
+  })();
+</script>
 {% endblock %}

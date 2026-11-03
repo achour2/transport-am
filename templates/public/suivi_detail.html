@@ -41,7 +41,7 @@
           <dt class="small text-muted fw-normal">{% translate "Départ" %}</dt>
           <dd class="fw-semibold">{{ voyage.pays_depart.drapeau }} {{ voyage.ville_depart.nom }}, {{ voyage.pays_depart.nom }}<br><span class="small fw-normal">{{ voyage.depart|tz:voyage.pays_depart.fuseau|date:"d/m/Y H:i" }} ({{ voyage.pays_depart.fuseau|nom_tz }})</span></dd>
           <dt class="small text-muted fw-normal">{% translate "Arrivée" %}</dt>
-          <dd class="fw-semibold">{{ voyage.pays_arrivee.drapeau }} {{ voyage.ville_arrivee.nom }}, {{ voyage.pays_arrivee.nom }}</dd>
+          <dd class="fw-semibold">{{ voyage.pays_arrivee.drapeau }} {{ bagage.ville_livraison.nom }}, {{ voyage.pays_arrivee.nom }}</dd>
           <dt class="small text-muted fw-normal">{% translate "Arrivée prévue" %}</dt>
           <dd class="fw-semibold">{{ voyage.arrivee_prevue|tz:voyage.pays_arrivee.fuseau|date:"l j F Y, H\hi" }} <span class="small fw-normal">({{ voyage.pays_arrivee.fuseau|nom_tz }})</span></dd>
           <dt class="small text-muted fw-normal">{% translate "Destinataire" %}</dt>

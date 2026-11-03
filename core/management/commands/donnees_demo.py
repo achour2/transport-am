@@ -67,19 +67,21 @@ class Command(BaseCommand):
         h = lambda d, heure=18: (now + timedelta(days=d)).replace(hour=heure, minute=0, second=0, microsecond=0)
         lieu = "Entrepôt Talaouglid, 1234 rue Exemple, Montréal"
 
-        def voyage(dep, arr, jours, cap, transporteur, moyen="avion", duree=16):
+        def voyage(dep, arr, jours, cap, transporteur, moyen="avion", duree=16, escales=()):
             d = h(jours)
-            return Voyage.objects.create(ville_depart=villes[dep], ville_arrivee=villes[arr], depart=d,
+            v = Voyage.objects.create(ville_depart=villes[dep], ville_arrivee=villes[arr], depart=d,
                                          arrivee_prevue=d + timedelta(hours=duree), date_limite_depot=d - timedelta(hours=24),
                                          lieu_depot=lieu, heure_depot="de 10 h à 18 h", capacite_kg=cap,
                                          transporteur=transporteur, moyen=moyen)
+            v.autres_villes.set([villes[e] for e in escales])
+            return v
 
         en_cours = voyage("Montréal", "Paris", -1, 250, yacine, duree=30)
-        alger = voyage("Montréal", "Alger", 12, 300, karim)
+        alger = voyage("Montréal", "Alger", 12, 300, karim, escales=("Oran", "Constantine"))
         voyage("Montréal", "Oran", 19, 250, karim)
         voyage("Montréal", "Casablanca", 9, 200, yacine)
         voyage("Montréal", "Tunis", 16, 200, yacine)
-        voyage("Toronto", "Paris", 6, 180, yacine, duree=9)
+        voyage("Toronto", "Paris", 6, 180, yacine, duree=9, escales=("Lyon", "Marseille"))
         voyage("Montréal", "Alger", 26, 300, karim)
         termine = voyage("Montréal", "Constantine", -12, 250, karim)
 

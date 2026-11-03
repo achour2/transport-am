@@ -173,6 +173,8 @@ class EtapeDestinationForm(BootstrapMixin, forms.Form):
         v, p = d.get("voyage"), d.get("pays")
         if v and p and v.ville_arrivee.pays_id != p.pk:
             self.add_error("voyage", "Ce voyage ne va pas vers le pays choisi.")
+        if v and d.get("ville") and not v.dessert(d["ville"]):
+            self.add_error("voyage", f"Ce voyage ne dessert pas {d['ville'].nom}.")
         if v and not v.reservations_ouvertes:
             self.add_error("voyage", "Ce voyage n'est plus réservable (complet ou date limite dépassée).")
         return d
@@ -313,9 +315,10 @@ class PaysForm(BootstrapMixin, forms.ModelForm):
 class VoyageForm(BootstrapMixin, forms.ModelForm):
     class Meta:
         model = Voyage
-        fields = ["ville_depart", "ville_arrivee", "depart", "arrivee_prevue", "date_limite_depot", "lieu_depot",
+        fields = ["ville_depart", "ville_arrivee", "autres_villes", "depart", "arrivee_prevue", "date_limite_depot", "lieu_depot",
                   "heure_depot", "capacite_kg", "transporteur", "moyen"]
-        widgets = {"depart": DT_WIDGET, "arrivee_prevue": DT_WIDGET, "date_limite_depot": DT_WIDGET}
+        widgets = {"depart": DT_WIDGET, "arrivee_prevue": DT_WIDGET, "date_limite_depot": DT_WIDGET,
+                   "autres_villes": forms.CheckboxSelectMultiple}
         help_texts = {"date_limite_depot": "Laisser vide : 24 h avant le départ (voir paramètres)."}
 
     def __init__(self, *args, **kwargs):
@@ -323,6 +326,8 @@ class VoyageForm(BootstrapMixin, forms.ModelForm):
         villes = Ville.objects.filter(pays__actif=True).select_related("pays").order_by("pays__nom", "nom")
         self.fields["ville_depart"].queryset = villes
         self.fields["ville_arrivee"].queryset = villes
+        self.fields["autres_villes"].queryset = villes
+        self.fields["autres_villes"].widget.attrs.pop("class", None)
         self.fields["transporteur"].queryset = Utilisateur.objects.filter(role=Utilisateur.Role.TRANSPORTEUR, is_active=True)
         self.fields["date_limite_depot"].required = False
         for f in ("depart", "arrivee_prevue", "date_limite_depot"):
@@ -330,6 +335,12 @@ class VoyageForm(BootstrapMixin, forms.ModelForm):
 
     def clean(self):
         d = self.cleaned_data
+        principale, autres = d.get("ville_arrivee"), d.get("autres_villes")
+        if principale and autres:
+            hors_pays = [v.nom for v in autres if v.pays_id != principale.pays_id]
+            if hors_pays:
+                self.add_error("autres_villes", f"Ces villes ne sont pas en {principale.pays.nom} : {', '.join(hors_pays)}.")
+            d["autres_villes"] = [v for v in autres if v.pk != principale.pk]
         if d.get("depart") and not d.get("date_limite_depot"):
             heures = Parametres.charger().fermeture_reservations_heures
             d["date_limite_depot"] = d["depart"] - timezone.timedelta(hours=heures)
@@ -376,6 +387,8 @@ class EnvoiComptoirForm(BootstrapMixin, forms.Form):
     telephone = forms.CharField(label="Téléphone", max_length=30)
     # Voyage et bagage
     voyage = forms.ModelChoiceField(queryset=Voyage.objects.none(), label="Voyage")
+    ville_destination = forms.ModelChoiceField(queryset=Ville.objects.none(), label="Ville de livraison", required=False,
+                                               empty_label="Ville principale du voyage")
     description = forms.CharField(label="Description du contenu", max_length=255)
     poids = forms.DecimalField(label="Poids (kg)", min_value=Decimal("0.1"), max_digits=6, decimal_places=2)
     longueur_cm = forms.IntegerField(label="Longueur (cm)", required=False, min_value=1)
@@ -396,8 +409,9 @@ class EnvoiComptoirForm(BootstrapMixin, forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["voyage"].queryset = Voyage.reservables().order_by("depart")
+        self.fields["ville_destination"].queryset = Ville.objects.filter(pays__actif=True).select_related("pays").order_by("pays__nom", "nom")
         self.fields["voyage"].label_from_instance = lambda v: (
-            f"{v.ville_depart.nom} → {v.ville_arrivee.nom} · {timezone.localtime(v.depart):%d/%m/%Y %H:%M} "
+            f"{v.ville_depart.nom} → {v.destinations_texte} · {timezone.localtime(v.depart):%d/%m/%Y %H:%M} "
             f"· {v.kilos_restants:.0f} kg restants · {v.pays_arrivee.frais_fixes} + {v.pays_arrivee.tarif_kg}/kg")
 
     def clean(self):
@@ -409,4 +423,6 @@ class EnvoiComptoirForm(BootstrapMixin, forms.Form):
                 self.add_error("poids", f"Le poids maximum pour {pays.nom} est de {pays.poids_max} kg.")
             elif poids > v.kilos_restants:
                 self.add_error("poids", f"Il ne reste que {v.kilos_restants} kg sur ce voyage.")
+        if v and d.get("ville_destination") and not v.dessert(d["ville_destination"]):
+            self.add_error("ville_destination", f"Ce voyage dessert : {v.destinations_texte}.")
         return d

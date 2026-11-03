@@ -22,6 +22,7 @@
         </div>
         <div class="col-md-6">
           <dl>
+            <dt>Ville de livraison</dt><dd><strong>{{ bagage.ville_livraison }}</strong></dd>
             <dt>Destinataire</dt><dd>{{ bagage.dest_nom }}<br>{{ bagage.dest_telephone }}<br>{{ bagage.dest_adresse }}{% if bagage.dest_courriel %}<br>{{ bagage.dest_courriel }}{% endif %}</dd>
             <dt>Prix (figé)</dt><dd>{{ bagage.frais_fixes|argent:bagage.devise }} + {{ bagage.poids }} × {{ bagage.tarif_kg|argent:bagage.devise }} = <strong>{{ bagage.prix|argent:bagage.devise }}</strong></dd>
             <dt>Code de remise</dt><dd class="numero">{{ bagage.code_remise }}</dd>

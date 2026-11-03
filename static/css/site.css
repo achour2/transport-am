@@ -392,3 +392,9 @@ a.contact-ligne:hover .rond { background: var(--tb-navy); color: #fff; }
 .etapes-mini div { text-align: center; flex: 1; position: relative; font-size: .78rem; color: rgba(255, 255, 255, .8); }
 .etapes-mini i { width: 40px; height: 40px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, .12); color: #fff; margin-bottom: .35rem; border: 1px solid rgba(255, 255, 255, .2); }
 .puce.active .text-muted { color: rgba(255, 255, 255, .75) !important; }
+#id_autres_villes { display: flex; flex-wrap: wrap; gap: .5rem; }
+#id_autres_villes label { display: inline-flex; align-items: center; gap: .4rem; padding: .4rem .8rem; border: 1px solid var(--tb-border); border-radius: 999px; cursor: pointer; font-weight: 500; background: #fff; }
+#id_autres_villes label:has(input:checked) { border-color: var(--tb-navy); background: #f3f8fd; color: var(--tb-navy); }
+#id_autres_villes input { margin: 0; }
+#id_autres_villes > div { display: inline-flex; }
+#id_autres_villes input[type=checkbox] { width: 1.05em; height: 1.05em; accent-color: var(--tb-navy); }

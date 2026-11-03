@@ -32,7 +32,7 @@
     {% for v in resultat.voyages %}
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 py-2 {% if not forloop.last %}border-bottom{% endif %}">
       <div>
-        <div class="fw-semibold">{{ v.ville_depart.nom }} <i class="bi bi-arrow-right text-muted"></i> {{ v.ville_arrivee.nom }}</div>
+        <div class="fw-semibold">{{ v.ville_depart.nom }} <i class="bi bi-arrow-right text-muted"></i> {{ v.destinations_texte }}</div>
         <div class="small text-muted"><i class="bi bi-calendar-event"></i> {{ v.depart|tz:v.pays_depart.fuseau|date:"l j F, H\hi" }} · {{ v.kilos_restants|floatformat:0 }} kg {% translate "restants" %}</div>
       </div>
       <a class="btn btn-accent btn-sm" href="{% url 'client_envoi_nouveau' %}?voyage={{ v.pk }}&poids={{ resultat.poids }}">{% translate "Réserver ce prix" %} <i class="bi bi-arrow-right"></i></a>

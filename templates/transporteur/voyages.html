@@ -6,7 +6,7 @@
   {% for voyage in en_cours %}
   <div class="carte carte-ombre p-4 mb-4 border-primary">
     <span class="badge bg-primary mb-2">{% translate "En cours" %}</span>
-    <div class="fs-5 fw-bold">{{ voyage.ville_depart.nom }} → {{ voyage.ville_arrivee.nom }}</div>
+    <div class="fs-5 fw-bold">{{ voyage.ville_depart.nom }} → {{ voyage.destinations_texte }}</div>
     {% with m=voyage.minutes_depuis_position p=voyage.derniere_position %}
     <div class="mb-3 {% if m is not None and m >= 120 %}retard{% else %}text-muted{% endif %}">
       <i class="bi bi-clock-history"></i>
@@ -22,7 +22,7 @@
   {% for v in prochains %}
   <a href="{% url 'transporteur_voyage' v.pk %}" class="carte carte-ombre p-3 mb-2 d-block text-decoration-none text-body">
     <div class="d-flex justify-content-between">
-      <div><div class="fw-bold">{{ v.ville_depart.nom }} → {{ v.ville_arrivee.nom }}</div>
+      <div><div class="fw-bold">{{ v.ville_depart.nom }} → {{ v.destinations_texte }}</div>
         <div class="small text-muted">{{ v.depart|tz:v.pays_depart.fuseau|date:"l j F, H\hi" }} · {{ v.get_moyen_display }}</div></div>
       <div class="text-end small"><div class="fw-bold">{{ v.bagages.count }} {% translate "bagages" %}</div><div class="text-muted">{{ v.kilos_reserves|floatformat:0 }} / {{ v.capacite_kg|floatformat:0 }} kg</div></div>
     </div>

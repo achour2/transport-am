@@ -212,7 +212,12 @@ class Voyage(models.Model):
         ANNULE = "annule", _("Annulé")
 
     ville_depart = models.ForeignKey(Ville, on_delete=models.PROTECT, related_name="voyages_depart")
-    ville_arrivee = models.ForeignKey(Ville, on_delete=models.PROTECT, related_name="voyages_arrivee")
+    ville_arrivee = models.ForeignKey(Ville, on_delete=models.PROTECT, related_name="voyages_arrivee",
+                                      verbose_name=_("ville d'arrivée (principale)"))
+    autres_villes = models.ManyToManyField(
+        Ville, blank=True, related_name="voyages_escales", verbose_name=_("autres villes desservies"),
+        help_text="Autres villes du même pays où ce voyage livre aussi (ex. Lyon, Marseille).",
+    )
     depart = models.DateTimeField(_("date et heure de départ"))
     arrivee_prevue = models.DateTimeField(_("date et heure d'arrivée prévue"))
     date_limite_depot = models.DateTimeField(_("date limite de dépôt"))
@@ -236,7 +241,7 @@ class Voyage(models.Model):
         ordering = ["depart"]
 
     def __str__(self):
-        return f"{self.ville_depart.nom} → {self.ville_arrivee.nom} · {timezone.localtime(self.depart):%d/%m/%Y %H:%M}"
+        return f"{self.ville_depart.nom} → {self.destinations_texte} · {timezone.localtime(self.depart):%d/%m/%Y %H:%M}"
 
     def get_absolute_url(self):
         return reverse("gestion_voyage_modifier", args=[self.pk])
@@ -259,6 +264,24 @@ class Voyage(models.Model):
             erreurs["capacite_kg"] = f"Capacité inférieure aux kilos déjà réservés ({self.kilos_reserves} kg)."
         if erreurs:
             raise ValidationError(erreurs)
+
+    # -- villes desservies (1 à N dans le pays d'arrivée)
+    @property
+    def villes_desservies(self):
+        autres = [v for v in self.autres_villes.all() if v.pk != self.ville_arrivee_id] if self.pk else []
+        return [self.ville_arrivee] + sorted(autres, key=lambda v: v.nom)
+
+    @property
+    def destinations_texte(self):
+        return ", ".join(v.nom for v in self.villes_desservies)
+
+    def dessert(self, ville):
+        return ville is not None and any(v.pk == ville.pk for v in self.villes_desservies)
+
+    @classmethod
+    def filtre_ville(cls, qs, ville):
+        """Voyages qui desservent cette ville (principale ou escale)."""
+        return qs.filter(models.Q(ville_arrivee=ville) | models.Q(autres_villes=ville)).distinct()
 
     # -- pays (raccourcis)
     @property
@@ -402,6 +425,8 @@ class Bagage(models.Model):
     numero_suivi = models.CharField(max_length=12, unique=True, default=generer_numero_suivi, editable=False)
     client = models.ForeignKey(Utilisateur, on_delete=models.SET_NULL, null=True, related_name="bagages")
     voyage = models.ForeignKey(Voyage, on_delete=models.PROTECT, related_name="bagages")
+    ville_destination = models.ForeignKey(Ville, on_delete=models.PROTECT, null=True, blank=True, related_name="bagages",
+                                          verbose_name=_("ville de livraison"))
     description = models.CharField(_("description du contenu"), max_length=255)
     poids = models.DecimalField(_("poids (kg)"), max_digits=6, decimal_places=2)
     longueur_cm = models.PositiveIntegerField(null=True, blank=True)
@@ -449,6 +474,10 @@ class Bagage(models.Model):
         prenom = parties[0][0].upper() + "***"
         nom = (" " + parties[-1][0].upper() + ".") if len(parties) > 1 else ""
         return prenom + nom
+
+    @property
+    def ville_livraison(self):
+        return self.ville_destination or self.voyage.ville_arrivee
 
     @property
     def a_encaisser(self):

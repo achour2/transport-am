@@ -26,7 +26,7 @@
       <td><a class="numero" href="{% url 'gestion_bagage' b.numero_suivi %}">{{ b.numero_suivi }}</a><div class="small text-muted">{{ b.cree_le|date:"d/m/Y" }}</div></td>
       <td class="small">{{ b.client|default:"(compte supprimé)" }}</td>
       <td class="small">{{ b.dest_nom }}</td>
-      <td class="small">{{ b.voyage.ville_depart.nom }} → {{ b.voyage.ville_arrivee.nom }}<div class="text-muted">{{ b.voyage.depart|date:"d/m/Y" }}</div></td>
+      <td class="small">{{ b.voyage.ville_depart.nom }} → {{ b.ville_livraison.nom }}<div class="text-muted">{{ b.voyage.depart|date:"d/m/Y" }}</div></td>
       <td class="text-end">{{ b.poids|floatformat:"-1" }} kg</td>
       <td class="text-end">{{ b.prix|argent:b.devise }}</td>
       <td>{% if b.a_encaisser %}<span class="badge bg-warning text-dark">À encaisser</span>{% else %}<span class="badge bg-{{ b.statut_paiement|couleur }}">{{ b.get_statut_paiement_display }}</span>{% endif %}</td>

@@ -34,7 +34,7 @@ def recu_pdf(paiement):
     ]
     lignes = [
         ["Numéro de suivi", b.numero_suivi],
-        ["Trajet", f"{v.ville_depart} → {v.ville_arrivee}"],
+        ["Trajet", f"{v.ville_depart} → {b.ville_livraison}"],
         ["Départ", f"{timezone.localtime(v.depart):%d/%m/%Y %H:%M}"],
         ["Contenu", b.description],
         ["Destinataire", b.dest_nom],

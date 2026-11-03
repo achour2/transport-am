@@ -474,3 +474,49 @@ class ReservationPaiementComptoir(Base):
         r = services.verifications_periodiques(voyage.date_limite_depot + timedelta(minutes=1))
         b2.refresh_from_db()
         self.assertEqual((r.get("expirees"), b2.statut), (1, "annule"))
+
+
+class VoyagePlusieursVilles(Base):
+    """Un voyage peut desservir 1 à N villes du pays d'arrivée."""
+
+    def setUp(self):
+        super().setUp()
+        self.oran = Ville.objects.create(pays=self.algerie, nom="Oran", latitude=35.7, longitude=-0.63)
+        self.paris = Ville.objects.create(pays=Pays.objects.create(nom="France", code="FR", devise="CAD", frais_fixes=15,
+                                                                  tarif_kg=7, poids_max=30, fuseau="Europe/Paris"), nom="Paris")
+
+    def test_admin_ajoute_des_escales_du_meme_pays(self):
+        self.client.force_login(self.admin)
+        base = {"ville_depart": self.mtl.pk, "ville_arrivee": self.alger.pk, "depart": "2030-12-15T18:00",
+                "arrivee_prevue": "2030-12-16T10:00", "lieu_depot": "Entrepôt", "capacite_kg": "300",
+                "transporteur": self.karim.pk, "moyen": "avion"}
+        r = self.client.post(reverse("gestion_voyage_creer"), {**base, "autres_villes": [self.paris.pk]})
+        self.assertEqual(r.status_code, 200)  # Paris n'est pas en Algérie : refusé
+        self.client.post(reverse("gestion_voyage_creer"), {**base, "autres_villes": [self.oran.pk]})
+        v = Voyage.objects.get()
+        self.assertEqual([x.nom for x in v.villes_desservies], ["Alger", "Oran"])
+        self.assertEqual(v.destinations_texte, "Alger, Oran")
+
+    def test_client_reserve_pour_oran(self):
+        voyage = self.creer_voyage()
+        voyage.autres_villes.add(self.oran)
+        self.client.force_login(self.sara)
+        r = self.client.get(reverse("client_envoi_nouveau"), {"pays": self.algerie.pk, "ville": self.oran.pk})
+        self.assertContains(r, "Alger, Oran")
+        self.client.post(reverse("client_envoi_nouveau"), {"pays": self.algerie.pk, "ville": self.oran.pk, "voyage": voyage.pk})
+        self.client.post(reverse("client_envoi_etape", args=[2]), {"description": "Valise", "poids": "10", "valeur_declaree": "0"})
+        self.client.post(reverse("client_envoi_etape", args=[3]), {"dest_nom": "A B", "dest_telephone": "1", "dest_adresse": "Oran"})
+        self.client.post(reverse("client_envoi_etape", args=[4]), {"accepte": "on"})
+        b = Bagage.objects.get()
+        self.assertEqual(b.ville_livraison, self.oran)
+        # Un voyage qui ne dessert pas Oran n'apparaît pas pour Oran
+        autre = self.creer_voyage(jours=20)
+        r = self.client.get(reverse("simulateur"), {"pays": self.algerie.pk, "ville": self.oran.pk, "poids": "5"})
+        self.assertNotIn(autre, r.context["resultat"]["voyages"])
+        self.assertIn(voyage, r.context["resultat"]["voyages"])
+
+    def test_ville_non_desservie_refusee(self):
+        voyage = self.creer_voyage()
+        with self.assertRaises(services.ErreurMetier):
+            services.creer_bagage(self.sara, voyage, {"description": "x", "poids": Decimal(5), "dest_nom": "a",
+                                                      "dest_telephone": "1", "dest_adresse": "b", "ville_destination": self.oran})

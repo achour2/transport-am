@@ -28,7 +28,7 @@
       <td class="{% if not du_mois %}hors{% endif %} {% if jour == aujourdhui %}aujourdhui{% endif %}">
         <div class="fw-semibold">{{ jour.day }}</div>
         {% for v in liste %}
-        <a class="ev bg-{{ v.statut|couleur }}" href="{% url 'gestion_voyage_modifier' v.pk %}" title="{{ v }} — {{ v.kilos_reserves|floatformat:0 }}/{{ v.capacite_kg|floatformat:0 }} kg">{{ v.depart|date:"H:i" }} {{ v.ville_depart.nom|slice:":3" }}→{{ v.ville_arrivee.nom }}</a>
+        <a class="ev bg-{{ v.statut|couleur }}" href="{% url 'gestion_voyage_modifier' v.pk %}" title="{{ v }} — {{ v.kilos_reserves|floatformat:0 }}/{{ v.capacite_kg|floatformat:0 }} kg">{{ v.depart|date:"H:i" }} {{ v.ville_depart.nom|slice:":3" }}→{{ v.destinations_texte }}</a>
         {% endfor %}
       </td>
       {% endfor %}
@@ -51,7 +51,7 @@
     <tbody>
     {% for v in voyages %}
     <tr>
-      <td><strong>{{ v.pays_depart.drapeau }} {{ v.ville_depart.nom }} → {{ v.pays_arrivee.drapeau }} {{ v.ville_arrivee.nom }}</strong><div class="small text-muted">{{ v.get_moyen_display }}</div></td>
+      <td><strong>{{ v.pays_depart.drapeau }} {{ v.ville_depart.nom }} → {{ v.pays_arrivee.drapeau }} {{ v.destinations_texte }}</strong><div class="small text-muted">{{ v.get_moyen_display }}</div></td>
       <td class="small">{{ v.depart|tz:v.pays_depart.fuseau|date:"d/m/Y H:i" }}</td>
       <td class="small">{{ v.arrivee_prevue|tz:v.pays_arrivee.fuseau|date:"d/m/Y H:i" }}</td>
       <td class="small">{{ v.transporteur|default:"<span class='text-danger'>Non assigné</span>" }}</td>

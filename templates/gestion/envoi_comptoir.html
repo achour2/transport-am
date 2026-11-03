@@ -20,7 +20,8 @@
   <div class="carte carte-ombre p-4 mb-3">
     <h2 class="h6 fw-bold mb-3"><i class="bi bi-luggage"></i> 2. Voyage et bagage</h2>
     <div class="row">
-      {% include "gestion/_champ.html" with f=form.voyage col="col-12" %}
+      {% include "gestion/_champ.html" with f=form.voyage col="col-md-8" %}
+      {% include "gestion/_champ.html" with f=form.ville_destination col="col-md-4" %}
       {% include "gestion/_champ.html" with f=form.description col="col-md-8" %}
       {% include "gestion/_champ.html" with f=form.poids col="col-md-4" %}
       {% include "gestion/_champ.html" with f=form.longueur_cm col="col-4 col-md-2" %}

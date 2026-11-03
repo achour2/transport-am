@@ -79,7 +79,7 @@ def export_excel(request):
     for b in qs:
         ws.append([
             b.numero_suivi, timezone.localtime(b.cree_le).strftime("%Y-%m-%d %H:%M"), str(b.client or ""),
-            b.client.email if b.client else "", str(b.voyage.ville_depart), str(b.voyage.ville_arrivee),
+            b.client.email if b.client else "", str(b.voyage.ville_depart), str(b.ville_livraison),
             timezone.localtime(b.voyage.depart).strftime("%Y-%m-%d"), float(b.poids), float(b.prix), b.devise,
             b.get_statut_paiement_display(), b.get_statut_display(), b.dest_nom,
         ])
@@ -190,6 +190,7 @@ def voyage_form(request, pk=None, dupliquer=None):
             "depart": timezone.localtime(src.depart + decal), "arrivee_prevue": timezone.localtime(src.arrivee_prevue + decal),
             "date_limite_depot": timezone.localtime(src.date_limite_depot + decal), "lieu_depot": src.lieu_depot,
             "heure_depot": src.heure_depot, "capacite_kg": src.capacite_kg, "transporteur": src.transporteur, "moyen": src.moyen,
+            "autres_villes": list(src.autres_villes.values_list("pk", flat=True)),
         }
     if voyage and voyage.statut in ("termine", "annule") and request.method == "POST":
         messages.error(request, "Un voyage terminé ou annulé ne peut plus être modifié.")
@@ -270,6 +271,7 @@ def envoi_comptoir(request):
         d = form.cleaned_data
         donnees = {k: d[k] for k in ("description", "poids", "longueur_cm", "largeur_cm", "hauteur_cm", "valeur_declaree",
                                      "dest_nom", "dest_telephone", "dest_adresse", "dest_courriel")}
+        donnees["ville_destination"] = d.get("ville_destination") or d["voyage"].ville_arrivee
         try:
             bagage, compte_cree = creer_envoi_comptoir(
                 request.user, d["voyage"], donnees,

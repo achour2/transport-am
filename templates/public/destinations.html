@@ -40,7 +40,7 @@
           </div>
           {% with prochain=p.prochain_depart %}
           {% if prochain %}
-          <div class="pastille-info mb-3"><i class="bi bi-calendar-event"></i><span>{% translate "Prochain départ" %} : <strong>{{ prochain.depart|tz:prochain.pays_depart.fuseau|date:"j F Y" }}</strong> · {{ prochain.ville_depart.nom }} → {{ prochain.ville_arrivee.nom }} · {{ prochain.kilos_restants|floatformat:0 }} kg {% translate "restants" %}</span></div>
+          <div class="pastille-info mb-3"><i class="bi bi-calendar-event"></i><span>{% translate "Prochain départ" %} : <strong>{{ prochain.depart|tz:prochain.pays_depart.fuseau|date:"j F Y" }}</strong> · {{ prochain.ville_depart.nom }} → {{ prochain.destinations_texte }} · {{ prochain.kilos_restants|floatformat:0 }} kg {% translate "restants" %}</span></div>
           {% else %}
           <div class="pastille-info vide mb-3"><i class="bi bi-calendar"></i><span>{% translate "Prochain départ" %} : {% translate "à venir" %}</span></div>
           {% endif %}

@@ -5,7 +5,7 @@
   <h1 class="section-titre h4 mb-3">{% translate "Ma position" %}</h1>
   {% if voyage %}
   <div class="carte carte-ombre p-4">
-    <div class="fw-bold mb-1">{{ voyage.ville_depart.nom }} → {{ voyage.ville_arrivee.nom }}</div>
+    <div class="fw-bold mb-1">{{ voyage.ville_depart.nom }} → {{ voyage.destinations_texte }}</div>
     {% with p=voyage.derniere_position %}<div class="small text-muted mb-3">{% if p %}{% translate "Dernier envoi" %} : {{ p.envoyee_le|date:"H:i" }} ({{ p.envoyee_le|depuis }}){% else %}{% translate "Aucune position envoyée" %}{% endif %}</div>{% endwith %}
     {% include "transporteur/_bouton_position.html" %}
     <hr class="my-4">

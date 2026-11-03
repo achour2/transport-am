@@ -77,7 +77,7 @@
       {% endif %}
       <div class="carte carte-ombre p-4 mb-4">
         <dl class="small mb-0">
-          <dt>{% translate "Trajet" %}</dt><dd>{{ voyage.ville_depart }} → {{ voyage.ville_arrivee }}</dd>
+          <dt>{% translate "Trajet" %}</dt><dd>{{ voyage.ville_depart }} → {{ bagage.ville_livraison }}</dd>
           <dt>{% translate "Départ" %}</dt><dd>{{ voyage.depart|tz:voyage.pays_depart.fuseau|date:"d/m/Y H:i" }} ({{ voyage.pays_depart.fuseau|nom_tz }})</dd>
           <dt>{% translate "Arrivée prévue" %}</dt><dd>{{ voyage.arrivee_prevue|tz:voyage.pays_arrivee.fuseau|date:"d/m/Y H:i" }} ({{ voyage.pays_arrivee.fuseau|nom_tz }})</dd>
           <dt>{% translate "Contenu" %}</dt><dd>{{ bagage.description }} · {{ bagage.poids|floatformat:"-2" }} kg {% if bagage.dimensions %}· {{ bagage.dimensions }}{% endif %}</dd>

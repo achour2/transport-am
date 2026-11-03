@@ -20,7 +20,7 @@ from ..forms import (
     EtapeDestinationForm,
     ProfilForm,
 )
-from ..models import Bagage, DestinataireEnregistre, Paiement, Pays, Voyage
+from ..models import Bagage, DestinataireEnregistre, Paiement, Pays, Ville, Voyage
 from ..pdf import recu_pdf
 from ..services import (
     ErreurMetier,
@@ -103,14 +103,15 @@ def envoi_nouveau(request, etape=1):
         form = EtapeDestinationForm(request.POST or None, initial=initial)
         if request.method == "POST" and form.is_valid():
             d = form.cleaned_data
-            resa.update(pays=d["pays"].pk, ville=d["ville"].pk if d["ville"] else None, voyage=d["voyage"].pk)
+            resa.update(pays=d["pays"].pk, ville=d["ville"].pk if d["ville"] else None, voyage=d["voyage"].pk,
+                        ville_destination=(d["ville"] or d["voyage"].ville_arrivee).pk)
             request.session.modified = True
             return redirect("client_envoi_etape", etape=2)
         pays_id = form.data.get("pays") or initial.get("pays")
         voyages = Voyage.reservables().filter(ville_arrivee__pays_id=pays_id) if pays_id else Voyage.objects.none()
         ville_id = form.data.get("ville") or initial.get("ville")
         if ville_id:
-            voyages = voyages.filter(ville_arrivee_id=ville_id)
+            voyages = Voyage.filtre_ville(voyages, ville_id)
         form.fields["ville"].queryset = form.fields["ville"].queryset.filter(pays_id=pays_id or 0)
         form.fields["ville"].empty_label = "Toutes les villes"
         ctx.update(form=form, voyages=[v for v in voyages if not v.est_complet], pays_choisi=Pays.objects.filter(pk=pays_id or 0).first())
@@ -153,6 +154,7 @@ def envoi_nouveau(request, etape=1):
         pays = voyage.pays_arrivee
         poids = Decimal(b["poids"])
         ctx.update(
+            ville_livraison=Ville.objects.filter(pk=resa.get("ville_destination")).first() or voyage.ville_arrivee,
             pays=pays, poids=poids, bagage=b, dest=resa["destinataire"],
             montant_kilos=(poids * pays.tarif_kg).quantize(Decimal("0.01")),
             prix=pays.calculer_prix(poids),
@@ -165,6 +167,7 @@ def envoi_nouveau(request, etape=1):
                 "description": b["description"], "poids": poids,
                 "longueur_cm": b.get("longueur_cm"), "largeur_cm": b.get("largeur_cm"), "hauteur_cm": b.get("hauteur_cm"),
                 "valeur_declaree": Decimal(b.get("valeur_declaree") or 0), **resa["destinataire"],
+                "ville_destination": Ville.objects.filter(pk=resa.get("ville_destination")).first() or voyage.ville_arrivee,
             }
             try:
                 if settings.PAIEMENT_EN_LIGNE:
@@ -230,7 +233,7 @@ def payer(request, numero):
                 "price_data": {
                     "currency": bagage.devise.lower(),
                     "unit_amount": int(bagage.prix * 100),
-                    "product_data": {"name": f"Envoi {bagage.numero_suivi} — {bagage.poids} kg vers {bagage.voyage.ville_arrivee}"},
+                    "product_data": {"name": f"Envoi {bagage.numero_suivi} — {bagage.poids} kg vers {bagage.ville_livraison}"},
                 },
             }],
             metadata={"paiement": paiement.pk},
