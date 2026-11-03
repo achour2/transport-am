@@ -1,13 +1,13 @@
 # Déploiement Render (Blueprint) : New + → Blueprint → choisir ce dépôt
 databases:
-  - name: transbagages-db
+  - name: talaouglid-db
     plan: free
-    databaseName: transbagages
-    user: transbagages
+    databaseName: talaouglid
+    user: talaouglid
 
 services:
   - type: web
-    name: transbagages
+    name: talaouglid
     runtime: python
     plan: free
     region: virginia
@@ -18,7 +18,7 @@ services:
         value: 3.12.7
       - key: DATABASE_URL
         fromDatabase:
-          name: transbagages-db
+          name: talaouglid-db
           property: connectionString
       - key: DJANGO_SECRET_KEY
         generateValue: true
