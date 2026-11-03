@@ -685,3 +685,23 @@ class Securite(Base):
         self.assertNotIn("latitude", api["derniere_position"])
         self.client.force_login(self.sara)  # l'expéditeur connecté voit la carte détaillée
         self.assertContains(self.client.get(reverse("client_envoi", args=[b.numero_suivi])), "45.4711")
+
+
+class MiseEnRegle(Base):
+    def test_conditions_infos_legales_et_indemnite(self):
+        from core.models import Parametres
+
+        p = Parametres.charger()
+        p.nom_legal, p.neq, p.indemnisation_max_kg = "Talaouglid inc.", "1234567890", Decimal("20")
+        p.save()
+        r = self.client.get(reverse("conditions"))
+        self.assertContains(r, "Talaouglid inc.")
+        self.assertContains(r, "1234567890")
+        self.assertContains(r, "Render")
+        self.assertContains(self.client.get("/"), "NEQ 1234567890")
+        voyage = self.creer_voyage()
+        b = self.reserver(voyage, 10)
+        b.valeur_declaree = Decimal("500")
+        b.save()
+        self.assertEqual(b.indemnite_suggeree, Decimal("200.00"))  # 20 $/kg × 10 kg < 500 $
+        self.assertContains(self.client.get(reverse("simulateur"), {"pays": self.algerie.pk, "poids": "18"}), "$ CA")

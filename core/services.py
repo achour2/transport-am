@@ -218,7 +218,9 @@ def confirmer_paiement(paiement, reference=""):
             f"Montant payé : {paiement.montant} {paiement.devise} (reçu {paiement.numero_recu})\n"
             f"Lieu de dépôt : {voyage.lieu_depot}\n"
             f"Date limite de dépôt : {limite:%d/%m/%Y à %H:%M}\n"
-            f"Code de remise (à transmettre au destinataire) : {bagage.code_remise}"
+            f"Code de remise (à transmettre au destinataire) : {bagage.code_remise}\n\n"
+            f"Conditions générales applicables à cet envoi : {url_absolue(reverse('conditions'))}\n"
+            + (f"{params.nom_legal} — NEQ {params.neq} — {params.adresse_legale}" if params.nom_legal else params.nom_entreprise)
         )
         Notification.objects.create(
             destinataire=bagage.client, message=f"Réservation confirmée : {bagage.numero_suivi}", lien=lien
@@ -502,6 +504,13 @@ def traiter_incident(incident, etat, auteur):
         changer_statut(b, Bagage.Statut.PERDU, auteur)
         if b.statut_paiement == Bagage.Paiement.PAYE:
             rembourser(b, auteur)
+        if b.indemnite_suggeree:
+            EvenementBagage.objects.create(
+                bagage=b, statut=b.statut, auteur=auteur,
+                message=f"Indemnité prévue par les conditions : {b.indemnite_suggeree} {b.devise} "
+                        f"(valeur déclarée {b.valeur_declaree}, plafonnée) — à verser au client.")
+            notifier_admins(f"Indemnité à verser pour {b.numero_suivi} : {b.indemnite_suggeree} {b.devise}",
+                            reverse("gestion_bagage", args=[b.numero_suivi]), courriel=False)
     elif etat == Incident.Etat.RESOLU and b.statut == Bagage.Statut.INCIDENT:
         changer_statut(b, incident.statut_avant or Bagage.Statut.EN_TRANSIT, auteur, f"Incident résolu pour {b.numero_suivi}.")
     return incident

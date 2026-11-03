@@ -1,4 +1,4 @@
-{% extends "gestion/_base.html" %}
+{% extends "gestion/_base.html" %}{% load outils %}
 {% block titre %}Incidents{% endblock %}
 {% block gestion %}
 <h1 class="section-titre h3 mb-3">Incidents</h1>
@@ -10,6 +10,7 @@
       <div class="fw-bold">{{ i.get_type_display }} — {% if i.bagage %}<a class="numero" href="{% url 'gestion_bagage' i.bagage.numero_suivi %}">{{ i.bagage.numero_suivi }}</a>{% else %}tout le voyage{% endif %}</div>
       <div class="small text-muted">{{ i.voyage }} · signalé par {{ i.signale_par|default:"—" }} le {{ i.cree_le|date:"d/m/Y H:i" }}</div>
       {% if i.commentaire %}<p class="small mt-2 mb-0">« {{ i.commentaire }} »</p>{% endif %}
+      {% if i.bagage %}<p class="small text-muted mb-0 mt-1">Si perdu : remboursement du transport {{ i.bagage.prix|argent:i.bagage.devise }}{% if i.bagage.indemnite_suggeree %} + indemnité {{ i.bagage.indemnite_suggeree|argent:i.bagage.devise }}{% endif %}.</p>{% endif %}
     </div>
     <form method="post" class="d-flex flex-wrap gap-2 align-items-start">{% csrf_token %}<input type="hidden" name="pk" value="{{ i.pk }}">
       {% if i.bagage %}

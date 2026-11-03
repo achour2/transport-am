@@ -61,7 +61,7 @@ def argent(valeur, devise=""):
         return valeur
     if txt.endswith(",00"):
         txt = txt[:-3]
-    symbole = {"CAD": "$", "USD": "$", "EUR": "€", "DZD": "DA", "MAD": "DH", "TND": "DT"}.get(devise, devise)
+    symbole = {"CAD": "$ CA", "USD": "$ US", "EUR": "€", "DZD": "DA", "MAD": "DH", "TND": "DT"}.get(devise, devise)
     return f"{txt} {symbole}".strip()
 
 

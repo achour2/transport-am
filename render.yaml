@@ -33,6 +33,8 @@ services:
         sync: false
       - key: DJANGO_ADMIN_PASSWORD
         sync: false
+      - key: DJANGO_DOMAINE
+        sync: false
       - key: VERIFICATIONS_JETON
         generateValue: true
       - key: STRIPE_SECRET_KEY

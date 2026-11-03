@@ -1,12 +1,51 @@
-{% extends "base.html" %}{% load i18n %}
+{% extends "base.html" %}{% load i18n outils %}
 {% block titre %}{% translate "Conditions générales" %}{% endblock %}
 {% block contenu %}
-<div class="container my-5" style="max-width:820px">
+<section class="entete-page" style="padding-bottom:4.5rem">
+  <div class="container" style="max-width:860px">
+    <span class="surtitre">{% translate "Contrat de transport" %}</span>
+    <h1 class="display-6 mb-0">{% translate "Conditions générales et confidentialité" %}</h1>
+  </div>
+</section>
+<div class="container sous-entete mb-5" style="max-width:860px">
   <div class="carte carte-ombre p-4 p-md-5">
-    <h1 class="section-titre h3">{% translate "Conditions générales" %}</h1>
+    <h2 class="section-titre h4">{% translate "Le commerçant" %}</h2>
+    <p class="mb-4">
+      <strong>{{ parametres.nom_legal|default:parametres.nom_entreprise }}</strong>{% if parametres.nom_legal and parametres.nom_legal != parametres.nom_entreprise %} ({% translate "nom commercial" %} : {{ parametres.nom_entreprise }}){% endif %}<br>
+      {% if parametres.neq %}NEQ : {{ parametres.neq }}<br>{% endif %}
+      {{ parametres.adresse_legale|default:parametres.adresse_depot }}<br>
+      {{ parametres.telephone }} · {{ parametres.courriel }}
+      {% if parametres.numero_tps or parametres.numero_tvq %}<br>{% if parametres.numero_tps %}TPS/TVH : {{ parametres.numero_tps }}{% endif %}{% if parametres.numero_tvq %} · TVQ : {{ parametres.numero_tvq }}{% endif %}{% endif %}
+    </p>
+
+    <h2 class="section-titre h4">{% translate "Conditions générales" %}</h2>
     <p style="white-space:pre-line">{{ parametres.conditions_generales }}</p>
-    <h2 class="section-titre h4 mt-4" id="confidentialite">{% translate "Politique de confidentialité" %}</h2>
+
+    <h3 class="h5 fw-bold mt-4">{% translate "Déclaration et contrôle du contenu" %}</h3>
+    <ul>
+      <li>{% translate "L’expéditeur déclare le contenu exact du bagage et l’absence d’objets interdits (liste par pays sur la page Destinations). Cette déclaration est enregistrée avec sa date lors de la réservation, ou signée au comptoir." %}</li>
+      <li>{% translate "Une pièce d’identité de l’expéditeur est vérifiée au dépôt." %}</li>
+      <li>{% translate "L’entreprise peut ouvrir, inspecter et photographier le bagage au dépôt, et refuser tout bagage non conforme." %}</li>
+      <li>{% translate "Le poids est vérifié à la pesée au comptoir ; le prix est ajusté au poids réel." %}{% if parametres.diviseur_volumetrique %} {% translate "Le poids facturé est le plus élevé entre le poids réel et le poids volumétrique" %} (L × l × H {% translate "en cm" %} ÷ {{ parametres.diviseur_volumetrique }}).{% endif %}</li>
+    </ul>
+
+    <h3 class="h5 fw-bold mt-4">{% translate "Perte ou dommage" %}</h3>
+    <p>{% translate "En cas de perte confirmée, le prix du transport est remboursé intégralement." %}
+      {% if parametres.indemnisation_max_kg %}{% translate "S’y ajoute une indemnité égale à la valeur déclarée, plafonnée à" %} {{ parametres.indemnisation_max_kg|argent:"CAD" }} {% translate "par kilogramme." %}
+      {% else %}{% translate "Aucune indemnité supplémentaire n’est versée au-delà du remboursement du transport." %}{% endif %}</p>
+
+    <h3 class="h5 fw-bold mt-4">{% translate "Remise au destinataire" %}</h3>
+    <p>{% translate "Le bagage est remis uniquement contre le code à 6 chiffres transmis par l’expéditeur au destinataire. Une photo de la remise est prise. Après 5 codes faux, la remise est bloquée jusqu’à vérification." %}</p>
+
+    <h2 class="section-titre h4 mt-5" id="confidentialite">{% translate "Politique de confidentialité" %}</h2>
     <p style="white-space:pre-line">{{ parametres.politique_confidentialite }}</p>
+    <ul>
+      <li><strong>{% translate "Responsable de la protection des renseignements personnels" %} :</strong> {{ parametres.responsable_vie_privee|default:_("la personne ayant la plus haute autorité au sein de l’entreprise") }} — {{ parametres.courriel }}</li>
+      <li><strong>{% translate "Hébergement hors Québec" %} :</strong> {% translate "les données du site sont hébergées par Render Services, Inc. aux États-Unis. Une évaluation des facteurs relatifs à la vie privée a été réalisée avant ce transfert." %}</li>
+      <li><strong>{% translate "Renseignements recueillis" %} :</strong> {% translate "identité et coordonnées de l’expéditeur et du destinataire, contenu et photos du bagage, paiements, positions des voyages. Ils servent uniquement au traitement des envois." %}</li>
+      <li><strong>{% translate "Vos droits" %} :</strong> {% translate "accès, rectification et suppression du compte depuis votre profil, ou sur demande au responsable ci-dessus." %}</li>
+      <li>{% translate "Sur la page de suivi publique, le nom du destinataire est masqué et la position exacte du transporteur n’est jamais affichée." %}</li>
+    </ul>
   </div>
 </div>
 {% endblock %}

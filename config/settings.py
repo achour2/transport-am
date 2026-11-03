@@ -35,6 +35,12 @@ DEBUG = env_bool("DJANGO_DEBUG", True)
 ALLOWED_HOSTS = [h for h in env("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,testserver").split(",") if h]
 CSRF_TRUSTED_ORIGINS = [o for o in env("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",") if o]
 
+# Nom de domaine personnel (ex. DJANGO_DOMAINE=talaouglid.com) : ajoute domaine + www et l'adresse des courriels
+DOMAINE = env("DJANGO_DOMAINE", "").strip().lower()
+if DOMAINE:
+    ALLOWED_HOSTS += [DOMAINE, f"www.{DOMAINE}"]
+    CSRF_TRUSTED_ORIGINS += [f"https://{DOMAINE}", f"https://www.{DOMAINE}"]
+
 # Hébergement Render : l'adresse publique est fournie automatiquement
 RENDER_HOST = env("RENDER_EXTERNAL_HOSTNAME")
 if RENDER_HOST:
@@ -205,7 +211,7 @@ else:
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", "Talaouglid <no-reply@talaouglid.com>")
 
 # Adresse publique du site (pour les liens dans les courriels)
-SITE_URL = env("SITE_URL", f"https://{RENDER_HOST}" if RENDER_HOST else "http://localhost:8000")
+SITE_URL = env("SITE_URL", f"https://{DOMAINE}" if DOMAINE else (f"https://{RENDER_HOST}" if RENDER_HOST else "http://localhost:8000"))
 
 # Stripe : laissez vide pour le mode « paiement simulé » (démo / développement)
 STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY", "")

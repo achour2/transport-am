@@ -483,6 +483,14 @@ class Bagage(models.Model):
         return prenom + nom
 
     @property
+    def indemnite_suggeree(self):
+        """En cas de perte : min(valeur déclarée, plafond par kg × poids), en plus du remboursement du transport."""
+        plafond = Parametres.charger().indemnisation_max_kg
+        if not plafond:
+            return Decimal("0")
+        return min(self.valeur_declaree or Decimal("0"), (plafond * self.poids).quantize(Decimal("0.01")))
+
+    @property
     def poids_a_facturer(self):
         return self.poids_facture or self.poids
 

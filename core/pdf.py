@@ -26,6 +26,8 @@ def recu_pdf(paiement):
     elements = [
         Paragraph(p.nom_entreprise, s["Title"]),
         Paragraph(f"{p.adresse_depot} · {p.telephone} · {p.courriel}", s["Normal"]),
+        *([Paragraph(f"{p.nom_legal}" + (f" — NEQ {p.neq}" if p.neq else "") + (f" — {p.adresse_legale}" if p.adresse_legale else ""), s["Normal"])] if p.nom_legal else []),
+        *([Paragraph(" · ".join(x for x in [f"TPS/TVH : {p.numero_tps}" if p.numero_tps else "", f"TVQ : {p.numero_tvq}" if p.numero_tvq else ""] if x), s["Normal"])] if (p.numero_tps or p.numero_tvq) else []),
         Spacer(1, 10 * mm),
         Paragraph(f"<b>Reçu {paiement.numero_recu}</b>", s["Heading2"]),
         Paragraph(f"Date : {timezone.localtime(paiement.paye_le or paiement.cree_le):%d/%m/%Y %H:%M}", s["Normal"]),
@@ -64,6 +66,7 @@ def recu_pdf(paiement):
     from django.urls import reverse
     elements += [Spacer(1, 6 * mm),
                  Paragraph(f"<b>Suivez votre bagage :</b> {url_absolue(reverse('suivi_detail', args=[b.numero_suivi]))}", s["Normal"]),
-                 Paragraph(f"<b>Code de remise à transmettre au destinataire :</b> {b.code_remise}", s["Normal"])]
+                 Paragraph(f"<b>Code de remise à transmettre au destinataire :</b> {b.code_remise}", s["Normal"]),
+                 Paragraph(f"Conditions générales : {url_absolue(reverse('conditions'))}", s["Normal"])]
     doc.build(elements)
     return tampon.getvalue()
