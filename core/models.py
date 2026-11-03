@@ -52,7 +52,7 @@ class Utilisateur(AbstractUser):
     role = models.CharField(max_length=20, choices=Role.choices, default=Role.CLIENT)
     telephone = models.CharField(_("téléphone"), max_length=30, blank=True)
     pays_residence = models.CharField(_("pays de résidence"), max_length=80, blank=True)
-    langue = models.CharField(max_length=5, choices=settings.LANGUAGES, default="fr")
+    langue = models.CharField(max_length=5, choices=settings.LANGUES_DISPONIBLES, default="fr")
     email_confirme = models.BooleanField(default=False)
     notif_site = models.BooleanField(_("notifications dans le site"), default=True)
     notif_courriel = models.BooleanField(_("notifications par courriel"), default=True)
@@ -180,18 +180,34 @@ class Pays(models.Model):
         return None
 
 
+def normaliser_nom_ville(nom):
+    """« Tizi-Ouzou », « tizi ouzou », « TIZI  OUZOU » → « tizi ouzou » (sans accents, tirets ni espaces doubles)."""
+    import re
+    import unicodedata
+
+    nom = unicodedata.normalize("NFD", nom or "")
+    nom = "".join(c for c in nom if unicodedata.category(c) != "Mn").lower()
+    return re.sub(r"[\s\-_'’.]+", " ", nom).strip()
+
+
 class Ville(models.Model):
     pays = models.ForeignKey(Pays, on_delete=models.CASCADE, related_name="villes")
     nom = models.CharField(max_length=80)
+    nom_normalise = models.CharField(max_length=80, editable=False, default="")
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
 
     class Meta:
         ordering = ["nom"]
-        unique_together = [("pays", "nom")]
+        constraints = [models.UniqueConstraint(fields=["pays", "nom_normalise"], name="ville_unique_par_pays")]
 
     def __str__(self):
         return f"{self.nom} ({self.pays.code})"
+
+    def save(self, *args, **kwargs):
+        self.nom = " ".join((self.nom or "").split())
+        self.nom_normalise = normaliser_nom_ville(self.nom)
+        super().save(*args, **kwargs)
 
 
 # --------------------------------------------------------------------------

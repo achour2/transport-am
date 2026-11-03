@@ -705,3 +705,23 @@ class MiseEnRegle(Base):
         b.save()
         self.assertEqual(b.indemnite_suggeree, Decimal("200.00"))  # 20 $/kg × 10 kg < 500 $
         self.assertContains(self.client.get(reverse("simulateur"), {"pays": self.algerie.pk, "poids": "18"}), "$ CA")
+
+
+class VillesEtLangues(Base):
+    def test_ville_en_double_refusee(self):
+        from django.db import IntegrityError, transaction
+
+        Ville.objects.create(pays=self.algerie, nom="Tizi-Ouzou")
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            Ville.objects.create(pays=self.algerie, nom="tizi  ouzou")
+        self.client.force_login(self.admin)
+        r = self.client.post(reverse("gestion_pays_modifier", args=[self.algerie.pk]), {
+            "nom": "Algérie", "code": "DZ", "devise": "CAD", "frais_fixes": "20", "tarif_kg": "8", "poids_max": "30",
+            "delai_min": "5", "delai_max": "7", "fuseau": "Africa/Algiers", "actif": "on",
+            "villes": "Alger\nTizi-Ouzou\ntizi ouzou"})
+        self.assertContains(r, "en double")
+
+    def test_menu_des_langues_masque(self):
+        r = self.client.get("/")
+        self.assertNotContains(r, "العربية")
+        self.assertNotContains(r, "fonts.googleapis.com")

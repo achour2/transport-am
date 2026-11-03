@@ -300,7 +300,9 @@ class PaysForm(BootstrapMixin, forms.ModelForm):
             self.initial["villes"] = "\n".join(lignes)
 
     def clean_villes(self):
-        resultat = []
+        from .models import normaliser_nom_ville
+
+        resultat, vus = [], set()
         for ligne in self.cleaned_data["villes"].splitlines():
             parts = [p.strip() for p in ligne.split(";")]
             if not parts[0]:
@@ -311,20 +313,29 @@ class PaysForm(BootstrapMixin, forms.ModelForm):
                     lat, lng = float(parts[1].replace(",", ".")), float(parts[2].replace(",", "."))
                 except ValueError:
                     raise ValidationError(f"Coordonnées invalides pour « {parts[0]} ».")
-            resultat.append((parts[0], lat, lng))
+            cle = normaliser_nom_ville(parts[0])
+            if cle in vus:
+                raise ValidationError(f"« {parts[0]} » est en double dans la liste.")
+            vus.add(cle)
+            resultat.append((" ".join(parts[0].split()), lat, lng))
         if not resultat:
             raise ValidationError("Indiquez au moins une ville.")
         return resultat
 
     def save(self, commit=True):
         pays = super().save(commit=True)
-        noms = []
+        from .models import normaliser_nom_ville
+
+        cles = []
         for nom, lat, lng in self.cleaned_data["villes"]:
-            Ville.objects.update_or_create(pays=pays, nom=nom, defaults={"latitude": lat, "longitude": lng})
-            noms.append(nom)
+            cle = normaliser_nom_ville(nom)
+            ville = pays.villes.filter(nom_normalise=cle).first() or Ville(pays=pays)
+            ville.nom, ville.latitude, ville.longitude = nom, lat, lng
+            ville.save()
+            cles.append(cle)
         # Villes retirées : supprimées seulement si aucun voyage ne les utilise
-        for v in pays.villes.exclude(nom__in=noms):
-            if not v.voyages_depart.exists() and not v.voyages_arrivee.exists():
+        for v in pays.villes.exclude(nom_normalise__in=cles):
+            if not (v.voyages_depart.exists() or v.voyages_arrivee.exists() or v.voyages_escales.exists() or v.bagages.exists()):
                 v.delete()
         return pays
 

@@ -27,8 +27,7 @@
   <link rel="stylesheet" href="{% static 'vendor/bootstrap/bootstrap.min.css' %}">
   {% endif %}
   <link rel="stylesheet" href="{% static 'vendor/bootstrap-icons/bootstrap-icons.min.css' %}">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Noto+Sans+Arabic:wght@400;700&display=swap">
+  <link rel="stylesheet" href="{% static 'vendor/fonts/fonts.css' %}">
   {% block head %}{% endblock %}
   <link rel="stylesheet" href="{% static 'css/site.css' %}">
 </head>
@@ -56,10 +55,10 @@
         {% endif %}
       </ul>
       <ul class="navbar-nav align-items-lg-center gap-lg-1">
+        {% get_available_languages as LANGS %}{% if LANGS|length > 1 %}
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-translate"></i> {{ LANG|upper }}</a>
           <ul class="dropdown-menu dropdown-menu-end">
-            {% get_available_languages as LANGS %}
             {% for code, nom in LANGS %}
             <li>
               <form action="{% url 'set_language' %}" method="post">{% csrf_token %}
@@ -69,7 +68,7 @@
             </li>
             {% endfor %}
           </ul>
-        </li>
+        </li>{% endif %}
         {% if user.is_authenticated %}
           <li class="nav-item position-relative">
             <a class="nav-link" href="{% url 'notifications' %}" aria-label="{% translate 'Notifications' %}"><i class="bi bi-bell-fill"></i>

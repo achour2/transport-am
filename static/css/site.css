@@ -42,7 +42,7 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
-html[dir="rtl"] body { --bs-body-font-family: "Noto Sans Arabic", system-ui, sans-serif; font-family: var(--bs-body-font-family); }
+html[dir="rtl"] body { --bs-body-font-family: "Noto Sans Arabic", "Inter", system-ui, sans-serif; font-family: var(--bs-body-font-family); }
 main { flex: 1; }
 ::selection { background: rgba(242, 140, 40, .25); }
 h1, h2, h3, .h1, .h2, .h3 { letter-spacing: -.02em; }

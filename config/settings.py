@@ -150,7 +150,11 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Langues : français par défaut, anglais et arabe (droite à gauche)
 LANGUAGE_CODE = "fr"
-LANGUAGES = [("fr", "Français"), ("en", "English"), ("ar", "العربية")]
+LANGUES_DISPONIBLES = [("fr", "Français"), ("en", "English"), ("ar", "العربية")]
+# Langues proposées aux visiteurs. Anglais et arabe masqués tant que la traduction n'est pas complète :
+# DJANGO_LANGUES=fr,en,ar pour les réactiver.
+_langues = [c.strip() for c in env("DJANGO_LANGUES", "fr").split(",") if c.strip()]
+LANGUAGES = [l for l in LANGUES_DISPONIBLES if l[0] in _langues] or [LANGUES_DISPONIBLES[0]]
 LOCALE_PATHS = [BASE_DIR / "locale"]
 USE_I18N = True
 # Dates enregistrées en UTC, affichées dans le fuseau du pays concerné
@@ -246,3 +250,11 @@ LOGGING = {
     "handlers": {"console": {"class": "logging.StreamHandler"}},
     "loggers": {"core": {"handlers": ["console"], "level": "INFO"}},
 }
+
+# Alertes d'erreurs (Sentry, gratuit) : activé seulement si SENTRY_DSN est défini.
+# Aucune donnée personnelle n'est envoyée (send_default_pii=False).
+if env("SENTRY_DSN"):
+    import sentry_sdk
+
+    sentry_sdk.init(dsn=env("SENTRY_DSN"), send_default_pii=False, traces_sample_rate=0.0,
+                    environment="production" if not DEBUG else "developpement")
