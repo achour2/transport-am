@@ -192,17 +192,9 @@ STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET", "")
 # tant que Stripe n'est pas configuré, sauf si PAIEMENT_EN_LIGNE=true (mode démo / développement).
 PAIEMENT_EN_LIGNE = env_bool("PAIEMENT_EN_LIGNE", bool(STRIPE_SECRET_KEY))
 
-# Celery + Redis (rappels toutes les 2 h, alertes de retard)
-CELERY_BROKER_URL = env("REDIS_URL", "redis://localhost:6379/0")
-CELERY_RESULT_BACKEND = env("REDIS_URL", "redis://localhost:6379/0")
-CELERY_TASK_ALWAYS_EAGER = not env("REDIS_URL")
-CELERY_TIMEZONE = "UTC"
-CELERY_BEAT_SCHEDULE = {
-    "verifications-periodiques": {
-        "task": "core.tasks.verifications_periodiques",
-        "schedule": 600.0,  # toutes les 10 minutes
-    },
-}
+# Vérifications périodiques (rappels 2 h, alertes 4 h, réservations expirées) :
+# un service externe (cron-job.org) appelle /taches/verifications/ toutes les 10 min avec ce jeton.
+VERIFICATIONS_JETON = env("VERIFICATIONS_JETON", "")
 
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.AllowAny"],

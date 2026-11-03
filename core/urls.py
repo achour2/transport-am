@@ -8,6 +8,7 @@ urlpatterns = [
     path("", public.accueil, name="accueil"),
     path("robots.txt", public.robots_txt, name="robots_txt"),
     path("sitemap.xml", public.sitemap_xml, name="sitemap_xml"),
+    path("taches/verifications/", public.taches_verifications, name="taches_verifications"),
     path("destinations/", public.destinations, name="destinations"),
     path("simulateur/", public.simulateur, name="simulateur"),
     path("simulateur/villes/", public.villes_pays, name="villes_pays"),

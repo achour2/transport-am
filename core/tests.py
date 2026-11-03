@@ -520,3 +520,34 @@ class VoyagePlusieursVilles(Base):
         with self.assertRaises(services.ErreurMetier):
             services.creer_bagage(self.sara, voyage, {"description": "x", "poids": Decimal(5), "dest_nom": "a",
                                                       "dest_telephone": "1", "dest_adresse": "b", "ville_destination": self.oran})
+
+
+@override_settings(VERIFICATIONS_JETON="secret-123")
+class TachesPlanifiees(TestCase):
+    def test_jeton_obligatoire(self):
+        self.assertEqual(self.client.get("/taches/verifications/").status_code, 403)
+        self.assertEqual(self.client.get("/taches/verifications/", HTTP_X_JETON="faux").status_code, 403)
+        r = self.client.get("/taches/verifications/", HTTP_X_JETON="secret-123")
+        self.assertEqual(r.status_code, 200)
+        self.assertTrue(r.json()["ok"])
+
+    @override_settings(VERIFICATIONS_JETON="")
+    def test_sans_jeton_configure_tout_est_refuse(self):
+        self.assertEqual(self.client.get("/taches/verifications/?jeton=").status_code, 403)
+
+    def test_creer_admin_ne_change_pas_le_mot_de_passe(self):
+        import os
+        from django.core.management import call_command
+
+        os.environ.update(DJANGO_ADMIN_EMAIL="chef@t.ca", DJANGO_ADMIN_PASSWORD="Premier-Mdp-123")
+        try:
+            call_command("creer_admin", verbosity=0)
+            u = Utilisateur.objects.get(email="chef@t.ca")
+            u.set_password("Change-Depuis-Le-Site-9")
+            u.save()
+            call_command("creer_admin", verbosity=0)
+            u.refresh_from_db()
+            self.assertTrue(u.check_password("Change-Depuis-Le-Site-9"))
+        finally:
+            for k in ("DJANGO_ADMIN_EMAIL", "DJANGO_ADMIN_PASSWORD"):
+                os.environ.pop(k, None)

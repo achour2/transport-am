@@ -33,6 +33,8 @@ services:
         sync: false
       - key: DJANGO_ADMIN_PASSWORD
         sync: false
+      - key: VERIFICATIONS_JETON
+        generateValue: true
       - key: STRIPE_SECRET_KEY
         sync: false
       - key: EMAIL_HOST
@@ -40,4 +42,16 @@ services:
       - key: EMAIL_HOST_USER
         sync: false
       - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: DEFAULT_FROM_EMAIL
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+      - key: S3_BUCKET
+        sync: false
+      - key: S3_ENDPOINT_URL
+        sync: false
+      - key: S3_ACCESS_KEY
+        sync: false
+      - key: S3_SECRET_KEY
         sync: false

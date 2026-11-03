@@ -239,7 +239,7 @@ def robots_txt(request):
 
     base = settings.SITE_URL.rstrip("/")
     lignes = ["User-agent: *", "Disallow: /client/", "Disallow: /transporteur/", "Disallow: /gestion/",
-              "Disallow: /django-admin/", "Disallow: /suivi/BG-", "Disallow: /api/", "", f"Sitemap: {base}/sitemap.xml"]
+              "Disallow: /django-admin/", "Disallow: /taches/", "Disallow: /suivi/BG-", "Disallow: /api/", "", f"Sitemap: {base}/sitemap.xml"]
     return HttpResponse("\n".join(lignes) + "\n", content_type="text/plain")
 
 
@@ -252,3 +252,23 @@ def sitemap_xml(request):
     return HttpResponse('<?xml version="1.0" encoding="UTF-8"?>'
                         f'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}</urlset>',
                         content_type="application/xml")
+
+
+# --------------------------------------------------------------------------
+# Tâches planifiées : appelée toutes les 10 min par cron-job.org (jeton secret obligatoire)
+# --------------------------------------------------------------------------
+
+
+def taches_verifications(request):
+    import hmac
+
+    from django.conf import settings
+    from django.http import HttpResponseForbidden, JsonResponse
+
+    from ..services import verifications_periodiques
+
+    attendu = settings.VERIFICATIONS_JETON
+    recu = request.headers.get("X-Jeton") or request.GET.get("jeton", "")
+    if not attendu or not hmac.compare_digest(attendu, recu):
+        return HttpResponseForbidden("Jeton invalide")
+    return JsonResponse({"ok": True, **verifications_periodiques()})

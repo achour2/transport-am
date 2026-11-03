@@ -34,7 +34,7 @@ Comptes de démo (mot de passe `demo12345`) :
 | Espace transporteur (6.3), conçu pour le téléphone : position GPS en 1 clic, saisie manuelle, chargement, démarrage, arrivée, livraison par code + photo, incidents | `core/views/transporteur.py` |
 | Espace administrateur (6.4) : tableau de bord + carte + alertes, export Excel, pays, voyages (liste / calendrier / dupliquer / annuler), bagages, incidents, utilisateurs, paramètres | `core/views/gestion.py` |
 | Notifications (section 8) dans le site + courriel ; SMS journalisé (V2) | `core/services.py` |
-| Rappel de position toutes les 2 h, alerte admin après 4 h sans position, rappel 24 h avant la date limite de dépôt | `core/tasks.py` (Celery Beat) ou `manage.py verifications` (cron) |
+| Rappel de position toutes les 2 h, alerte admin après 4 h sans position, rappel 24 h avant la date limite de dépôt | `/taches/verifications/` (cron-job.org) ou `manage.py verifications` (cron) |
 | API JSON (DRF) : `/api/suivi/<numéro>/`, `/api/pays/`, `/api/voyages-en-cours/` | `core/api.py` |
 | FR / EN / AR (droite à gauche) | `locale/`, `scripts/traductions.py` |
 | Dates stockées en UTC, affichées dans le fuseau du pays | filtre `tz` dans `core/templatetags/outils.py` |
@@ -62,7 +62,7 @@ Limites du plan gratuit : le site s’endort après 15 min sans visite (premier 
 1. Installer PostgreSQL 16, Redis et Nginx ; copier le projet dans `/srv/transbagages`.
 2. `cp .env.example .env` puis remplir les valeurs (clé secrète, base, SMTP Brevo/SendGrid, clés Stripe, Redis).
 3. `pip install -r requirements.txt && python manage.py migrate && python manage.py collectstatic && python manage.py createsuperuser`
-4. Installer `deploiement/transbagages.service` et `deploiement/transbagages-celery.service` (systemd) puis `deploiement/nginx.conf`.
+4. Installer `deploiement/transbagages.service` (systemd) puis `deploiement/nginx.conf`, et programmer `python manage.py verifications` toutes les 10 min (cron).
 5. HTTPS : `certbot --nginx -d votre-domaine` (Let’s Encrypt, obligatoire pour la géolocalisation).
 6. Stripe : créer un webhook vers `https://votre-domaine/paiement/webhook/` (événement `checkout.session.completed`).
 7. Sauvegarde nocturne conservée 30 jours : `deploiement/sauvegarde.sh` dans la crontab.
