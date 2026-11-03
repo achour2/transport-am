@@ -104,7 +104,8 @@ def livraison(request, numero):
     form = LivraisonForm(request.POST or None, request.FILES or None)
     if request.method == "POST" and form.is_valid():
         try:
-            valider_livraison(bagage, form.cleaned_data["code"], form.cleaned_data.get("photo"), request.user)
+            valider_livraison(bagage, form.cleaned_data["code"], form.cleaned_data.get("photo"), request.user,
+                              form.cleaned_data.get("piece_4", ""))
             messages.success(request, f"Bagage {bagage.numero_suivi} livré. Le client est notifié.")
             return redirect("transporteur_voyage", pk=bagage.voyage_id)
         except ErreurMetier as e:

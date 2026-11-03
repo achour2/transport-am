@@ -24,6 +24,8 @@ from ..models import Bagage, DestinataireEnregistre, Paiement, Pays, Ville, Voya
 from ..pdf import recu_pdf
 from ..services import (
     ErreurMetier,
+    calculer_prix,
+    poids_facture,
     annuler_reservation_comptoir,
     reserver_paiement_comptoir,
     annuler_envoi,
@@ -156,8 +158,9 @@ def envoi_nouveau(request, etape=1):
         ctx.update(
             ville_livraison=Ville.objects.filter(pk=resa.get("ville_destination")).first() or voyage.ville_arrivee,
             pays=pays, poids=poids, bagage=b, dest=resa["destinataire"],
-            montant_kilos=(poids * pays.tarif_kg).quantize(Decimal("0.01")),
-            prix=pays.calculer_prix(poids),
+            montant_kilos=(poids_facture(poids, b.get("longueur_cm"), b.get("largeur_cm"), b.get("hauteur_cm")) * pays.tarif_kg).quantize(Decimal("0.01")),
+            prix=calculer_prix(pays, poids, b.get("longueur_cm"), b.get("largeur_cm"), b.get("hauteur_cm")),
+            poids_facture=poids_facture(poids, b.get("longueur_cm"), b.get("largeur_cm"), b.get("hauteur_cm")),
         )
         if request.method == "POST":
             if not request.POST.get("accepte"):

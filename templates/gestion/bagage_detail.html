@@ -24,8 +24,10 @@
           <dl>
             <dt>Ville de livraison</dt><dd><strong>{{ bagage.ville_livraison }}</strong></dd>
             <dt>Destinataire</dt><dd>{{ bagage.dest_nom }}<br>{{ bagage.dest_telephone }}<br>{{ bagage.dest_adresse }}{% if bagage.dest_courriel %}<br>{{ bagage.dest_courriel }}{% endif %}</dd>
-            <dt>Prix (figé)</dt><dd>{{ bagage.frais_fixes|argent:bagage.devise }} + {{ bagage.poids }} × {{ bagage.tarif_kg|argent:bagage.devise }} = <strong>{{ bagage.prix|argent:bagage.devise }}</strong></dd>
+            <dt>Prix (figé)</dt><dd>{{ bagage.frais_fixes|argent:bagage.devise }} + {{ bagage.poids_a_facturer }} kg{% if bagage.volumetrique_applique %} (volumétrique){% endif %} × {{ bagage.tarif_kg|argent:bagage.devise }} = <strong>{{ bagage.prix|argent:bagage.devise }}</strong></dd>
             <dt>Code de remise</dt><dd class="numero">{{ bagage.code_remise }}</dd>
+            {% if bagage.dest_piece_4 %}<dt>Pièce d'identité (4 derniers)</dt><dd class="numero">•••• {{ bagage.dest_piece_4 }}</dd>{% endif %}
+            {% if bagage.declaration_contenu_le %}<dt>Déclaration de contenu</dt><dd>Acceptée le {{ bagage.declaration_contenu_le|date:"d/m/Y H:i" }}</dd>{% endif %}
           </dl>
         </div>
       </div>
@@ -49,11 +51,25 @@
     </div>
   </div>
   <div class="col-xl-5">
+    {% if bagage.remise_bloquee %}
+    <form method="post" class="carte border-danger p-4 mb-3">{% csrf_token %}<input type="hidden" name="action" value="debloquer_remise">
+      <h2 class="h6 fw-bold text-danger"><i class="bi bi-lock"></i> Remise bloquée</h2>
+      <p class="small mb-2">{{ bagage.essais_code }} codes faux saisis. Vérifiez l'identité du destinataire avant de débloquer.</p>
+      <button class="btn btn-danger btn-sm">Débloquer la remise</button>
+    </form>
+    {% endif %}
     {% if bagage.a_encaisser %}
     <form method="post" class="carte border-warning p-4 mb-3">{% csrf_token %}<input type="hidden" name="action" value="encaisser">
       <h2 class="h5 fw-bold"><i class="bi bi-cash-coin text-warning"></i> Encaisser au comptoir</h2>
       <p class="mb-2">Réservé en ligne par le client. Montant à encaisser : <strong class="fs-4 text-primary">{{ bagage.prix|argent:bagage.devise }}</strong></p>
       {% if bagage.reservation_expiree %}<div class="alert alert-danger small py-2">Date limite de dépôt dépassée : les kilos ne sont plus bloqués. Vous pouvez encaisser s'il reste de la place.</div>{% endif %}
+      <label class="form-label small fw-semibold" for="poids_pese">Poids pesé (kg)</label>
+      <input type="text" inputmode="decimal" name="poids_pese" id="poids_pese" class="form-control mb-1" value="{{ bagage.poids|floatformat:'-2' }}">
+      <div class="form-text mb-2">Déclaré : {{ bagage.poids|floatformat:"-2" }} kg. Si la balance indique autre chose, le prix est recalculé aux tarifs figés.</div>
+      {% if parametres.diviseur_volumetrique %}
+      <label class="form-label small fw-semibold">Dimensions mesurées (cm)</label>
+      <div class="row g-2 mb-2"><div class="col"><input name="longueur" class="form-control" placeholder="L" value="{{ bagage.longueur_cm|default:'' }}"></div><div class="col"><input name="largeur" class="form-control" placeholder="l" value="{{ bagage.largeur_cm|default:'' }}"></div><div class="col"><input name="hauteur" class="form-control" placeholder="h" value="{{ bagage.hauteur_cm|default:'' }}"></div></div>
+      {% endif %}
       <label class="form-label small fw-semibold" for="mode">Mode de paiement</label>
       <select name="mode" id="mode" class="form-select mb-2">
         <option value="especes">Espèces</option><option value="terminal">Terminal de paiement (comptoir)</option><option value="virement">Virement / Interac</option>

@@ -1,4 +1,6 @@
 """Espace public (6.1) : accueil, destinations, simulateur, suivi, comptes, aide."""
+from decimal import Decimal
+
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth import views as auth_views
@@ -44,8 +46,13 @@ def _calcul_simulation(form):
     pays = d["pays"]
     resultat = {"pays": pays, "poids": d["poids"]}
     try:
-        resultat["prix"] = calculer_prix(pays, d["poids"])
-        resultat["detail_kilos"] = (d["poids"] * pays.tarif_kg).quantize(pays.frais_fixes)
+        from ..services import poids_facture
+
+        dims = (d.get("longueur"), d.get("largeur"), d.get("hauteur"))
+        resultat["prix"] = calculer_prix(pays, d["poids"], *dims)
+        resultat["poids_facture"] = poids_facture(d["poids"], *dims)
+        resultat["volumetrique"] = resultat["poids_facture"] > d["poids"]
+        resultat["detail_kilos"] = (resultat["poids_facture"] * pays.tarif_kg).quantize(Decimal("0.01"))
         resultat["part_fixe"] = int(pays.frais_fixes * 100 / resultat["prix"]) if resultat["prix"] else 0
     except ErreurMetier as e:
         resultat["erreur"] = str(e)

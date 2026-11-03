@@ -449,6 +449,13 @@ class Bagage(models.Model):
     statut_paiement = models.CharField(max_length=12, choices=Paiement.choices, default=Paiement.EN_ATTENTE)
     choix_requis = models.BooleanField(default=False, help_text="Voyage annulé : le client doit choisir")
     paiement_au_comptoir = models.BooleanField(default=False, help_text="Réservé en ligne, à payer au point de dépôt")
+    poids_facture = models.DecimalField(_("poids facturé (kg)"), max_digits=7, decimal_places=2, null=True, blank=True,
+                                        help_text="Max(poids réel, poids volumétrique)")
+    dest_piece_4 = models.CharField(_("4 derniers chiffres de la pièce d'identité du destinataire"), max_length=4, blank=True)
+    essais_code = models.PositiveSmallIntegerField(default=0)
+    remise_bloquee = models.BooleanField(default=False, help_text="Trop de codes de remise faux : déblocage par l'admin")
+    declaration_contenu_le = models.DateTimeField(null=True, blank=True, help_text="Déclaration de contenu acceptée le")
+    avis_demande_le = models.DateTimeField(null=True, blank=True)
     rappel_depot_envoye = models.BooleanField(default=False)
     cree_le = models.DateTimeField(auto_now_add=True)
 
@@ -474,6 +481,14 @@ class Bagage(models.Model):
         prenom = parties[0][0].upper() + "***"
         nom = (" " + parties[-1][0].upper() + ".") if len(parties) > 1 else ""
         return prenom + nom
+
+    @property
+    def poids_a_facturer(self):
+        return self.poids_facture or self.poids
+
+    @property
+    def volumetrique_applique(self):
+        return self.poids_facture is not None and self.poids_facture > self.poids
 
     @property
     def ville_livraison(self):
@@ -628,6 +643,8 @@ class MessageContact(models.Model):
 
 
 class AvisClient(models.Model):
+    bagage = models.OneToOneField("Bagage", on_delete=models.SET_NULL, null=True, blank=True, related_name="avis")
+    cree_le = models.DateTimeField(default=timezone.now)
     nom = models.CharField(max_length=80)
     ville = models.CharField(max_length=80, blank=True)
     note = models.PositiveSmallIntegerField(default=5)
@@ -647,6 +664,20 @@ class Parametres(models.Model):
     alerte_sans_position_heures = models.PositiveIntegerField(_("délai d'alerte sans position (h)"), default=4)
     fermeture_reservations_heures = models.PositiveIntegerField(_("fermeture des réservations avant départ (h)"), default=24)
     seuil_presque_complet = models.PositiveIntegerField(default=90, help_text="% de remplissage déclenchant une alerte")
+    diviseur_volumetrique = models.PositiveIntegerField(
+        _("diviseur du poids volumétrique"), default=0,
+        help_text="Poids facturé = max(poids réel, L×l×H en cm ÷ diviseur). 5000 = standard aérien. 0 = désactivé.")
+    indemnisation_max_kg = models.DecimalField(
+        _("plafond d'indemnisation par kg en cas de perte"), max_digits=8, decimal_places=2, default=0,
+        help_text="Indemnité = min(valeur déclarée, plafond × poids), en plus du remboursement du transport. 0 = transport seul.")
+    nom_legal = models.CharField(_("nom légal de l'entreprise"), max_length=150, blank=True)
+    neq = models.CharField(_("NEQ"), max_length=20, blank=True, help_text="Numéro d'entreprise du Québec")
+    adresse_legale = models.CharField(_("adresse légale"), max_length=255, blank=True)
+    numero_tps = models.CharField(_("numéro de TPS/TVH"), max_length=30, blank=True)
+    numero_tvq = models.CharField(_("numéro de TVQ"), max_length=30, blank=True)
+    responsable_vie_privee = models.CharField(
+        _("responsable de la protection des renseignements personnels"), max_length=150, blank=True,
+        help_text="Nom et titre (Loi 25). Par défaut : la personne ayant la plus haute autorité.")
     texte_courriel_confirmation = models.TextField(
         default="Merci pour votre réservation. Déposez votre bagage avant la date limite indiquée ci-dessous."
     )

@@ -39,7 +39,9 @@ def recu_pdf(paiement):
         ["Contenu", b.description],
         ["Destinataire", b.dest_nom],
         ["Frais fixes", f"{b.frais_fixes} {b.devise}"],
-        [f"Poids : {b.poids} kg × {b.tarif_kg} {b.devise}/kg", f"{(b.poids * b.tarif_kg).quantize(b.frais_fixes)} {b.devise}"],
+        [f"Poids facturé : {b.poids_a_facturer} kg"
+         + (f" (volumétrique ; réel {b.poids} kg)" if b.volumetrique_applique else "")
+         + f" × {b.tarif_kg} {b.devise}/kg", f"{(b.poids_a_facturer * b.tarif_kg).quantize(b.frais_fixes)} {b.devise}"],
         ["TOTAL PAYÉ", f"{paiement.montant} {paiement.devise}"],
     ]
     if paiement.statut == "rembourse":

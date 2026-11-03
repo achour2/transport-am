@@ -157,7 +157,7 @@
       </div>
     </div>
     <hr class="border-secondary opacity-25 mt-4">
-    <div class="small d-flex flex-wrap justify-content-between gap-2"><span>© {% now "Y" %} {{ parametres.nom_entreprise }}</span><span><i class="bi bi-shield-check"></i> {% translate "Paiement sécurisé · Données protégées (Loi 25)" %}</span></div>
+    <div class="small d-flex flex-wrap justify-content-between gap-2"><span>© {% now "Y" %} {{ parametres.nom_entreprise }}</span><span><i class="bi bi-shield-check"></i> {% if paiement_en_ligne %}{% translate "Paiement sécurisé" %}{% else %}{% translate "Paiement au dépôt" %}{% endif %} · {% translate "Données protégées (Loi 25)" %}</span></div>
   </div>
 </footer>
 <script src="{% static 'vendor/bootstrap/bootstrap.bundle.min.js' %}"></script>

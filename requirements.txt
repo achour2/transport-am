@@ -8,5 +8,5 @@ openpyxl>=3.1
 gunicorn>=22
 whitenoise>=6.7
 dj-database-url>=2.2
-# Optionnel : stockage S3 (OVHcloud Object Storage / AWS S3)
-# django-storages[s3]>=1.14
+# Stockage des photos (Cloudflare R2, AWS S3, OVHcloud) si S3_BUCKET est défini
+django-storages[s3]>=1.14

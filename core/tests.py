@@ -14,6 +14,17 @@ from core import services
 from core.models import Bagage, Incident, Notification, Paiement, Pays, Position, Utilisateur, Ville, Voyage
 
 
+def image_test():
+    from io import BytesIO
+
+    from django.core.files.uploadedfile import SimpleUploadedFile
+    from PIL import Image
+
+    tampon = BytesIO()
+    Image.new("RGB", (4, 4), "orange").save(tampon, "PNG")
+    return SimpleUploadedFile("remise.png", tampon.getvalue(), content_type="image/png")
+
+
 @override_settings(STRIPE_SECRET_KEY="", PAIEMENT_EN_LIGNE=True, EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
 class Base(TestCase):
     def setUp(self):
@@ -261,12 +272,17 @@ class Scenario6Livraison(Base):
         services.terminer_voyage(voyage, self.karim)
         self.client.force_login(self.karim)
         url = reverse("transporteur_livraison", args=[b.numero_suivi])
-        self.client.post(url, {"code": "000000" if b.code_remise != "000000" else "111111"})
+        faux = "000000" if b.code_remise != "000000" else "111111"
+        self.client.post(url, {"code": faux, "photo": image_test()})
         b.refresh_from_db()
         self.assertEqual(b.statut, "arrive")  # mauvais code refusé
         self.client.post(url, {"code": b.code_remise})
         b.refresh_from_db()
-        self.assertEqual(b.statut, "livre")
+        self.assertEqual(b.statut, "arrive")  # photo obligatoire
+        self.client.post(url, {"code": b.code_remise, "photo": image_test(), "piece_4": "4821"})
+        b.refresh_from_db()
+        self.assertEqual((b.statut, b.dest_piece_4), ("livre", "4821"))
+        self.assertTrue(b.photo_livraison)
         self.assertTrue(Notification.objects.filter(destinataire=self.sara, message__contains="livré").exists())
 
 
@@ -360,7 +376,8 @@ class EnvoiComptoir(Base):
     def donnees(self, voyage, **kw):
         d = {"courriel": "lina@t.ca", "prenom": "Lina", "nom": "Mansouri", "telephone": "+1 514 555 0000",
              "voyage": voyage.pk, "description": "Valise", "poids": "15", "valeur_declaree": "0",
-             "dest_nom": "Yasmine M", "dest_telephone": "+213 555", "dest_adresse": "Oran", "mode": "especes", "depose": "on"}
+             "dest_nom": "Yasmine M", "dest_telephone": "+213 555", "dest_adresse": "Oran", "mode": "especes", "depose": "on",
+             "declaration": "on"}
         d.update(kw)
         return d
 
@@ -551,3 +568,69 @@ class TachesPlanifiees(TestCase):
         finally:
             for k in ("DJANGO_ADMIN_EMAIL", "DJANGO_ADMIN_PASSWORD"):
                 os.environ.pop(k, None)
+
+
+
+@override_settings(PAIEMENT_EN_LIGNE=False, MEDIA_ROOT="/tmp/claude-0/media-tests")
+class ComptoirPeseeEtSecurite(Base):
+    def reservation(self, voyage, poids="20", **kw):
+        b = services.reserver_paiement_comptoir(self.sara, voyage, {
+            "description": "Valise", "poids": Decimal(poids), "dest_nom": "A B", "dest_telephone": "1", "dest_adresse": "c", **kw})
+        return b
+
+    def test_poids_pese_recalcule_le_prix(self):
+        voyage = self.creer_voyage(capacite=100)
+        b = self.reservation(voyage, "23")
+        self.assertEqual(b.prix, Decimal("204.00"))
+        self.client.force_login(self.admin)
+        self.client.post(reverse("gestion_bagage", args=[b.numero_suivi]),
+                         {"action": "encaisser", "mode": "especes", "poids_pese": "26", "depose": "on"})
+        b.refresh_from_db()
+        self.assertEqual((b.poids, b.prix, b.statut_paiement), (Decimal("26"), Decimal("228.00"), "paye"))
+        self.assertEqual(b.paiements.get().montant, Decimal("228.00"))
+        self.assertTrue(b.evenements.filter(message__startswith="Pesée au comptoir").exists())
+        self.assertEqual(voyage.kilos_restants, Decimal("74"))
+
+    def test_pesee_depassant_la_capacite_refusee(self):
+        voyage = self.creer_voyage(capacite=25)
+        b = self.reservation(voyage, "20")
+        with self.assertRaises(services.ErreurMetier):
+            services.encaisser_reservation(b, self.admin, "especes", poids_pese="28")
+        b.refresh_from_db()
+        self.assertEqual(b.statut_paiement, "en_attente")
+
+    def test_poids_volumetrique(self):
+        from core.models import Parametres
+
+        p = Parametres.charger()
+        p.diviseur_volumetrique = 5000
+        p.save()
+        voyage = self.creer_voyage()
+        # Carton léger mais encombrant : 80×60×50 / 5000 = 48 kg > 10 kg (poids réel)
+        b = self.reservation(voyage, "10", longueur_cm=80, largeur_cm=60, hauteur_cm=50)
+        self.assertEqual(b.poids_facture, Decimal("48.00"))
+        self.assertEqual(b.prix, Decimal("404.00"))
+        self.assertEqual(voyage.kilos_reserves, Decimal("10"))  # la capacité compte le poids réel
+
+    def test_code_de_remise_bloque_apres_5_essais(self):
+        voyage = self.creer_voyage()
+        b = self.reservation(voyage, "5")
+        services.encaisser_reservation(b, self.admin, "especes")
+        b.refresh_from_db()
+        services.marquer_charge(voyage, b.numero_suivi, self.karim)
+        services.demarrer_voyage(voyage, self.karim)
+        services.terminer_voyage(voyage, self.karim)
+        b.refresh_from_db()
+        faux = "000000" if b.code_remise != "000000" else "111111"
+        for _ in range(5):
+            with self.assertRaises(services.ErreurMetier):
+                services.valider_livraison(b, faux, None, self.karim)
+            b.refresh_from_db()
+        self.assertTrue(b.remise_bloquee)
+        with self.assertRaises(services.ErreurMetier):  # même le bon code est refusé
+            services.valider_livraison(b, b.code_remise, None, self.karim)
+        self.assertTrue(Notification.objects.filter(destinataire=self.admin, message__startswith="Remise bloquée").exists())
+        services.debloquer_remise(b, self.admin)
+        services.valider_livraison(b, b.code_remise, None, self.karim)
+        b.refresh_from_db()
+        self.assertEqual(b.statut, "livre")

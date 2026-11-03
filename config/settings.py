@@ -160,8 +160,10 @@ if env("S3_BUCKET"):
                 "endpoint_url": env("S3_ENDPOINT_URL"),
                 "access_key": env("S3_ACCESS_KEY"),
                 "secret_key": env("S3_SECRET_KEY"),
-                "region_name": env("S3_REGION"),
-                "querystring_auth": True,
+                "region_name": env("S3_REGION", "auto"),
+                "querystring_auth": True,  # liens temporaires signés : les photos restent privées
+                "file_overwrite": False,
+                "location": "media",
             },
         },
         "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},

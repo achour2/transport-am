@@ -19,11 +19,12 @@
       <div class="decomposition mt-4"><div class="fixe" style="width: {{ resultat.part_fixe }}%"></div><div class="kilos" style="flex:1"></div></div>
       <div class="legende d-flex flex-wrap justify-content-between gap-2 small mt-2 opacity-75">
         <span class="l-fixe">{% translate "Frais fixes" %} {{ resultat.pays.frais_fixes|argent:resultat.pays.devise }}</span>
-        <span class="l-kilos">{{ resultat.poids|floatformat:"-2" }} kg × {{ resultat.pays.tarif_kg|argent:resultat.pays.devise }} = {{ resultat.detail_kilos|argent:resultat.pays.devise }}</span>
+        <span class="l-kilos">{{ resultat.poids_facture|floatformat:"-2" }} kg × {{ resultat.pays.tarif_kg|argent:resultat.pays.devise }} = {{ resultat.detail_kilos|argent:resultat.pays.devise }}</span>
       </div>
       <div class="d-flex flex-wrap gap-3 mt-4 small">
         <span><i class="bi bi-clock text-warning"></i> {% translate "Délai estimé" %} : <strong>{{ resultat.pays.delai_texte }}</strong></span>
         {% if resultat.volume_l %}<span><i class="bi bi-box text-warning"></i> {% translate "Volume" %} : <strong>{{ resultat.volume_l }} L</strong></span>{% endif %}
+        {% if resultat.volumetrique %}<span><i class="bi bi-rulers text-warning"></i> {% translate "Poids volumétrique appliqué" %} : <strong>{{ resultat.poids_facture|floatformat:"-2" }} kg</strong> ({% translate "plus que le poids réel" %})</span>{% endif %}
       </div>
     </div>
   </div>

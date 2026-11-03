@@ -82,14 +82,24 @@ def notifier_abonnes(bagage, message):
 # --------------------------------------------------------------------------
 
 
-def calculer_prix(pays, poids):
-    """Prix = frais fixes du pays + (poids × tarif par kilo). Refusé au-delà du poids max."""
+def poids_facture(poids, longueur=None, largeur=None, hauteur=None):
+    """Poids facturé = max(poids réel, L×l×H ÷ diviseur) si le poids volumétrique est activé (Paramètres)."""
+    poids = Decimal(str(poids))
+    diviseur = Parametres.charger().diviseur_volumetrique
+    if diviseur and longueur and largeur and hauteur:
+        volumetrique = (Decimal(longueur) * Decimal(largeur) * Decimal(hauteur) / Decimal(diviseur)).quantize(Decimal("0.01"))
+        return max(poids, volumetrique)
+    return poids
+
+
+def calculer_prix(pays, poids, longueur=None, largeur=None, hauteur=None):
+    """Prix = frais fixes du pays + (poids facturé × tarif par kilo). Refusé au-delà du poids max (poids réel)."""
     poids = Decimal(str(poids))
     if poids <= 0:
         raise ErreurMetier("Le poids doit être supérieur à 0.")
     if poids > pays.poids_max:
         raise ErreurMetier(f"Le poids dépasse le maximum autorisé pour {pays.nom} ({pays.poids_max} kg).")
-    return pays.calculer_prix(poids)
+    return pays.calculer_prix(poids_facture(poids, longueur, largeur, hauteur))
 
 
 # --------------------------------------------------------------------------
@@ -147,12 +157,15 @@ def creer_bagage(client, voyage, donnees):
         raise ErreurMetier(f"Ce voyage ne dessert pas {ville.nom}.")
     donnees["ville_destination"] = ville
     pays = voyage.pays_arrivee
+    pf = poids_facture(donnees["poids"], donnees.get("longueur_cm"), donnees.get("largeur_cm"), donnees.get("hauteur_cm"))
+    donnees.setdefault("declaration_contenu_le", timezone.now())
     bagage = Bagage.objects.create(
         client=client,
         voyage=voyage,
         frais_fixes=pays.frais_fixes,
         tarif_kg=pays.tarif_kg,
-        prix=pays.calculer_prix(donnees["poids"]),
+        poids_facture=pf,
+        prix=pays.calculer_prix(pf),
         devise=pays.devise,
         **donnees,
     )
@@ -401,16 +414,44 @@ def enregistrer_position(voyage, auteur, latitude=None, longitude=None, lieu="",
     )
 
 
-@transaction.atomic
-def valider_livraison(bagage, code, photo, auteur):
+ESSAIS_CODE_MAX = 5
+
+
+def valider_livraison(bagage, code, photo, auteur, piece_4=""):
+    """Remise : bon code obligatoire. Après 5 codes faux, la remise est bloquée jusqu'au déblocage par l'admin."""
+    import hmac
+
     if bagage.statut != Bagage.Statut.ARRIVE:
         raise ErreurMetier("Le bagage doit être « arrivé à destination » pour être livré.")
-    if code.strip() != bagage.code_remise:
-        raise ErreurMetier("Code de remise incorrect.")
-    if photo:
-        bagage.photo_livraison = photo
-        bagage.save(update_fields=["photo_livraison"])
+    if bagage.remise_bloquee:
+        raise ErreurMetier("Remise bloquée après trop de codes faux. L'administrateur doit la débloquer.")
+    if not hmac.compare_digest(code.strip(), bagage.code_remise):
+        bagage.essais_code += 1
+        champs = ["essais_code"]
+        if bagage.essais_code >= ESSAIS_CODE_MAX:
+            bagage.remise_bloquee = True
+            champs.append("remise_bloquee")
+        bagage.save(update_fields=champs)
+        if bagage.remise_bloquee:
+            EvenementBagage.objects.create(bagage=bagage, statut=bagage.statut, auteur=auteur,
+                                           message=f"Remise bloquée : {ESSAIS_CODE_MAX} codes faux.")
+            notifier_admins(f"Remise bloquée ({ESSAIS_CODE_MAX} codes faux) pour {bagage.numero_suivi}",
+                            reverse("gestion_bagage", args=[bagage.numero_suivi]))
+            raise ErreurMetier("Code incorrect. Remise bloquée : l'administrateur a été alerté.")
+        reste = ESSAIS_CODE_MAX - bagage.essais_code
+        raise ErreurMetier(f"Code de remise incorrect. Encore {reste} essai{'s' if reste > 1 else ''}.")
+    bagage.photo_livraison = photo or bagage.photo_livraison
+    bagage.dest_piece_4 = (piece_4 or "").strip()[:4]
+    bagage.essais_code = 0
+    bagage.save(update_fields=["photo_livraison", "dest_piece_4", "essais_code"])
     return changer_statut(bagage, Bagage.Statut.LIVRE, auteur)
+
+
+def debloquer_remise(bagage, admin):
+    bagage.remise_bloquee = False
+    bagage.essais_code = 0
+    bagage.save(update_fields=["remise_bloquee", "essais_code"])
+    EvenementBagage.objects.create(bagage=bagage, statut=bagage.statut, auteur=admin, message="Remise débloquée par l'administrateur.")
 
 
 # --------------------------------------------------------------------------
@@ -624,13 +665,45 @@ def reserver_paiement_comptoir(client, voyage, donnees):
     return bagage
 
 
+def corriger_poids(bagage, poids_pese, auteur, longueur=None, largeur=None, hauteur=None):
+    """Pesée au comptoir : met à jour le poids réel (et les dimensions), recalcule le prix aux tarifs figés."""
+    poids_pese = Decimal(str(poids_pese))
+    pays = bagage.voyage.pays_arrivee
+    if poids_pese <= 0:
+        raise ErreurMetier("Le poids pesé doit être supérieur à 0.")
+    if poids_pese > pays.poids_max:
+        raise ErreurMetier(f"Le poids pesé dépasse le maximum autorisé pour {pays.nom} ({pays.poids_max} kg).")
+    voyage = Voyage.objects.select_for_update().get(pk=bagage.voyage_id)
+    restants = voyage.kilos_restants + (bagage.poids if bagage.a_encaisser and timezone.now() < voyage.date_limite_depot else 0)
+    if poids_pese > restants:
+        raise ErreurMetier(f"Capacité insuffisante : il ne reste que {restants} kg sur ce voyage pour ce bagage.")
+    if longueur and largeur and hauteur:
+        bagage.longueur_cm, bagage.largeur_cm, bagage.hauteur_cm = longueur, largeur, hauteur
+    ancien_poids, ancien_prix = bagage.poids, bagage.prix
+    pf = poids_facture(poids_pese, bagage.longueur_cm, bagage.largeur_cm, bagage.hauteur_cm)
+    nouveau_prix = (bagage.frais_fixes + pf * bagage.tarif_kg).quantize(Decimal("0.01"))
+    if poids_pese == ancien_poids and nouveau_prix == ancien_prix:
+        return bagage
+    bagage.poids, bagage.poids_facture, bagage.prix = poids_pese, pf, nouveau_prix
+    bagage.save(update_fields=["poids", "poids_facture", "prix", "longueur_cm", "largeur_cm", "hauteur_cm"])
+    EvenementBagage.objects.create(
+        bagage=bagage, statut=bagage.statut, auteur=auteur,
+        message=f"Pesée au comptoir : {ancien_poids} → {poids_pese} kg"
+                + (f" (facturé {pf} kg, volumétrique)" if pf > poids_pese else "")
+                + f", prix {ancien_prix} → {nouveau_prix} {bagage.devise}.")
+    return bagage
+
+
 @transaction.atomic
-def encaisser_reservation(bagage, admin, mode, depose=True):
-    """L'admin encaisse au comptoir une réservation faite en ligne."""
+def encaisser_reservation(bagage, admin, mode, depose=True, poids_pese=None, longueur=None, largeur=None, hauteur=None):
+    """L'admin encaisse au comptoir une réservation faite en ligne (après pesée éventuelle)."""
     if not bagage.a_encaisser:
         raise ErreurMetier("Cette réservation n'est pas en attente de paiement.")
     if bagage.voyage.statut != Voyage.Statut.PLANIFIE:
         raise ErreurMetier("Le voyage n'est plus planifié : déplacez l'envoi vers un autre voyage.")
+    if poids_pese:
+        corriger_poids(bagage, poids_pese, admin, longueur, largeur, hauteur)
+        bagage.refresh_from_db()
     paiement = Paiement.objects.create(bagage=bagage, montant=bagage.prix, devise=bagage.devise, mode=mode, encaisse_par=admin)
     confirmer_paiement(paiement, reference=f"comptoir-{mode}-{paiement.pk}")
     bagage.refresh_from_db()

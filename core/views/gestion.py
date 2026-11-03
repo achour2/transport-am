@@ -333,9 +333,23 @@ def bagage_detail(request, numero):
                 mode = request.POST.get("mode", "especes")
                 if mode not in ("especes", "terminal", "virement"):
                     mode = "especes"
-                encaisser_reservation(bagage, request.user, mode, depose=bool(request.POST.get("depose")))
+                def _nb(cle, typ=float):
+                    v = (request.POST.get(cle) or "").replace(",", ".").strip()
+                    try:
+                        return typ(v) if v else None
+                    except ValueError:
+                        raise ErreurMetier(f"Valeur invalide : {cle}")
+                encaisser_reservation(bagage, request.user, mode, depose=bool(request.POST.get("depose")),
+                                      poids_pese=_nb("poids_pese", str), longueur=_nb("longueur", int),
+                                      largeur=_nb("largeur", int), hauteur=_nb("hauteur", int))
+                bagage.refresh_from_db()
                 messages.success(request, f"{bagage.prix} {bagage.devise} encaissés. Le client reçoit sa confirmation et son code de remise.")
                 return redirect(f"{reverse('gestion_bagage', args=[numero])}?nouveau=1")
+            elif action == "debloquer_remise":
+                from ..services import debloquer_remise
+
+                debloquer_remise(bagage, request.user)
+                messages.success(request, "Remise débloquée.")
             elif action == "annuler_reservation":
                 from ..services import annuler_reservation_comptoir
 

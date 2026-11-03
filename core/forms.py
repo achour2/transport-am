@@ -252,8 +252,11 @@ class IncidentForm(BootstrapMixin, forms.Form):
 class LivraisonForm(BootstrapMixin, forms.Form):
     code = forms.CharField(label="Code de remise à 6 chiffres", min_length=6, max_length=6,
                            widget=forms.TextInput(attrs={"inputmode": "numeric", "pattern": "[0-9]{6}", "autocomplete": "off"}))
-    photo = forms.ImageField(label="Photo de la remise", required=False,
+    photo = forms.ImageField(label="Photo de la remise (obligatoire)", required=True,
                              widget=forms.ClearableFileInput(attrs={"accept": "image/*", "capture": "environment"}))
+    piece_4 = forms.CharField(label="4 derniers chiffres de la pièce d'identité du destinataire (optionnel)", required=False,
+                              min_length=4, max_length=4,
+                              widget=forms.TextInput(attrs={"inputmode": "numeric", "pattern": "[0-9A-Za-z]{4}", "autocomplete": "off"}))
 
 
 # --------------------------------------------------------------------------
@@ -402,6 +405,9 @@ class EnvoiComptoirForm(BootstrapMixin, forms.Form):
     dest_adresse = forms.CharField(label="Adresse du destinataire", max_length=255)
     dest_courriel = forms.EmailField(label="Courriel du destinataire", required=False)
     # Paiement
+    declaration = forms.BooleanField(
+        label="L'expéditeur a signé la déclaration de contenu (contenu exact, aucun objet interdit, pièce d'identité vérifiée)",
+        required=True)
     mode = forms.ChoiceField(label="Mode de paiement", choices=[
         ("especes", "Espèces"), ("terminal", "Terminal de paiement (comptoir)"), ("virement", "Virement / Interac")])
     depose = forms.BooleanField(label="Le bagage est déposé maintenant au comptoir", required=False, initial=True)
@@ -425,4 +431,8 @@ class EnvoiComptoirForm(BootstrapMixin, forms.Form):
                 self.add_error("poids", f"Il ne reste que {v.kilos_restants} kg sur ce voyage.")
         if v and d.get("ville_destination") and not v.dessert(d["ville_destination"]):
             self.add_error("ville_destination", f"Ce voyage dessert : {v.destinations_texte}.")
+        if Parametres.charger().diviseur_volumetrique:
+            for champ in ("longueur_cm", "largeur_cm", "hauteur_cm"):
+                if not d.get(champ):
+                    self.add_error(champ, "Obligatoire (poids volumétrique activé).")
         return d

@@ -5,7 +5,7 @@
   <div class="container py-lg-5">
     <div class="row align-items-center g-5">
       <div class="col-lg-7">
-        <span class="pastille mb-4"><span class="point"></span> {% translate "Suivi en temps réel · Paiement sécurisé" %}</span>
+        <span class="pastille mb-4"><span class="point"></span> {% if paiement_en_ligne %}{% translate "Suivi à chaque étape · Paiement sécurisé" %}{% else %}{% translate "Suivi à chaque étape · Paiement au dépôt" %}{% endif %}</span>
         <h1 class="display-4 mb-3">{% translate "Vos bagages arrivent." %}<br><span class="surligne">{% translate "Vous savez où ils sont." %}</span></h1>
         <p class="lead mb-4 pe-lg-5">{% translate "Réservez en moins de 3 minutes, déposez votre bagage, et suivez-le sur la carte jusqu’à sa remise au destinataire." %}</p>
         <div class="d-flex flex-wrap gap-2 mb-4">
@@ -50,8 +50,8 @@
     <div class="row text-center g-3">
       <div class="col-6 col-md-3"><div class="chiffre"><span data-compteur="{{ destinations|length }}">{{ destinations|length }}</span></div><div class="kpi-label">{% translate "Pays desservis" %}</div></div>
       <div class="col-6 col-md-3"><div class="chiffre"><span data-compteur="{{ nb_villes }}">{{ nb_villes }}</span></div><div class="kpi-label">{% translate "Villes d’arrivée" %}</div></div>
-      <div class="col-6 col-md-3"><div class="chiffre">{% if delai_min %}{{ delai_min }} {% translate "jours" %}{% else %}—{% endif %}</div><div class="kpi-label">{% translate "Livraison dès" %}</div></div>
-      <div class="col-6 col-md-3"><div class="chiffre">24/7</div><div class="kpi-label">{% translate "Suivi en ligne" %}</div></div>
+      <div class="col-6 col-md-3"><div class="chiffre">{% if delai_min %}{{ delai_min }} {% translate "jours" %}{% else %}—{% endif %}</div><div class="kpi-label">{% translate "Délai estimé dès" %}</div></div>
+      <div class="col-6 col-md-3"><div class="chiffre">6 {% translate "chiffres" %}</div><div class="kpi-label">{% translate "Code de remise" %}</div></div>
     </div>
   </div>
 </section>

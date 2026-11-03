@@ -47,7 +47,9 @@
     <div class="row align-items-end">
       {% include "gestion/_champ.html" with f=form.mode col="col-md-5" %}
       <div class="col-md-4 mb-3"><div class="small text-muted">Montant à encaisser</div><div class="fs-3 fw-bold text-primary" id="montant">—</div></div>
-      <div class="col-12"><div class="form-check mb-3">{{ form.depose }} <label class="form-check-label" for="id_depose">{{ form.depose.label }}</label></div></div>
+      <div class="col-12"><div class="form-check mb-2">{{ form.depose }} <label class="form-check-label" for="id_depose">{{ form.depose.label }}</label></div></div>
+      <div class="col-12"><div class="form-check mb-3">{{ form.declaration }} <label class="form-check-label fw-semibold" for="id_declaration">{{ form.declaration.label }}</label>
+        {% for e in form.declaration.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}</div></div>
     </div>
     <button class="btn btn-accent btn-lg"><i class="bi bi-check2-circle"></i> Encaisser et enregistrer l’envoi</button>
   </div>
