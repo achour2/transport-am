@@ -1,16 +1,37 @@
 {% extends "base.html" %}{% load i18n %}
 {% block titre %}{% translate "Suivre un bagage" %}{% endblock %}
 {% block contenu %}
-<div class="container my-5" style="max-width:640px">
-  <div class="carte carte-ombre p-4 p-md-5 text-center">
-    <i class="bi bi-search display-5 text-primary"></i>
-    <h1 class="h3 fw-bold mt-3">{% translate "Suivre mon bagage" %}</h1>
-    <p class="text-muted">{% translate "Saisissez le numéro de suivi reçu par courriel (ex. BG-7F3K9Q2A)." %}</p>
-    <form method="get" class="input-group input-group-lg">
-      <label for="numero" class="visually-hidden">{% translate "Numéro de suivi" %}</label>
-      <input id="numero" name="numero" value="{{ numero }}" class="form-control numero text-uppercase" placeholder="BG-XXXXXXXX" required autofocus>
-      <button class="btn btn-primary">{% translate "Suivre" %}</button>
-    </form>
+<section class="entete-page suivi-hero" style="padding-bottom:3.5rem">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8 col-xl-7 text-center">
+        <span class="surtitre">{% translate "Suivi en temps réel" %}</span>
+        <h1 class="display-5 mb-2">{% translate "Où est mon bagage ?" %}</h1>
+        <p class="lead mx-auto mb-4">{% translate "Saisissez le numéro de suivi reçu par courriel (ex. BG-7F3K9Q2A)." %}</p>
+        <form method="get" class="boite text-start mb-5">
+          <label for="numero" class="form-label fw-bold">{% translate "Numéro de suivi" %}</label>
+          <div class="input-group input-group-lg">
+            <input id="numero" name="numero" value="{{ numero }}" class="form-control numero text-uppercase" placeholder="BG-XXXXXXXX" required autofocus autocomplete="off" spellcheck="false">
+            <button class="btn btn-primary px-4"><i class="bi bi-search"></i> {% translate "Suivre" %}</button>
+          </div>
+          <div class="form-text"><i class="bi bi-info-circle"></i> {% translate "Le numéro de suivi figure dans votre courriel de confirmation." %}</div>
+        </form>
+        <div class="etapes-mini">
+          <div><i class="bi bi-receipt"></i><br>{% translate "Enregistré" %}</div>
+          <div><i class="bi bi-box-seam"></i><br>{% translate "Déposé" %}</div>
+          <div><i class="bi bi-airplane"></i><br>{% translate "En transit" %}</div>
+          <div><i class="bi bi-geo-alt"></i><br>{% translate "Arrivé" %}</div>
+          <div><i class="bi bi-hand-thumbs-up"></i><br>{% translate "Livré" %}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<div class="container my-5">
+  <div class="row g-4">
+    <div class="col-md-4 reveal"><div class="carte carte-ombre p-4 h-100"><div class="etape-num mb-3"><i class="bi bi-map"></i></div><h2 class="h6 fw-bold">{% translate "Carte du trajet" %}</h2><p class="small text-muted mb-0">{% translate "La position du voyage s’affiche sur la carte dès que le bagage est en transit." %}</p></div></div>
+    <div class="col-md-4 reveal" style="--delai:120ms"><div class="carte carte-ombre p-4 h-100"><div class="etape-num mb-3"><i class="bi bi-bell"></i></div><h2 class="h6 fw-bold">{% translate "Être prévenu par courriel" %}</h2><p class="small text-muted mb-0">{% translate "Abonnez-vous depuis la page de suivi : un courriel à chaque changement d’étape." %}</p></div></div>
+    <div class="col-md-4 reveal" style="--delai:240ms"><div class="carte carte-ombre p-4 h-100"><div class="etape-num mb-3"><i class="bi bi-shield-lock"></i></div><h2 class="h6 fw-bold">{% translate "Remise sécurisée" %}</h2><p class="small text-muted mb-0">{% translate "Le bagage n’est remis qu’au destinataire qui présente le code à 6 chiffres." %}</p></div></div>
   </div>
 </div>
 {% endblock %}

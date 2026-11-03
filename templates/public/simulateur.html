@@ -1,54 +1,76 @@
-{% extends "base.html" %}{% load i18n %}
+{% extends "base.html" %}{% load i18n outils %}
 {% block titre %}{% translate "Simulateur de prix" %}{% endblock %}
 {% block contenu %}
-<div class="container my-5">
-  <h1 class="section-titre h2 mb-1">{% translate "Simulateur de prix" %}</h1>
-  <p class="text-muted mb-4">{% translate "Un prix exact, avant même de créer un compte." %}</p>
+<section class="entete-page">
+  <div class="container">
+    <span class="surtitre">{% translate "Sans inscription" %}</span>
+    <h1 class="display-5 mb-2">{% translate "Simulateur de prix" %}</h1>
+    <p class="lead mb-0">{% translate "Un prix exact, avant même de créer un compte." %}</p>
+  </div>
+</section>
+
+<div class="container sous-entete mb-5">
   <div class="row g-4">
-    <div class="col-lg-5">
-      <form class="carte carte-ombre p-4" method="get" action="{% url 'simulateur' %}"
-            hx-get="{% url 'simulateur' %}" hx-target="#resultat" hx-trigger="input delay:400ms, change, submit" hx-push-url="true">
-        <div class="mb-3">
-          <label class="form-label fw-semibold" for="{{ form.pays.id_for_label }}">{{ form.pays.label }}</label>
-          {{ form.pays }}
-        </div>
-        <div class="mb-3">
-          <label class="form-label fw-semibold" for="{{ form.ville.id_for_label }}">{{ form.ville.label }}</label>
+    <div class="col-lg-6">
+      <form class="carte carte-ombre p-4 p-md-4" method="get" action="{% url 'simulateur' %}" id="form-simu"
+            hx-get="{% url 'simulateur' %}" hx-target="#resultat" hx-trigger="input delay:350ms, change, submit" hx-push-url="true" hx-indicator="#resultat">
+        <fieldset class="mb-4">
+          <legend class="form-label fw-bold fs-6 mb-2"><span class="badge bg-primary rounded-circle me-1">1</span> {% translate "Pays d’arrivée" %}</legend>
+          <div class="choix-pays">
+            {% for p in form.fields.pays.queryset %}{% if p.code != "CA" %}
+            <label><input type="radio" name="pays" value="{{ p.pk }}" {% if form.pays.value|stringformat:"s" == p.pk|stringformat:"s" %}checked{% endif %}> {{ p.drapeau }} {{ p.nom }}</label>
+            {% endif %}{% endfor %}
+          </div>
+          {% for e in form.pays.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+        </fieldset>
+        <div class="mb-4">
+          <label class="form-label fw-bold" for="id_ville"><span class="badge bg-primary rounded-circle me-1">2</span> {% translate "Ville d’arrivée" %} <span class="fw-normal text-muted small">({% translate "optionnel" %})</span></label>
           {{ form.ville }}
         </div>
-        <div class="mb-3">
-          <label class="form-label fw-semibold" for="{{ form.poids.id_for_label }}">{{ form.poids.label }}</label>
-          <div class="input-group">{{ form.poids }}<span class="input-group-text">kg</span></div>
-          {% for e in form.poids.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+        <div class="mb-4">
+          <label class="form-label fw-bold" for="id_poids"><span class="badge bg-primary rounded-circle me-1">3</span> {% translate "Poids" %}</label>
+          <div class="input-group input-group-lg">{{ form.poids }}<span class="input-group-text bg-white">kg</span></div>
+          {% for e in form.poids.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+          <div class="puces mt-2" aria-label="{% translate 'Poids courants' %}">
+            <button type="button" class="puce" data-poids="5">5 kg</button>
+            <button type="button" class="puce" data-poids="10">10 kg</button>
+            <button type="button" class="puce" data-poids="15">15 kg</button>
+            <button type="button" class="puce" data-poids="23">23 kg <span class="text-muted fw-normal small">· {% translate "valise" %}</span></button>
+            <button type="button" class="puce" data-poids="30">30 kg</button>
+          </div>
         </div>
-        <fieldset class="mb-3">
-          <legend class="form-label fw-semibold fs-6">{% translate "Dimensions (optionnel)" %}</legend>
-          <div class="row g-2">
+        <details class="mb-4">
+          <summary class="fw-semibold text-primary small">{% translate "Dimensions (optionnel)" %}</summary>
+          <div class="row g-2 mt-1">
             <div class="col">{{ form.longueur }}</div><div class="col">{{ form.largeur }}</div><div class="col">{{ form.hauteur }}</div>
           </div>
           <div class="form-text">{% translate "Longueur × largeur × hauteur, en cm" %}</div>
-        </fieldset>
-        <button class="btn btn-primary w-100"><i class="bi bi-calculator"></i> {% translate "Calculer" %}</button>
+        </details>
+        <button class="btn btn-primary btn-lg w-100"><i class="bi bi-calculator"></i> {% translate "Calculer" %}</button>
       </form>
     </div>
-    <div class="col-lg-7" id="resultat" aria-live="polite">
-      {% include "public/_resultat_simulation.html" %}
+    <div class="col-lg-6" aria-live="polite">
+      <div id="resultat" class="resultat-zone h-100">{% include "public/_resultat_simulation.html" %}</div>
     </div>
   </div>
 </div>
 {% endblock %}
 {% block scripts %}
 <script>
-  document.getElementById("id_longueur").placeholder = "L";
-  document.getElementById("id_largeur").placeholder = "l";
-  document.getElementById("id_hauteur").placeholder = "h";
-  var pays = document.getElementById("id_pays"), ville = document.getElementById("id_ville");
-  pays.addEventListener("change", function () {
-    fetch("{% url 'villes_pays' %}?pays=" + pays.value).then(r => r.text()).then(h => { ville.innerHTML = h; });
+  [["id_longueur", "L"], ["id_largeur", "l"], ["id_hauteur", "h"]].forEach(function (x) { var el = document.getElementById(x[0]); if (el) el.placeholder = x[1] + " (cm)"; });
+  var form = document.getElementById("form-simu"), ville = document.getElementById("id_ville"), poids = document.getElementById("id_poids");
+  poids.placeholder = "ex. 18";
+  form.querySelectorAll("input[name=pays]").forEach(function (r) {
+    r.addEventListener("change", function () {
+      fetch("{% url 'villes_pays' %}?pays=" + r.value).then(function (x) { return x.text(); }).then(function (h) { ville.innerHTML = h; });
+    });
   });
-  if (pays.value) {
-    var sel = ville.value;
-    fetch("{% url 'villes_pays' %}?pays=" + pays.value).then(r => r.text()).then(h => { ville.innerHTML = h; ville.value = sel; });
-  }
+  form.querySelectorAll("[data-poids]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      poids.value = b.dataset.poids;
+      form.querySelectorAll("[data-poids]").forEach(function (x) { x.classList.toggle("active", x === b); });
+      poids.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+  });
 </script>
 {% endblock %}

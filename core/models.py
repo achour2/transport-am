@@ -133,10 +133,24 @@ class Pays(models.Model):
             raise ValidationError({"fuseau": "Fuseau horaire inconnu (ex. Africa/Algiers)."})
 
     @property
-    def drapeau(self):
-        if len(self.code) != 2:
+    def drapeau_url(self):
+        from django.contrib.staticfiles.storage import staticfiles_storage
+
+        code = (self.code or "").lower()
+        try:
+            return staticfiles_storage.url(f"vendor/flags/{code}.svg")
+        except ValueError:
             return ""
-        return "".join(chr(0x1F1E6 + ord(c) - ord("A")) for c in self.code.upper())
+
+    @property
+    def drapeau(self):
+        """Drapeau en image (les drapeaux emoji ne s'affichent pas sous Windows)."""
+        from django.utils.html import format_html
+
+        url = self.drapeau_url
+        if not url:
+            return ""
+        return format_html('<img src="{}" alt="" class="drapeau-img" width="28" height="21" loading="lazy">', url)
 
     @property
     def delai_texte(self):
@@ -159,7 +173,11 @@ class Pays(models.Model):
         return Voyage.objects.filter(models.Q(ville_depart__pays=self) | models.Q(ville_arrivee__pays=self)).exists()
 
     def prochain_depart(self):
-        return Voyage.reservables().filter(ville_arrivee__pays=self).order_by("depart").first()
+        """Prochain voyage encore réservable (pas complet) vers ce pays."""
+        for v in Voyage.reservables().filter(ville_arrivee__pays=self).order_by("depart")[:10]:
+            if not v.est_complet:
+                return v
+        return None
 
 
 class Ville(models.Model):

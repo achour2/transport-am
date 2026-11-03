@@ -1,36 +1,85 @@
 {% extends "base.html" %}{% load i18n %}
 {% block titre %}{% translate "FAQ et contact" %}{% endblock %}
 {% block contenu %}
-<div class="container my-5">
-  <h1 class="section-titre h2 mb-4">{% translate "Questions fréquentes" %}</h1>
+<section class="entete-page">
+  <div class="container">
+    <div class="row justify-content-center text-center">
+      <div class="col-lg-8">
+        <span class="surtitre">{% translate "Centre d’aide" %}</span>
+        <h1 class="display-5 mb-2">{% translate "Comment pouvons-nous vous aider ?" %}</h1>
+        <p class="lead mx-auto mb-4">{% translate "Les réponses aux questions fréquentes, ou un message à notre équipe." %}</p>
+        <div class="recherche-faq mb-4">
+          <i class="bi bi-search"></i>
+          <input type="search" id="recherche-faq" class="form-control" placeholder="{% translate 'Rechercher : prix, délai, douane, remboursement…' %}" aria-label="{% translate 'Rechercher dans la FAQ' %}">
+        </div>
+        <nav class="puces justify-content-center">
+          {% for theme, questions in faq %}<a class="puce" href="#theme-{{ forloop.counter }}">{{ theme }}</a>{% endfor %}
+          <a class="puce" href="#contact"><i class="bi bi-chat-dots"></i> {% translate "Contact" %}</a>
+        </nav>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="container sous-entete mb-5">
   <div class="row g-4">
     <div class="col-lg-7">
-      {% for theme, questions in faq %}
-      <h2 class="h5 fw-bold mt-3">{{ theme }}</h2>
-      <div class="accordion mb-3" id="faq{{ forloop.counter }}">
-        {% for q, r in questions %}
-        <div class="accordion-item">
-          <h3 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#q{{ forloop.parentloop.counter }}-{{ forloop.counter }}">{{ q }}</button></h3>
-          <div id="q{{ forloop.parentloop.counter }}-{{ forloop.counter }}" class="accordion-collapse collapse" data-bs-parent="#faq{{ forloop.parentloop.counter }}"><div class="accordion-body">{{ r }}</div></div>
+      <div class="carte carte-ombre p-3 p-md-4">
+        {% for theme, questions in faq %}
+        <div class="faq-theme mb-3" id="theme-{{ forloop.counter }}">
+          <h2 class="h6 fw-bold text-uppercase text-muted mt-2 mb-2" style="letter-spacing:.06em">{{ theme }}</h2>
+          <div class="accordion" id="faq{{ forloop.counter }}">
+            {% for q, r in questions %}
+            <div class="accordion-item faq-item">
+              <h3 class="accordion-header"><button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#q{{ forloop.parentloop.counter }}-{{ forloop.counter }}">{{ q }}</button></h3>
+              <div id="q{{ forloop.parentloop.counter }}-{{ forloop.counter }}" class="accordion-collapse collapse" data-bs-parent="#faq{{ forloop.parentloop.counter }}"><div class="accordion-body text-muted">{{ r }}</div></div>
+            </div>
+            {% endfor %}
+          </div>
         </div>
         {% endfor %}
+        <div class="faq-vide etat-vide" id="faq-vide"><div class="icone"><i class="bi bi-search"></i></div><p class="mb-1 fw-semibold text-body">{% translate "Aucune réponse trouvée." %}</p><p class="small mb-0">{% translate "Écrivez-nous : nous répondons rapidement." %}</p></div>
       </div>
-      {% endfor %}
     </div>
     <div class="col-lg-5" id="contact">
       <div class="carte carte-ombre p-4 mb-4">
-        <h2 class="h5 fw-bold">{% translate "Nous joindre" %}</h2>
-        <p class="mb-1"><i class="bi bi-telephone text-primary"></i> {{ parametres.telephone }}</p>
-        <p class="mb-1"><i class="bi bi-envelope text-primary"></i> {{ parametres.courriel }}</p>
-        <p class="mb-1"><i class="bi bi-geo-alt text-primary"></i> {% translate "Point de dépôt" %} : {{ parametres.adresse_depot }}</p>
-        <p class="mb-0"><i class="bi bi-clock text-primary"></i> {{ parametres.horaires }}</p>
+        <h2 class="h5 fw-bold mb-2">{% translate "Nous joindre" %}</h2>
+        <a class="contact-ligne" href="tel:{{ parametres.telephone|cut:' ' }}"><span class="rond"><i class="bi bi-telephone"></i></span><span><span class="small text-muted d-block">{% translate "Téléphone" %}</span><strong>{{ parametres.telephone }}</strong></span></a>
+        <a class="contact-ligne" href="https://wa.me/{{ parametres.telephone|cut:' '|cut:'+'|cut:'-'|cut:'('|cut:')' }}" target="_blank" rel="noopener"><span class="rond"><i class="bi bi-whatsapp"></i></span><span><span class="small text-muted d-block">WhatsApp</span><strong>{% translate "Écrire sur WhatsApp" %}</strong></span></a>
+        <a class="contact-ligne" href="mailto:{{ parametres.courriel }}"><span class="rond"><i class="bi bi-envelope"></i></span><span><span class="small text-muted d-block">{% translate "Courriel" %}</span><strong>{{ parametres.courriel }}</strong></span></a>
+        <div class="contact-ligne"><span class="rond"><i class="bi bi-geo-alt"></i></span><span><span class="small text-muted d-block">{% translate "Point de dépôt" %}</span><strong>{{ parametres.adresse_depot }}</strong></span></div>
+        <div class="contact-ligne"><span class="rond"><i class="bi bi-clock"></i></span><span><span class="small text-muted d-block">{% translate "Horaires" %}</span><strong>{{ parametres.horaires }}</strong></span></div>
       </div>
       <form method="post" class="carte carte-ombre p-4" novalidate>{% csrf_token %}
-        <h2 class="h5 fw-bold mb-3">{% translate "Envoyer un message" %}</h2>
+        <h2 class="h5 fw-bold mb-1">{% translate "Envoyer un message" %}</h2>
+        <p class="small text-muted mb-3">{% translate "Réponse sous 24 h ouvrables." %}</p>
         {% include "partials/_form.html" %}
-        <button class="btn btn-primary w-100">{% translate "Envoyer" %}</button>
+        <button class="btn btn-accent w-100 btn-lg"><i class="bi bi-send-fill"></i> {% translate "Envoyer" %}</button>
       </form>
     </div>
   </div>
 </div>
+{% endblock %}
+{% block scripts %}
+<script>
+  (function () {
+    var champ = document.getElementById("recherche-faq"), vide = document.getElementById("faq-vide");
+    function norm(t) { return t.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""); }
+    champ.addEventListener("input", function () {
+      var q = norm(champ.value.trim()), total = 0;
+      document.querySelectorAll(".faq-theme").forEach(function (th) {
+        var visibles = 0;
+        th.querySelectorAll(".faq-item").forEach(function (it) {
+          var ok = !q || norm(it.textContent).indexOf(q) !== -1;
+          it.style.display = ok ? "" : "none";
+          var corps = it.querySelector(".accordion-collapse");
+          if (q && ok) corps.classList.add("show"); else if (!q) corps.classList.remove("show");
+          if (ok) visibles++;
+        });
+        th.style.display = visibles ? "" : "none"; total += visibles;
+      });
+      vide.style.display = total ? "none" : "block";
+    });
+  })();
+</script>
 {% endblock %}

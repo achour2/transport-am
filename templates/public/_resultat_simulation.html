@@ -1,42 +1,51 @@
 {% load i18n outils %}
 {% if resultat %}
   {% if resultat.erreur %}
-  <div class="alert alert-danger"><i class="bi bi-exclamation-triangle"></i> {{ resultat.erreur }}</div>
+  <div class="carte carte-ombre etat-vide h-100 d-flex flex-column justify-content-center">
+    <div class="icone" style="color:#e03131;background:#fff1f1"><i class="bi bi-exclamation-triangle"></i></div>
+    <p class="fw-semibold text-danger mb-0">{{ resultat.erreur }}</p>
+  </div>
   {% else %}
-  <div class="carte carte-ombre p-4">
-    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
-      <div>
-        <div class="kpi-label">{% translate "Prix total" %}</div>
-        <div class="display-5 fw-bold text-primary">{{ resultat.prix|argent:resultat.pays.devise }}</div>
-        <div class="text-muted small">{{ resultat.pays.frais_fixes|argent:resultat.pays.devise }} {% translate "frais fixes" %} + {{ resultat.poids|floatformat:"-2" }} kg × {{ resultat.pays.tarif_kg|argent:resultat.pays.devise }} = {{ resultat.detail_kilos|argent:resultat.pays.devise }}</div>
-      </div>
-      <div class="text-end">
-        <div class="kpi-label">{% translate "Délai estimé" %}</div>
-        <div class="fs-4 fw-bold">{{ resultat.pays.delai_texte }}</div>
-        <div class="drapeau">{{ resultat.pays.drapeau }}</div>
-      </div>
-    </div>
-    {% if resultat.volume_l %}<div class="small text-muted mt-2"><i class="bi bi-box"></i> {% translate "Volume" %} : {{ resultat.volume_l }} L</div>{% endif %}
-    <hr>
-    <h2 class="h6 fw-bold">{% translate "Prochains voyages disponibles" %}</h2>
-    <div class="list-group list-group-flush">
-      {% for v in resultat.voyages %}
-      <div class="list-group-item px-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
+  <div class="resultat-prix p-4 p-md-5 mb-3">
+    <div class="position-relative" style="z-index:1">
+      <div class="d-flex justify-content-between align-items-start gap-3">
         <div>
-          <div class="fw-semibold">{{ v.ville_depart.nom }} → {{ v.ville_arrivee.nom }}</div>
-          <div class="small text-muted">{{ v.depart|tz:v.pays_depart.fuseau|date:"l j F, H\hi" }} · {{ v.kilos_restants|floatformat:0 }} kg {% translate "restants" %}</div>
+          <div class="small text-uppercase fw-semibold opacity-75" style="letter-spacing:.08em">{% translate "Prix total" %}</div>
+          <div class="montant my-2">{{ resultat.prix|argent:resultat.pays.devise }}</div>
+          <div class="opacity-75">{{ resultat.poids|floatformat:"-2" }} kg → {{ resultat.pays.nom }}</div>
         </div>
-        <a class="btn btn-accent btn-sm" href="{% url 'client_envoi_nouveau' %}?voyage={{ v.pk }}&poids={{ resultat.poids }}">{% translate "Réserver ce prix" %}</a>
+        <span class="drapeau-xl">{{ resultat.pays.drapeau }}</span>
       </div>
-      {% empty %}
-      <p class="text-muted small mb-0">{% translate "Aucun voyage disponible pour ce poids pour l’instant." %}</p>
-      {% endfor %}
+      <div class="decomposition mt-4"><div class="fixe" style="width: {{ resultat.part_fixe }}%"></div><div class="kilos" style="flex:1"></div></div>
+      <div class="legende d-flex flex-wrap justify-content-between gap-2 small mt-2 opacity-75">
+        <span class="l-fixe">{% translate "Frais fixes" %} {{ resultat.pays.frais_fixes|argent:resultat.pays.devise }}</span>
+        <span class="l-kilos">{{ resultat.poids|floatformat:"-2" }} kg × {{ resultat.pays.tarif_kg|argent:resultat.pays.devise }} = {{ resultat.detail_kilos|argent:resultat.pays.devise }}</span>
+      </div>
+      <div class="d-flex flex-wrap gap-3 mt-4 small">
+        <span><i class="bi bi-clock text-warning"></i> {% translate "Délai estimé" %} : <strong>{{ resultat.pays.delai_texte }}</strong></span>
+        {% if resultat.volume_l %}<span><i class="bi bi-box text-warning"></i> {% translate "Volume" %} : <strong>{{ resultat.volume_l }} L</strong></span>{% endif %}
+      </div>
     </div>
+  </div>
+  <div class="carte carte-ombre p-4">
+    <h2 class="h6 fw-bold mb-3">{% translate "Prochains voyages disponibles" %}</h2>
+    {% for v in resultat.voyages %}
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 py-2 {% if not forloop.last %}border-bottom{% endif %}">
+      <div>
+        <div class="fw-semibold">{{ v.ville_depart.nom }} <i class="bi bi-arrow-right text-muted"></i> {{ v.ville_arrivee.nom }}</div>
+        <div class="small text-muted"><i class="bi bi-calendar-event"></i> {{ v.depart|tz:v.pays_depart.fuseau|date:"l j F, H\hi" }} · {{ v.kilos_restants|floatformat:0 }} kg {% translate "restants" %}</div>
+      </div>
+      <a class="btn btn-accent btn-sm" href="{% url 'client_envoi_nouveau' %}?voyage={{ v.pk }}&poids={{ resultat.poids }}">{% translate "Réserver ce prix" %} <i class="bi bi-arrow-right"></i></a>
+    </div>
+    {% empty %}
+    <p class="text-muted small mb-0"><i class="bi bi-info-circle"></i> {% translate "Aucun voyage disponible pour ce poids pour l’instant." %}</p>
+    {% endfor %}
   </div>
   {% endif %}
 {% else %}
-<div class="carte p-5 text-center text-muted h-100 d-flex flex-column justify-content-center">
-  <i class="bi bi-calculator display-4 mb-3"></i>
+<div class="carte carte-ombre etat-vide h-100 d-flex flex-column justify-content-center">
+  <div><div class="icone"><i class="bi bi-calculator"></i></div></div>
+  <h2 class="h5 fw-bold text-body">{% translate "Votre prix en 2 secondes" %}</h2>
   <p class="mb-0">{% translate "Choisissez un pays et saisissez le poids : le prix s’affiche instantanément." %}</p>
 </div>
 {% endif %}

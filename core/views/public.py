@@ -46,6 +46,7 @@ def _calcul_simulation(form):
     try:
         resultat["prix"] = calculer_prix(pays, d["poids"])
         resultat["detail_kilos"] = (d["poids"] * pays.tarif_kg).quantize(pays.frais_fixes)
+        resultat["part_fixe"] = int(pays.frais_fixes * 100 / resultat["prix"]) if resultat["prix"] else 0
     except ErreurMetier as e:
         resultat["erreur"] = str(e)
         return resultat
@@ -60,6 +61,7 @@ def _calcul_simulation(form):
 
 def simulateur(request):
     form = SimulateurForm(request.GET or None)
+    form.fields["ville"].queryset = form.fields["ville"].queryset.filter(pays_id=request.GET.get("pays") or 0)
     resultat = _calcul_simulation(form) if request.GET and form.is_valid() else None
     gabarit = "public/_resultat_simulation.html" if request.headers.get("HX-Request") else "public/simulateur.html"
     return render(request, gabarit, {"form": form, "resultat": resultat})
