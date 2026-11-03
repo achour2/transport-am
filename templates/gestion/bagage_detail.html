@@ -4,10 +4,7 @@
 <a href="{% url 'gestion_bagages' %}" class="small"><i class="bi bi-arrow-left"></i> Bagages</a>
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-2 mb-3">
   <h1 class="h3 numero mb-0">{{ bagage.numero_suivi }} <span class="badge bg-{{ bagage.statut|couleur }} fs-6 align-middle">{{ bagage.get_statut_display }}</span> <span class="badge bg-{{ bagage.statut_paiement|couleur }} fs-6 align-middle">{{ bagage.get_statut_paiement_display }}</span></h1>
-  <div class="d-flex gap-2">
-    {% if bagage.statut_paiement != "en_attente" %}<a href="{% url 'gestion_recu' bagage.numero_suivi %}" class="btn btn-sm {% if request.GET.nouveau %}btn-accent{% else %}btn-outline-primary{% endif %}" target="_blank"><i class="bi bi-printer"></i> Imprimer le reçu</a>{% endif %}
-    <a href="{% url 'suivi_detail' bagage.numero_suivi %}" class="btn btn-sm btn-outline-primary" target="_blank"><i class="bi bi-box-arrow-up-right"></i> Page de suivi</a>
-  </div>
+  <a href="{% url 'suivi_detail' bagage.numero_suivi %}" class="btn btn-sm btn-outline-primary" target="_blank"><i class="bi bi-box-arrow-up-right"></i> Page de suivi</a>
 </div>
 <div class="row g-4">
   <div class="col-xl-7">
@@ -42,7 +39,7 @@
     <div class="carte carte-ombre p-4">
       <h2 class="h6 fw-bold">Paiements</h2>
       <table class="table table-sm small mb-0">
-        {% for p in paiements %}<tr><td>{{ p.numero_recu }}</td><td>{{ p.cree_le|date:"d/m/Y H:i" }}</td><td>{{ p.montant|argent:p.devise }}</td><td>{{ p.get_mode_display }}{% if p.encaisse_par %} · {{ p.encaisse_par }}{% endif %}</td><td><span class="badge bg-{{ p.statut|couleur }}">{{ p.get_statut_display }}</span></td><td class="text-muted">{{ p.reference_stripe }}</td></tr>
+        {% for p in paiements %}<tr><td>{{ p.numero_recu }}</td><td>{{ p.cree_le|date:"d/m/Y H:i" }}</td><td>{{ p.montant|argent:p.devise }}</td><td><span class="badge bg-{{ p.statut|couleur }}">{{ p.get_statut_display }}</span></td><td class="text-muted">{{ p.reference_stripe }}</td></tr>
         {% empty %}<tr><td class="text-muted">Aucun paiement.</td></tr>{% endfor %}
       </table>
     </div>
@@ -67,7 +64,7 @@
     {% if bagage.statut_paiement == "paye" %}
     <form method="post" class="carte border-danger p-4" onsubmit="return confirm('Rembourser {{ bagage.prix }} {{ bagage.devise }} ?')">{% csrf_token %}<input type="hidden" name="action" value="rembourser">
       <h2 class="h6 fw-bold text-danger">Rembourser</h2>
-      <p class="small text-muted">Remboursement intégral {% if paiements.0.mode == "carte" %}via Stripe{% else %}à rendre au client en main propre{% endif %} ({{ bagage.prix|argent:bagage.devise }}). Les kilos sont libérés.</p>
+      <p class="small text-muted">Remboursement intégral via Stripe ({{ bagage.prix|argent:bagage.devise }}). Les kilos sont libérés.</p>
       <button class="btn btn-danger btn-sm">Rembourser</button>
     </form>
     {% endif %}

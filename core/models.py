@@ -510,15 +510,7 @@ class Paiement(models.Model):
         ECHOUE = "echoue", _("Échoué")
         REMBOURSE = "rembourse", _("Remboursé")
 
-    class Mode(models.TextChoices):
-        CARTE = "carte", _("Carte en ligne (Stripe)")
-        ESPECES = "especes", _("Espèces")
-        TERMINAL = "terminal", _("Terminal de paiement (comptoir)")
-        VIREMENT = "virement", _("Virement / Interac")
-
     bagage = models.ForeignKey(Bagage, on_delete=models.CASCADE, related_name="paiements")
-    mode = models.CharField(max_length=10, choices=Mode.choices, default=Mode.CARTE)
-    encaisse_par = models.ForeignKey(Utilisateur, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
     montant = models.DecimalField(max_digits=10, decimal_places=2)
     devise = models.CharField(max_length=3)
     reference_stripe = models.CharField(max_length=255, blank=True)
