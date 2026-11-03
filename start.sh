@@ -16,7 +16,9 @@ for i in $(seq 1 24); do
 done
 
 python manage.py creer_admin
-if [ "$CHARGER_DEMO" = "true" ]; then
+if [ "$SUPPRIMER_DEMO" = "true" ]; then
+  python manage.py supprimer_demo
+elif [ "$CHARGER_DEMO" = "true" ]; then
   python manage.py donnees_demo || true
 fi
 exec gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 2 --timeout 60

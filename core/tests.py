@@ -402,3 +402,18 @@ class EnvoiComptoir(Base):
     def test_reserve_admin(self):
         self.client.force_login(self.sara)
         self.assertEqual(self.client.get(reverse("gestion_envoi_comptoir")).status_code, 403)
+
+
+class SuppressionDemo(TestCase):
+    def test_supprimer_demo(self):
+        from django.core.management import call_command
+
+        call_command("donnees_demo", verbosity=0)
+        reel = Utilisateur.objects.create_user("vrai@client.ca", "x", role="client")
+        self.assertTrue(Voyage.objects.exists())
+        call_command("supprimer_demo", verbosity=0)
+        self.assertFalse(Utilisateur.objects.filter(email__endswith="@demo.ca").exists())
+        self.assertFalse(Voyage.objects.exists())
+        self.assertFalse(Bagage.objects.exists())
+        self.assertTrue(Utilisateur.objects.filter(pk=reel.pk).exists())
+        self.assertTrue(Pays.objects.filter(code="DZ").exists())
